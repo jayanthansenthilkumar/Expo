@@ -145,50 +145,141 @@
         </div>
     </section>
 
-    <!-- Timeline -->
+    <!-- Schedule Cards -->
     <section id="schedule" class="section about-section">
         <div class="container">
             <div class="section-header">
                 <span class="section-label">Roadmap</span>
                 <h2 class="section-title">Event Schedule</h2>
             </div>
-            <div class="timeline-centered">
-                <div class="timeline-line"></div>
-                <!-- Item 1 -->
-                <div class="t-item">
-                    <div class="t-marker"></div>
-                    <div class="t-content">
-                        <span class="t-date">Feb 10</span>
-                        <h3>Applications Open</h3>
-                        <p>Submit your team abstract via the portal.</p>
+            <div class="schedule-grid">
+                <!-- Card 1 -->
+                <div class="schedule-card">
+                    <div class="sc-date">
+                        <span class="sc-day">10</span>
+                        <span class="sc-month">FEB</span>
+                    </div>
+                    <div class="sc-content">
+                        <h3>Registration Opens</h3>
+                        <p>Portal opens for team registration. Form your teams (max 4 members) and start drafting your
+                            abstract.</p>
+                        <span class="sc-status open">Open Now</span>
                     </div>
                 </div>
-                <!-- Item 2 -->
-                <div class="t-item">
-                    <div class="t-marker"></div>
-                    <div class="t-content">
-                        <span class="t-date">Feb 25</span>
-                        <h3>Submission Deadline</h3>
-                        <p>Last day to edit your proposal.</p>
+                <!-- Card 2 -->
+                <div class="schedule-card">
+                    <div class="sc-date">
+                        <span class="sc-day">25</span>
+                        <span class="sc-month">FEB</span>
+                    </div>
+                    <div class="sc-content">
+                        <h3>Abstract Submission</h3>
+                        <p>Deadline to submit your project abstract. Ensure it covers the problem statement and proposed
+                            solution clearly.</p>
+                        <span class="sc-status upcoming">Upcoming</span>
                     </div>
                 </div>
-                <!-- Item 3 -->
-                <div class="t-item">
-                    <div class="t-marker"></div>
-                    <div class="t-content">
-                        <span class="t-date">Mar 05</span>
-                        <h3>Shortlist Announced</h3>
-                        <p>Check your email for selection status.</p>
+                <!-- Card 3 -->
+                <div class="schedule-card">
+                    <div class="sc-date">
+                        <span class="sc-day">05</span>
+                        <span class="sc-month">MAR</span>
+                    </div>
+                    <div class="sc-content">
+                        <h3>Shortlist & Mentoring</h3>
+                        <p>Selected teams announced. Assigned mentors will guide you to refine the project before the
+                            finale.</p>
+                        <span class="sc-status upcoming">Upcoming</span>
                     </div>
                 </div>
-                <!-- Item 4 -->
-                <div class="t-item">
-                    <div class="t-marker"></div>
-                    <div class="t-content">
-                        <span class="t-date">Mar 15</span>
-                        <h3>Expo Day</h3>
-                        <p>Setup starts at 8:00 AM.</p>
+                <!-- Card 4 -->
+                <div class="schedule-card highlight-card">
+                    <div class="sc-date">
+                        <span class="sc-day">15</span>
+                        <span class="sc-month">MAR</span>
                     </div>
+                    <div class="sc-content">
+                        <h3>Grand Expo Day</h3>
+                        <p>8:00 AM - Stall Setup<br>10:00 AM - Judging Begins<br>4:00 PM - Valedictory & Prize
+                            Distribution</p>
+                        <span class="sc-status event">Main Event</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detailed Guidelines (New Content) -->
+    <section class="section">
+        <div class="container">
+            <div class="content-split-layout">
+                <div class="content-text">
+                    <span class="section-label">Rules & Regulations</span>
+                    <h2 class="section-title">Participation Guidelines</h2>
+                    <ul class="check-list">
+                        <li>Each team must have a minimum of 2 and maximum of 4 members.</li>
+                        <li>Inter-departmental teams are highly encouraged to promote multidisciplinary solutions.</li>
+                        <li>Projects must be original. Plagiarism will lead to immediate disqualification.</li>
+                        <li>Hardware projects must have a working prototype; software projects must have a live demo.
+                        </li>
+                        <li>All participants must wear their college ID cards during the event.</li>
+                    </ul>
+                </div>
+                <div class="content-visual">
+                    <div class="info-box">
+                        <h3>Judges Criteria</h3>
+                        <div class="criteria-row">
+                            <span>Innovation</span>
+                            <div class="bar">
+                                <div style="width:30%"></div>
+                            </div>
+                        </div>
+                        <div class="criteria-row">
+                            <span>Feasibility</span>
+                            <div class="bar">
+                                <div style="width:25%"></div>
+                            </div>
+                        </div>
+                        <div class="criteria-row">
+                            <span>Presentation</span>
+                            <div class="bar">
+                                <div style="width:20%"></div>
+                            </div>
+                        </div>
+                        <div class="criteria-row">
+                            <span>Social Impact</span>
+                            <div class="bar">
+                                <div style="width:25%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section (New Content) -->
+    <section class="section about-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Frequently Asked Questions</h2>
+            </div>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h4>Who can participate?</h4>
+                    <p>All students from 1st year to Final year of any department are eligible.</p>
+                </div>
+                <div class="faq-item">
+                    <h4>Is there a registration fee?</h4>
+                    <p>No, registration is completely free for all students of our college.</p>
+                </div>
+                <div class="faq-item">
+                    <h4>Can I submit two projects?</h4>
+                    <p>No, a student can be part of only one team/project.</p>
+                </div>
+                <div class="faq-item">
+                    <h4>Will power supply be provided?</h4>
+                    <p>Yes, each stall will have one 230V power socket. Please bring extension cords if needed.</p>
                 </div>
             </div>
         </div>

@@ -391,83 +391,186 @@ ul {
     color: white;
 }
 
-/* Timeline */
-.timeline-centered {
-    position: relative;
-    max-width: 800px;
-    margin: 0 auto;
+/* Schedule Grid instead of Timeline */
+.schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
 }
 
-.timeline-line {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 4px;
-    height: 100%;
-    background: var(--border);
-    border-radius: 2px;
-}
-
-.t-item {
-    display: flex;
-    justify-content: center;
-    padding: 2rem 0;
-    position: relative;
-}
-
-.t-content {
-    width: 45%;
+.schedule-card {
     background: white;
-    padding: 1.5rem;
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    display: flex;
+    gap: 1.5rem;
     border: 1px solid var(--border);
-    position: relative;
+    transition: transform 0.3s ease;
+    align-items: flex-start;
 }
 
-.t-marker {
-    width: 20px;
-    height: 20px;
-    background: var(--primary);
-    border: 4px solid white;
-    border-radius: 50%;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 0 2px var(--border);
-    z-index: 2;
+.schedule-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
 }
 
-/* Alternating logic */
-.t-item:nth-child(odd) {
-    justify-content: flex-start;
+.highlight-card {
+    background: linear-gradient(135deg, #fff, #f0f9ff);
+    border: 1px solid var(--primary);
 }
 
-.t-item:nth-child(even) {
-    justify-content: flex-end;
-}
-
-.t-item:nth-child(odd) .t-content {
-    margin-left: auto;
-    margin-right: 50px;
-    text-align: right;
-}
-
-.t-item:nth-child(even) .t-content {
-    margin-left: 50px;
-    text-align: left;
-}
-
-.t-date {
-    display: inline-block;
+.sc-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     background: var(--bg-surface);
-    padding: 0.25rem 0.75rem;
+    padding: 1rem;
     border-radius: 12px;
+    min-width: 80px;
+}
+
+.sc-day {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.sc-month {
     font-size: 0.8rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--text-muted);
+}
+
+.sc-content h3 {
+    font-size: 1.2rem;
     margin-bottom: 0.5rem;
+}
+
+.sc-content p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.sc-status {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.sc-status.open {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.sc-status.upcoming {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.sc-status.event {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+
+/* Content Split Layout (Guidelines) */
+.content-split-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.check-list li {
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+}
+
+.check-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--primary);
+    font-weight: 800;
+}
+
+.info-box {
+    background: #0f172a;
+    color: white;
+    padding: 2.5rem;
+    border-radius: var(--radius-lg);
+}
+
+.info-box h3 {
+    margin-bottom: 1.5rem;
+}
+
+.criteria-row {
+    margin-bottom: 1.25rem;
+}
+
+.criteria-row span {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar div {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+}
+
+/* FAQ Grid */
+.faq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.faq-item {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+
+.faq-item h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+
+.faq-item p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* Response Update */
+@media (max-width: 900px) {
+    .content-split-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .faq-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* CTA */
