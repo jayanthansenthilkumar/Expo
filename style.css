@@ -19,6 +19,8 @@
   --container-max: 1280px;
   --radius-md: 12px;
   --radius-lg: 20px;
+  --sidebar-width: 260px;
+  --header-height: 70px;
 }
 
 * {
@@ -877,3 +879,192 @@ ul {
     padding: 1.5rem;
   }
 }
+
+/* =========================================
+   DASHBOARD SPECIFIC STYLES
+   ========================================= */
+
+/* Layout */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-surface);
+}
+
+/* Sidebar */
+.d-sidebar {
+    width: var(--sidebar-width);
+    background: white;
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.sidebar-menu {
+    flex: 1;
+    padding: 1.5rem 1rem;
+    overflow-y: auto;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-muted);
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.menu-item:hover, .menu-item.active {
+    background: #eff6ff;
+    color: var(--primary);
+}
+
+.menu-item i { width: 20px; text-align: center; }
+
+/* Main Content Area */
+.d-main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Dashboard Header */
+.d-header {
+    height: var(--header-height);
+    background: white;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.header-search {
+    width: 300px;
+    position: relative;
+    display: none;
+}
+@media(min-width: 900px) { .header-search { display: block; } }
+
+.header-search input {
+    width: 100%;
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+}
+.header-search i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+/* User Profile & Dropdown */
+.header-profile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    cursor: pointer;
+}
+
+.user-info {
+    text-align: right;
+    display: none;
+}
+@media(min-width: 768px) { .user-info { display: block; } }
+
+.user-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 0px; display: block; line-height: 1.2;}
+.user-role { font-size: 0.75rem; color: var(--text-muted); }
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+/* Dropdown Menu */
+.profile-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 200px;
+    background: white;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+    display: none; /* JS to toggle */
+    margin-top: 0.5rem;
+}
+.profile-dropdown.show { display: block; }
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    color: var(--text-main);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+.dropdown-item:hover { background: var(--bg-surface); }
+.dropdown-divider { border-top: 1px solid var(--border); margin: 0.5rem 0; }
+
+/* Dashboard Content */
+.d-content {
+    padding: 2rem;
+}
+
+/* Welcome Card */
+.welcome-card {
+    background: linear-gradient(135deg, var(--primary), #4f46e5);
+    color: white;
+    padding: 2.5rem;
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.welcome-text { position: relative; z-index: 2; }
+.welcome-text h2 { font-size: 2rem; margin-bottom: 0.5rem; }
+.welcome-text p { opacity: 0.9; max-width: 600px;}
+
+.welcome-decoration {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    opacity: 0.1;
+    transform: translate(10%, 10%);
+}
+.welcome-decoration i { font-size: 15rem; }
