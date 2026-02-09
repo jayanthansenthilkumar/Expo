@@ -67,48 +67,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="container nav-container">
-            <a href="index.php" class="logo">
-                <div style="width:30px; height:30px; background:var(--primary); border-radius:8px;"></div>
-                SPARK <span>'26</span>
-            </a>
-            <div class="nav-menu">
-                <a href="index.php#about" class="nav-link">About</a>
-                <a href="index.php#tracks" class="nav-link">Tracks</a>
-                <a href="index.php#schedule" class="nav-link">Schedule</a>
-            </div>
-            <a href="register.php" class="btn-primary">Register</a>
-        </div>
-    </nav>
-
     <!-- Login Form -->
     <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h2>Welcome Back</h2>
-                <p>Login to SPARK'26 Dashboard</p>
+        <div class="auth-grid-split">
+            <div class="auth-info-side">
+                <h1>SPARK <span>'26</span></h1>
+                <p>Login to Access Your Dashboard</p>
             </div>
+            <div class="auth-form-side">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <h2>Welcome Back</h2>
+                        <p>Login to SPARK'26 Dashboard</p>
+                    </div>
 
-            <form id="loginForm" method="POST" action="">
-                <div class="form-group">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" id="username" name="username" class="form-input" placeholder="Enter your username" required>
+                    <form id="loginForm" method="POST" action="">
+                        <div class="form-group">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" id="username" name="username" class="form-input" placeholder="Enter your username" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <i class="ri-login-box-line"></i> Login
+                        </button>
+                    </form>
+
+                    <div class="auth-footer">
+                        Don't have an account? <a href="register.php">Register here</a>
+                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
-                </div>
-
-                <button type="submit" class="btn-submit">
-                    <i class="ri-login-box-line"></i> Login
-                </button>
-            </form>
-
-            <div class="auth-footer">
-                Don't have an account? <a href="register.php">Register here</a>
             </div>
         </div>
     </div>

@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_bind_param($stmt, "sss", $username, $email, $reg_no);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
-        
+
         if (mysqli_fetch_assoc($result)) {
             $error = 'Username, Email or Register Number already exists';
         } else {
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $insertQuery = "INSERT INTO users (name, username, department, year, reg_no, email, password, role) VALUES (?, ?, ?, ?, ?, ?, ?, 'student')";
             $stmt = mysqli_prepare($conn, $insertQuery);
             mysqli_stmt_bind_param($stmt, "sssssss", $name, $username, $department, $year, $reg_no, $email, $password);
-            
+
             if (mysqli_stmt_execute($stmt)) {
                 $success = 'Registration successful! You can now login.';
             } else {
@@ -59,96 +59,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="container nav-container">
-            <a href="index.php" class="logo">
-                <div style="width:30px; height:30px; background:var(--primary); border-radius:8px;"></div>
-                SPARK <span>'26</span>
-            </a>
-            <div class="nav-menu">
-                <a href="index.php#about" class="nav-link">About</a>
-                <a href="index.php#tracks" class="nav-link">Tracks</a>
-                <a href="index.php#schedule" class="nav-link">Schedule</a>
-            </div>
-            <a href="login.php" class="btn-primary">Login</a>
-        </div>
-    </nav>
-
     <!-- Register Form -->
     <div class="auth-container">
-        <div class="auth-card register-card">
-            <div class="auth-header">
-                <h2>Create Account</h2>
-                <p>Join SPARK'26 Innovation Showcase</p>
+        <div class="auth-grid-split">
+            <div class="auth-info-side">
+                <h1>JOIN SPARK <span>'26</span></h1>
+                <p>Register to Showcase Your Innovation</p>
             </div>
-
-            <form id="registerForm" method="POST" action="">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="name" class="form-label">Full Name</label>
-                        <input type="text" id="name" name="name" class="form-input" placeholder="John Doe" required>
+            <div class="auth-form-side">
+                <div class="auth-card register-card">
+                    <div class="auth-header">
+                        <h2>Create Account</h2>
+                        <p>Join SPARK'26 Innovation Showcase</p>
                     </div>
-                    <div class="form-group">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" id="username" name="username" class="form-input" placeholder="johndoe" required>
+
+                    <form id="registerForm" method="POST" action="">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" id="name" name="name" class="form-input" placeholder="John Doe"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" id="username" name="username" class="form-input"
+                                    placeholder="johndoe" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="department" class="form-label">Department</label>
+                                <select id="department" name="department" class="form-select" required>
+                                    <option value="">Select Department</option>
+                                    <option value="AIDS">AIDS</option>
+                                    <option value="AIML">AIML</option>
+                                    <option value="CSE">CSE</option>
+                                    <option value="CSBS">CSBS</option>
+                                    <option value="CYBER">CYBER</option>
+                                    <option value="ECE">ECE</option>
+                                    <option value="EEE">EEE</option>
+                                    <option value="MECH">MECH</option>
+                                    <option value="CIVIL">CIVIL</option>
+                                    <option value="IT">IT</option>
+                                    <option value="VLSI">VLSI</option>
+                                    <option value="MBA">MBA</option>
+                                    <option value="MCA">MCA</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="year" class="form-label">Year</label>
+                                <select id="year" name="year" class="form-select" required>
+                                    <option value="">Select Year</option>
+                                    <option value="I year">I Year</option>
+                                    <option value="II year">II Year</option>
+                                    <option value="III year">III Year</option>
+                                    <option value="IV year">IV Year</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="rollNumber" class="form-label">Register Number</label>
+                                <input type="text" id="rollNumber" name="reg_no" class="form-input"
+                                    placeholder="Select department & year first" maxlength="12" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" id="email" name="email" class="form-input"
+                                    placeholder="john@example.com" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" id="password" name="password" class="form-input"
+                                placeholder="Create a password" required>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <i class="ri-user-add-line"></i> Create Account
+                        </button>
+                    </form>
+
+                    <div class="auth-footer">
+                        Already have an account? <a href="login.php">Login here</a>
                     </div>
                 </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="department" class="form-label">Department</label>
-                        <select id="department" name="department" class="form-select" required>
-                            <option value="">Select Department</option>
-                            <option value="AIDS">AIDS</option>
-                            <option value="AIML">AIML</option>
-                            <option value="CSE">CSE</option>
-                            <option value="CSBS">CSBS</option>
-                            <option value="CYBER">CYBER</option>
-                            <option value="ECE">ECE</option>
-                            <option value="EEE">EEE</option>
-                            <option value="MECH">MECH</option>
-                            <option value="CIVIL">CIVIL</option>
-                            <option value="IT">IT</option>
-                            <option value="VLSI">VLSI</option>
-                            <option value="MBA">MBA</option>
-                            <option value="MCA">MCA</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="year" class="form-label">Year</label>
-                        <select id="year" name="year" class="form-select" required>
-                            <option value="">Select Year</option>
-                            <option value="I year">I Year</option>
-                            <option value="II year">II Year</option>
-                            <option value="III year">III Year</option>
-                            <option value="IV year">IV Year</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="rollNumber" class="form-label">Register Number</label>
-                    <input type="text" id="rollNumber" name="reg_no" class="form-input" placeholder="Select department & year first" maxlength="12" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input type="email" id="email" name="email" class="form-input" placeholder="john@example.com" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" name="password" class="form-input" placeholder="Create a password" required>
-                </div>
-
-                <button type="submit" class="btn-submit">
-                    <i class="ri-user-add-line"></i> Create Account
-                </button>
-            </form>
-
-            <div class="auth-footer">
-                Already have an account? <a href="login.php">Login here</a>
             </div>
         </div>
     </div>
@@ -156,23 +155,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script>
         // Show error/success messages
         <?php if ($error): ?>
-        Swal.fire({
-            icon: 'error',
-            title: 'Registration Failed',
-            text: '<?php echo addslashes($error); ?>',
-            confirmButtonColor: '#2563eb'
-        });
+            Swal.fire({
+                icon: 'error',
+                title: 'Registration Failed',
+                text: '<?php echo addslashes($error); ?>',
+                confirmButtonColor: '#2563eb'
+            });
         <?php endif; ?>
 
         <?php if ($success): ?>
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: '<?php echo addslashes($success); ?>',
-            confirmButtonColor: '#2563eb'
-        }).then(() => {
-            window.location.href = 'login.php';
-        });
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '<?php echo addslashes($success); ?>',
+                confirmButtonColor: '#2563eb'
+            }).then(() => {
+                window.location.href = 'login.php';
+            });
         <?php endif; ?>
 
         // Auto-fill roll number logic
@@ -325,7 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
         // Form validation before submit
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
+        document.getElementById('registerForm').addEventListener('submit', function (e) {
             const rollNumber = rollNumberInput.value;
             if (rollNumber.length !== 12) {
                 e.preventDefault();
