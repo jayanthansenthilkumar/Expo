@@ -10,26 +10,31 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator'
 $userDept = $_SESSION['department'] ?? '';
 $role = $_SESSION['role'] ?? $_SESSION['user_role'] ?? '';
 
+// Multi-department support (AIDS & AIML share one coordinator)
+$deptFilter = buildDeptFilter($userDept);
+
 $categoryFilter = $_GET['category'] ?? '';
 
 // Build query for top scored approved projects
 $sql = "SELECT p.*, u.name as student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'approved' AND p.score > 0";
 $params = [];
+$types = '';
 
 if (strtolower($role) === 'departmentcoordinator') {
-    $sql .= " AND p.department = ?";
-    $params[] = $userDept;
+    $sql .= " AND p.department IN (" . $deptFilter['placeholders'] . ")";
+    $params = array_merge($params, $deptFilter['values']);
+    $types .= $deptFilter['types'];
 }
 
 if (!empty($categoryFilter)) {
     $sql .= " AND p.category = ?";
     $params[] = $categoryFilter;
+    $types .= 's';
 }
 
 $sql .= " ORDER BY p.score DESC";
 $stmt = mysqli_prepare($conn, $sql);
 if (!empty($params)) {
-    $types = str_repeat('s', count($params));
     mysqli_stmt_bind_param($stmt, $types, ...$params);
 }
 mysqli_stmt_execute($stmt);
@@ -41,9 +46,9 @@ mysqli_stmt_close($stmt);
 // Get distinct categories for filter
 $catSql = "SELECT DISTINCT category FROM projects WHERE category IS NOT NULL AND category != ''";
 if (strtolower($role) === 'departmentcoordinator') {
-    $catSql .= " AND department = ?";
+    $catSql .= " AND department IN (" . $deptFilter['placeholders'] . ")";
     $catStmt = mysqli_prepare($conn, $catSql);
-    mysqli_stmt_bind_param($catStmt, 's', $userDept);
+    mysqli_stmt_bind_param($catStmt, $deptFilter['types'], ...$deptFilter['values']);
     mysqli_stmt_execute($catStmt);
     $catRes = mysqli_stmt_get_result($catStmt);
 } else {

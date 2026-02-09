@@ -10,6 +10,9 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator'
 $userDept = $_SESSION['department'] ?? '';
 $role = $_SESSION['role'] ?? $_SESSION['user_role'] ?? '';
 
+// Multi-department support (AIDS & AIML share one coordinator)
+$deptFilter = buildDeptFilter($userDept);
+
 // Query teams with project and leader info
 $sql = "SELECT t.*, p.title as project_title, u.name as leader_name,
         (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count
@@ -18,10 +21,10 @@ $sql = "SELECT t.*, p.title as project_title, u.name as leader_name,
         LEFT JOIN users u ON t.leader_id = u.id";
 
 if (strtolower($role) === 'departmentcoordinator') {
-    $sql .= " WHERE t.department = ?";
+    $sql .= " WHERE t.department IN (" . $deptFilter['placeholders'] . ")";
     $sql .= " ORDER BY t.created_at DESC";
     $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, 's', $userDept);
+    mysqli_stmt_bind_param($stmt, $deptFilter['types'], ...$deptFilter['values']);
     mysqli_stmt_execute($stmt);
     $teamRes = mysqli_stmt_get_result($stmt);
 } else {

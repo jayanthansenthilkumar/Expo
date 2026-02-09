@@ -9,37 +9,43 @@ $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator');
 $userDept = $_SESSION['department'] ?? '';
 
+// Multi-department support (AIDS & AIML share one coordinator)
+$deptFilter = buildDeptFilter($userDept);
+$dp = $deptFilter['placeholders'];
+$dt = $deptFilter['types'];
+$dv = $deptFilter['values'];
+
 // Count total projects in department
-$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department = ?");
-mysqli_stmt_bind_param($stmt, 's', $userDept);
+$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department IN ($dp)");
+mysqli_stmt_bind_param($stmt, $dt, ...$dv);
 mysqli_stmt_execute($stmt);
 $totalProjects = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
 mysqli_stmt_close($stmt);
 
 // Count students in department
-$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department = ? AND role = 'student'");
-mysqli_stmt_bind_param($stmt, 's', $userDept);
+$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department IN ($dp) AND role = 'student'");
+mysqli_stmt_bind_param($stmt, $dt, ...$dv);
 mysqli_stmt_execute($stmt);
 $totalStudents = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
 mysqli_stmt_close($stmt);
 
 // Count pending projects in department
-$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department = ? AND status = 'pending'");
-mysqli_stmt_bind_param($stmt, 's', $userDept);
+$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department IN ($dp) AND status = 'pending'");
+mysqli_stmt_bind_param($stmt, $dt, ...$dv);
 mysqli_stmt_execute($stmt);
 $pendingProjects = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
 mysqli_stmt_close($stmt);
 
 // Count teams in department
-$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM teams WHERE department = ?");
-mysqli_stmt_bind_param($stmt, 's', $userDept);
+$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM teams WHERE department IN ($dp)");
+mysqli_stmt_bind_param($stmt, $dt, ...$dv);
 mysqli_stmt_execute($stmt);
 $totalTeams = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
 mysqli_stmt_close($stmt);
 
 // Category breakdown
-$stmt = mysqli_prepare($conn, "SELECT category, COUNT(*) as cnt FROM projects WHERE department = ? GROUP BY category");
-mysqli_stmt_bind_param($stmt, 's', $userDept);
+$stmt = mysqli_prepare($conn, "SELECT category, COUNT(*) as cnt FROM projects WHERE department IN ($dp) GROUP BY category");
+mysqli_stmt_bind_param($stmt, $dt, ...$dv);
 mysqli_stmt_execute($stmt);
 $catResult = mysqli_stmt_get_result($stmt);
 $categoryBreakdown = [];
@@ -47,8 +53,8 @@ while ($row = mysqli_fetch_assoc($catResult)) { $categoryBreakdown[] = $row; }
 mysqli_stmt_close($stmt);
 
 // Status breakdown
-$stmt = mysqli_prepare($conn, "SELECT status, COUNT(*) as cnt FROM projects WHERE department = ? GROUP BY status");
-mysqli_stmt_bind_param($stmt, 's', $userDept);
+$stmt = mysqli_prepare($conn, "SELECT status, COUNT(*) as cnt FROM projects WHERE department IN ($dp) GROUP BY status");
+mysqli_stmt_bind_param($stmt, $dt, ...$dv);
 mysqli_stmt_execute($stmt);
 $statResult = mysqli_stmt_get_result($stmt);
 $statusBreakdown = [];

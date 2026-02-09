@@ -9,29 +9,37 @@ $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator');
 $department = $_SESSION['department'] ?? '';
 
+// Multi-department support (AIDS & AIML share one coordinator)
+$deptFilter = buildDeptFilter($department);
+$dp = $deptFilter['placeholders'];
+$dt = $deptFilter['types'];
+$dv = $deptFilter['values'];
+
 // Pagination
 $perPage = 10;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $perPage;
 
 // Count students in department
-$countStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department = ? AND role = 'student'");
-mysqli_stmt_bind_param($countStmt, 's', $department);
+$countStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department IN ($dp) AND role = 'student'");
+mysqli_stmt_bind_param($countStmt, $dt, ...$dv);
 mysqli_stmt_execute($countStmt);
 $totalStudents = (int)mysqli_fetch_assoc(mysqli_stmt_get_result($countStmt))['cnt'];
 mysqli_stmt_close($countStmt);
 $totalPages = max(1, ceil($totalStudents / $perPage));
 
 // Fetch students with project count
+$fetchTypes = $dt . 'ii';
+$fetchParams = array_merge($dv, [$perPage, $offset]);
 $stmt = mysqli_prepare($conn, "
     SELECT u.*, 
         (SELECT COUNT(*) FROM projects WHERE student_id = u.id) AS project_count
     FROM users u
-    WHERE u.department = ? AND u.role = 'student'
+    WHERE u.department IN ($dp) AND u.role = 'student'
     ORDER BY u.created_at DESC
     LIMIT ? OFFSET ?
 ");
-mysqli_stmt_bind_param($stmt, 'sii', $department, $perPage, $offset);
+mysqli_stmt_bind_param($stmt, $fetchTypes, ...$fetchParams);
 mysqli_stmt_execute($stmt);
 $stuResult = mysqli_stmt_get_result($stmt);
 $students = [];

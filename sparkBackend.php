@@ -154,6 +154,18 @@ switch ($action) {
             redirectWith('submitProject.php', 'error', 'Title, category, and description are required');
         }
 
+        // Check if student is in a team (required for submission)
+        $teamCheckStmt = mysqli_prepare($conn, "SELECT t.id FROM team_members tm JOIN teams t ON tm.team_id = t.id WHERE tm.user_id = ?");
+        mysqli_stmt_bind_param($teamCheckStmt, 'i', $studentId);
+        mysqli_stmt_execute($teamCheckStmt);
+        $teamRow = mysqli_fetch_assoc(mysqli_stmt_get_result($teamCheckStmt));
+        mysqli_stmt_close($teamCheckStmt);
+
+        if (!$teamRow) {
+            redirectWith('submitProject.php', 'error', 'You must be part of a team to submit a project. Please create or join a team first.');
+        }
+        $teamId = $teamRow['id'];
+
         // Handle file upload
         $filePath = null;
         if (isset($_FILES['projectFile']) && $_FILES['projectFile']['error'] === UPLOAD_ERR_OK) {
@@ -178,10 +190,10 @@ switch ($action) {
         }
 
         $stmt = mysqli_prepare($conn, 
-            "INSERT INTO projects (title, description, category, student_id, department, team_members, github_link, file_path) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO projects (title, description, category, student_id, team_id, department, team_members, github_link, file_path) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
-        mysqli_stmt_bind_param($stmt, "sssissss", $title, $description, $category, $studentId, $department, $teamMembers, $githubLink, $filePath);
+        mysqli_stmt_bind_param($stmt, "sssiissss", $title, $description, $category, $studentId, $teamId, $department, $teamMembers, $githubLink, $filePath);
 
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
@@ -912,6 +924,52 @@ switch ($action) {
         } else {
             mysqli_stmt_close($stmt);
             redirectWith('myTeam.php', 'error', 'Failed to remove member');
+        }
+        break;
+
+    // ==========================================
+    // ADMIN: Add new coordinator (create user)
+    // ==========================================
+    case 'add_coordinator':
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'studentaffairs'])) {
+            redirectWith('login.php', 'error', 'Unauthorized');
+        }
+
+        $name = trim($_POST['name'] ?? '');
+        $username = trim($_POST['username'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+        $department = trim($_POST['department'] ?? '');
+        $year = null;
+        $regNo = trim($_POST['reg_no'] ?? '') ?: null;
+        $status = trim($_POST['status'] ?? 'active');
+
+        if (empty($name) || empty($username) || empty($email) || empty($password) || empty($department)) {
+            redirectWith('coordinators.php', 'error', 'Name, username, email, password and department are required');
+        }
+
+        // Check if username or email already exists
+        $checkStmt = mysqli_prepare($conn, "SELECT id FROM users WHERE username = ? OR email = ?");
+        mysqli_stmt_bind_param($checkStmt, 'ss', $username, $email);
+        mysqli_stmt_execute($checkStmt);
+        if (mysqli_fetch_assoc(mysqli_stmt_get_result($checkStmt))) {
+            mysqli_stmt_close($checkStmt);
+            redirectWith('coordinators.php', 'error', 'Username or email already exists');
+        }
+        mysqli_stmt_close($checkStmt);
+
+        $role = 'departmentcoordinator';
+        $stmt = mysqli_prepare($conn,
+            "INSERT INTO users (name, username, email, password, department, year, reg_no, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        mysqli_stmt_bind_param($stmt, 'sssssssss', $name, $username, $email, $password, $department, $year, $regNo, $role, $status);
+
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            redirectWith('coordinators.php', 'success', 'Coordinator "' . $name . '" created successfully');
+        } else {
+            mysqli_stmt_close($stmt);
+            redirectWith('coordinators.php', 'error', 'Failed to create coordinator. Please try again.');
         }
         break;
 

@@ -9,10 +9,24 @@ $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Student');
 $userId = $_SESSION['user_id'];
 
-// Fetch student's projects
+// Check if student is in a team
+$myTeamId = null;
+$teamCheck = mysqli_prepare($conn, "SELECT t.id FROM team_members tm JOIN teams t ON tm.team_id = t.id WHERE tm.user_id = ?");
+mysqli_stmt_bind_param($teamCheck, "i", $userId);
+mysqli_stmt_execute($teamCheck);
+$teamRow = mysqli_fetch_assoc(mysqli_stmt_get_result($teamCheck));
+if ($teamRow) $myTeamId = $teamRow['id'];
+mysqli_stmt_close($teamCheck);
+
+// Fetch team's projects (all projects linked to the team) or individual projects if no team
 $projects = [];
-$stmt = mysqli_prepare($conn, "SELECT p.*, u.name as reviewer_name FROM projects p LEFT JOIN users u ON p.reviewed_by = u.id WHERE p.student_id = ? ORDER BY p.created_at DESC");
-mysqli_stmt_bind_param($stmt, "i", $userId);
+if ($myTeamId) {
+    $stmt = mysqli_prepare($conn, "SELECT p.*, u.name as reviewer_name, us.name as submitter_name FROM projects p LEFT JOIN users u ON p.reviewed_by = u.id LEFT JOIN users us ON p.student_id = us.id WHERE p.team_id = ? ORDER BY p.created_at DESC");
+    mysqli_stmt_bind_param($stmt, "i", $myTeamId);
+} else {
+    $stmt = mysqli_prepare($conn, "SELECT p.*, u.name as reviewer_name, NULL as submitter_name FROM projects p LEFT JOIN users u ON p.reviewed_by = u.id WHERE p.student_id = ? ORDER BY p.created_at DESC");
+    mysqli_stmt_bind_param($stmt, "i", $userId);
+}
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 while ($row = mysqli_fetch_assoc($result)) {

@@ -71,17 +71,13 @@ unset($_SESSION['success'], $_SESSION['error']);
 
             <div class="dashboard-content">
                 <?php if (!$myTeam): ?>
-                <div style="background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);color:#92400e;padding:1.25rem 1.5rem;border-radius:12px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
-                    <div style="display:flex;align-items:center;gap:0.75rem;">
-                        <i class="ri-error-warning-line" style="font-size:1.5rem;"></i>
-                        <div>
-                            <strong>Team Required!</strong>
-                            <p style="font-size:0.85rem;opacity:0.9;">You need to be part of a team to submit projects.</p>
-                        </div>
-                    </div>
-                    <a href="myTeam.php" style="background:#92400e;color:#fff;padding:0.5rem 1.25rem;border-radius:8px;font-weight:600;text-decoration:none;font-size:0.9rem;">Join/Create Team</a>
+                <div style="text-align:center;padding:3rem 1rem;">
+                    <i class="ri-team-line" style="font-size:4rem;color:var(--text-muted);margin-bottom:1rem;display:block;"></i>
+                    <h2 style="margin-bottom:0.5rem;">Team Required</h2>
+                    <p style="color:var(--text-muted);max-width:400px;margin:0 auto 1.5rem;">You must be part of a team to submit projects for SPARK'26. Create a new team or join an existing one.</p>
+                    <a href="myTeam.php" class="btn-primary"><i class="ri-team-line"></i> Go to My Team</a>
                 </div>
-                <?php endif; ?>
+                <?php else: ?>
 
                 <div class="form-container">
                     <div class="form-card">
@@ -137,12 +133,13 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <div class="form-actions">
-                                <button type="submit" class="btn-primary" <?php echo !$myTeam ? 'disabled title="Join a team first"' : ''; ?>>Submit Project</button>
+                                <button type="submit" class="btn-primary">Submit Project</button>
                                 <a href="myProjects.php" class="btn-secondary">Cancel</a>
                             </div>
                         </form>
                     </div>
                 </div>
+                <?php endif; ?>
             </div>
         </main>
     </div>

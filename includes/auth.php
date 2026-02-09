@@ -95,4 +95,27 @@ function checkUserAccess($isPublic = false)
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
+
+/**
+ * Returns the list of departments a coordinator manages.
+ * AIDS and AIML share a single coordinator ('sparkai'), so both are returned together.
+ */
+function getUserDepartments($department) {
+    $sharedDepts = ['AIDS', 'AIML'];
+    if (in_array(strtoupper($department), $sharedDepts)) {
+        return $sharedDepts;
+    }
+    return [$department];
+}
+
+/**
+ * Builds a SQL IN clause placeholder and flat param array for multi-department queries.
+ * Returns ['placeholders' => '?,?', 'types' => 'ss', 'values' => ['AIDS','AIML']]
+ */
+function buildDeptFilter($department) {
+    $depts = getUserDepartments($department);
+    $placeholders = implode(',', array_fill(0, count($depts), '?'));
+    $types = str_repeat('s', count($depts));
+    return ['placeholders' => $placeholders, 'types' => $types, 'values' => $depts];
+}
 ?>

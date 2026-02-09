@@ -69,9 +69,14 @@ unset($_SESSION['success'], $_SESSION['error']);
             <div class="dashboard-content">
                 <div class="content-header">
                     <h2>Department Coordinators</h2>
-                    <button class="btn-primary" onclick="document.getElementById('assignModal').style.display='flex'">
-                        <i class="ri-add-line"></i> Assign Coordinator
-                    </button>
+                    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                        <button class="btn-primary" onclick="document.getElementById('addCoordModal').style.display='flex'">
+                            <i class="ri-user-add-line"></i> Add Coordinator
+                        </button>
+                        <button class="btn-secondary" onclick="document.getElementById('assignModal').style.display='flex'">
+                            <i class="ri-user-settings-line"></i> Assign Existing User
+                        </button>
+                    </div>
                 </div>
 
                 <div class="coordinators-grid">
@@ -114,6 +119,64 @@ unset($_SESSION['success'], $_SESSION['error']);
         </main>
     </div>
 
+    <!-- Add Coordinator Modal -->
+    <div id="addCoordModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;overflow-y:auto;">
+        <div style="background:var(--bg-primary, #fff);border-radius:12px;padding:2rem;width:90%;max-width:550px;position:relative;margin:2rem auto;max-height:90vh;overflow-y:auto;">
+            <button onclick="document.getElementById('addCoordModal').style.display='none'" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-primary);">&times;</button>
+            <h3 style="margin-bottom:1.5rem;"><i class="ri-user-add-line"></i> Add New Coordinator</h3>
+            <form action="sparkBackend.php" method="POST" id="addCoordForm">
+                <input type="hidden" name="action" value="add_coordinator">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div style="grid-column:1/-1;">
+                        <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Full Name *</label>
+                        <input type="text" name="name" required placeholder="e.g. CSE Coordinator" style="width:100%;padding:0.65rem;border:1px solid var(--border-color, #ddd);border-radius:8px;font-size:0.95rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Username *</label>
+                        <input type="text" name="username" required placeholder="e.g. coordcse" style="width:100%;padding:0.65rem;border:1px solid var(--border-color, #ddd);border-radius:8px;font-size:0.95rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Password *</label>
+                        <input type="password" name="password" required placeholder="Enter password" style="width:100%;padding:0.65rem;border:1px solid var(--border-color, #ddd);border-radius:8px;font-size:0.95rem;box-sizing:border-box;">
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Email *</label>
+                        <input type="email" name="email" required placeholder="e.g. coord.cse@spark.com" style="width:100%;padding:0.65rem;border:1px solid var(--border-color, #ddd);border-radius:8px;font-size:0.95rem;box-sizing:border-box;">
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Department *</label>
+                        <select name="department" required style="width:100%;padding:0.65rem;border:1px solid var(--border-color, #ddd);border-radius:8px;font-size:0.95rem;background:var(--bg-primary, #fff);">
+                            <option value="">Select Department</option>
+                            <option value="CSE">CSE</option>
+                            <option value="AIDS">AIDS</option>
+                            <option value="AIML">AIML</option>
+                            <option value="ECE">ECE</option>
+                            <option value="EEE">EEE</option>
+                            <option value="MECH">MECH</option>
+                            <option value="CIVIL">CIVIL</option>
+                            <option value="IT">IT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Register No</label>
+                        <input type="text" name="reg_no" placeholder="e.g. 612223104088" style="width:100%;padding:0.65rem;border:1px solid var(--border-color, #ddd);border-radius:8px;font-size:0.95rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:0.4rem;font-weight:500;">Status</label>
+                        <select name="status" style="width:100%;padding:0.65rem;border:1px solid var(--border-color, #ddd);border-radius:8px;font-size:0.95rem;background:var(--bg-primary, #fff);">
+                            <option value="active" selected>Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
+                    <button type="button" onclick="document.getElementById('addCoordModal').style.display='none'" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary"><i class="ri-save-line"></i> Create Coordinator</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Assign Coordinator Modal -->
     <div id="assignModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
         <div style="background:var(--bg-primary, #fff);border-radius:12px;padding:2rem;width:90%;max-width:500px;position:relative;">
@@ -150,6 +213,23 @@ unset($_SESSION['success'], $_SESSION['error']);
     <?php if ($errorMsg): ?>
     Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
     <?php endif; ?>
+
+    // SweetAlert confirmation for Add Coordinator form
+    document.getElementById('addCoordForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        Swal.fire({
+            title: 'Add Coordinator?',
+            text: 'This will create a new department coordinator account.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#2563eb',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, create!'
+        }).then((result) => {
+            if (result.isConfirmed) form.submit();
+        });
+    });
     </script>
 </body>
 

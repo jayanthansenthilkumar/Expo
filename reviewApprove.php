@@ -13,10 +13,16 @@ $role = $_SESSION['role'] ?? '';
 // Determine if user sees all projects or only their department
 $filterByDept = ($role === 'departmentcoordinator');
 
+// Multi-department support (AIDS & AIML share one coordinator)
+$deptFilter = buildDeptFilter($userDepartment);
+$dp = $deptFilter['placeholders'];
+$dt = $deptFilter['types'];
+$dv = $deptFilter['values'];
+
 // Count pending projects
 if ($filterByDept) {
-    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'pending' AND department = ?");
-    mysqli_stmt_bind_param($stmt, 's', $userDepartment);
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'pending' AND department IN ($dp)");
+    mysqli_stmt_bind_param($stmt, $dt, ...$dv);
     mysqli_stmt_execute($stmt);
     $pendingCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
     mysqli_stmt_close($stmt);
@@ -26,8 +32,8 @@ if ($filterByDept) {
 
 // Count approved projects
 if ($filterByDept) {
-    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved' AND department = ?");
-    mysqli_stmt_bind_param($stmt, 's', $userDepartment);
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved' AND department IN ($dp)");
+    mysqli_stmt_bind_param($stmt, $dt, ...$dv);
     mysqli_stmt_execute($stmt);
     $approvedCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
     mysqli_stmt_close($stmt);
@@ -37,8 +43,8 @@ if ($filterByDept) {
 
 // Count rejected projects
 if ($filterByDept) {
-    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'rejected' AND department = ?");
-    mysqli_stmt_bind_param($stmt, 's', $userDepartment);
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'rejected' AND department IN ($dp)");
+    mysqli_stmt_bind_param($stmt, $dt, ...$dv);
     mysqli_stmt_execute($stmt);
     $rejectedCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
     mysqli_stmt_close($stmt);
@@ -50,8 +56,8 @@ $underReviewCount = 0;
 
 // Fetch pending projects with student name
 if ($filterByDept) {
-    $stmt = mysqli_prepare($conn, "SELECT p.*, u.name AS student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'pending' AND p.department = ? ORDER BY p.created_at DESC");
-    mysqli_stmt_bind_param($stmt, 's', $userDepartment);
+    $stmt = mysqli_prepare($conn, "SELECT p.*, u.name AS student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'pending' AND p.department IN ($dp) ORDER BY p.created_at DESC");
+    mysqli_stmt_bind_param($stmt, $dt, ...$dv);
     mysqli_stmt_execute($stmt);
     $res = mysqli_stmt_get_result($stmt);
 } else {

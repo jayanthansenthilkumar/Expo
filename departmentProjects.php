@@ -9,6 +9,12 @@ $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator');
 $userDepartment = $_SESSION['department'] ?? '';
 
+// Multi-department support (AIDS & AIML share one coordinator)
+$deptFilter = buildDeptFilter($userDepartment);
+$dp = $deptFilter['placeholders'];
+$dt = $deptFilter['types'];
+$dv = $deptFilter['values'];
+
 // Filter parameters
 $categoryFilter = $_GET['category'] ?? '';
 $statusFilter = $_GET['status'] ?? '';
@@ -17,9 +23,9 @@ $perPage = 10;
 $offset = ($page - 1) * $perPage;
 
 // Build query
-$where = "WHERE p.department = ?";
-$params = [$userDepartment];
-$types = "s";
+$where = "WHERE p.department IN ($dp)";
+$params = $dv;
+$types = $dt;
 
 if ($categoryFilter !== '') {
     $where .= " AND p.category = ?";

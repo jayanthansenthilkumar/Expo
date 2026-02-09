@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS projects (
     description TEXT,
     category VARCHAR(50) DEFAULT NULL,
     student_id INT NOT NULL,
+    team_id INT DEFAULT NULL,
     department VARCHAR(50) DEFAULT NULL,
     team_members TEXT DEFAULT NULL,
     github_link VARCHAR(255) DEFAULT NULL,
@@ -45,6 +46,7 @@ CREATE TABLE IF NOT EXISTS projects (
     score INT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL,
     FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
