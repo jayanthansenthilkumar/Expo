@@ -71,6 +71,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <title>All Projects | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -101,12 +102,6 @@ unset($_SESSION['success'], $_SESSION['error']);
             </header>
 
             <div class="dashboard-content">
-                <?php if ($successMsg): ?>
-                    <div style="background:#dcfce7;color:#166534;padding:1rem;border-radius:8px;margin-bottom:1rem;"><i class="ri-checkbox-circle-line"></i> <?php echo htmlspecialchars($successMsg); ?></div>
-                <?php endif; ?>
-                <?php if ($errorMsg): ?>
-                    <div style="background:#fef2f2;color:#991b1b;padding:1rem;border-radius:8px;margin-bottom:1rem;"><i class="ri-error-warning-line"></i> <?php echo htmlspecialchars($errorMsg); ?></div>
-                <?php endif; ?>
 
                 <div class="content-header">
                     <h2>Project Management</h2>
@@ -187,7 +182,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             </form>
                                             <?php endif; ?>
                                             <?php if (in_array($_SESSION['role'], ['admin', 'studentaffairs'])): ?>
-                                            <form action="sparkBackend.php" method="POST" style="display:inline;" onsubmit="return confirm('Delete this project?');">
+                                            <form action="sparkBackend.php" method="POST" style="display:inline;" class="confirm-delete-form">
                                                 <input type="hidden" name="action" value="delete_project">
                                                 <input type="hidden" name="project_id" value="<?php echo $p['id']; ?>">
                                                 <button type="submit" class="btn-icon" title="Delete" style="color:#ef4444;"><i class="ri-delete-bin-line"></i></button>
@@ -212,6 +207,31 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script>
+    <?php if ($successMsg): ?>
+    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+    <?php endif; ?>
+    <?php if ($errorMsg): ?>
+    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+    <?php endif; ?>
+    document.querySelectorAll('.confirm-delete-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formEl = this;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) formEl.submit();
+            });
+        });
+    });
+    </script>
 </body>
 
 </html>

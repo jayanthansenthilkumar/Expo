@@ -19,21 +19,21 @@ $totalProjects = 0;
 $approvedProjects = 0;
 $pendingProjects = 0;
 
-$stmt = $conn->prepare("SELECT COUNT(*) as total FROM projects WHERE user_id = ?");
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM projects WHERE student_id = ?");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
 $result = $stmt->get_result();
 $totalProjects = $result->fetch_assoc()['total'] ?? 0;
 $stmt->close();
 
-$stmt = $conn->prepare("SELECT COUNT(*) as total FROM projects WHERE user_id = ? AND status = 'approved'");
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM projects WHERE student_id = ? AND status = 'approved'");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
 $result = $stmt->get_result();
 $approvedProjects = $result->fetch_assoc()['total'] ?? 0;
 $stmt->close();
 
-$stmt = $conn->prepare("SELECT COUNT(*) as total FROM projects WHERE user_id = ? AND status = 'pending'");
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM projects WHERE student_id = ? AND status = 'pending'");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -65,6 +65,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <title>Profile | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -163,6 +164,14 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script>
+    <?php if ($success): ?>
+    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($success); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+    <?php endif; ?>
+    <?php if ($error): ?>
+    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($error); ?>', confirmButtonColor: '#2563eb' });
+    <?php endif; ?>
+    </script>
 </body>
 
 </html>

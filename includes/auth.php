@@ -57,8 +57,8 @@ function checkUserAccess($isPublic = false)
             'judging.php', 'database.php', 'guidelines.php'
         ],
         'student' => [
-            'studentDashboard.php', 'myProjects.php', 'submitProject.php', 'schedule.php', 
-            'guidelines.php', 'announcements.php', 'profile.php', 'settings.php', 
+            'studentDashboard.php', 'myProjects.php', 'submitProject.php', 'myTeam.php',
+            'schedule.php', 'guidelines.php', 'announcements.php', 'profile.php', 'settings.php', 
             'logout.php', 'index.php'
         ]
     ];

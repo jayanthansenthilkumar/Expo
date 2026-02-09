@@ -72,6 +72,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
     <title>Department Projects | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -102,11 +103,6 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
             </header>
 
             <div class="dashboard-content">
-                <?php if ($flashMessage): ?>
-                    <div class="alert alert-<?php echo htmlspecialchars($flashType); ?>">
-                        <?php echo htmlspecialchars($flashMessage); ?>
-                    </div>
-                <?php endif; ?>
 
                 <div class="content-header">
                     <h2>Projects in Your Department</h2>
@@ -188,6 +184,11 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script>
+    <?php if ($flashMessage): ?>
+    Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo addslashes($flashMessage); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
+    <?php endif; ?>
+    </script>
 </body>
 
 </html>

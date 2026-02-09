@@ -68,7 +68,6 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
     <nav class="navbar">
         <div class="container nav-container">
             <a href="index.php" class="logo">
-                <div style="width:30px; height:30px; background:var(--primary); border-radius:8px;"></div>
                 SPARK <span>'26</span>
             </a>
             <div class="nav-menu">

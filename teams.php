@@ -20,18 +20,22 @@ $sql = "SELECT t.*, p.title as project_title, u.name as leader_name,
 if (strtolower($role) === 'departmentcoordinator') {
     $sql .= " WHERE t.department = ?";
     $sql .= " ORDER BY t.created_at DESC";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$userDept]);
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, 's', $userDept);
+    mysqli_stmt_execute($stmt);
+    $teamRes = mysqli_stmt_get_result($stmt);
 } else {
     $sql .= " ORDER BY t.created_at DESC";
-    $stmt = $pdo->query($sql);
+    $teamRes = mysqli_query($conn, $sql);
 }
-$teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$teams = [];
+while ($row = mysqli_fetch_assoc($teamRes)) { $teams[] = $row; }
+if (isset($stmt)) { mysqli_stmt_close($stmt); }
 
 // Flash messages
-$flashMessage = $_SESSION['flash_message'] ?? null;
-$flashType = $_SESSION['flash_type'] ?? 'info';
-unset($_SESSION['flash_message'], $_SESSION['flash_type']);
+$successMsg = $_SESSION['success'] ?? '';
+$errorMsg = $_SESSION['error'] ?? '';
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -42,6 +46,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
     <title>Teams | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -72,11 +77,6 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
             </header>
 
             <div class="dashboard-content">
-                <?php if ($flashMessage): ?>
-                    <div class="alert alert-<?php echo htmlspecialchars($flashType); ?>" style="padding:12px 16px;border-radius:8px;margin-bottom:16px;background:<?php echo $flashType === 'success' ? '#d4edda' : ($flashType === 'error' ? '#f8d7da' : '#d1ecf1'); ?>;color:<?php echo $flashType === 'success' ? '#155724' : ($flashType === 'error' ? '#721c24' : '#0c5460'); ?>;">
-                        <?php echo htmlspecialchars($flashMessage); ?>
-                    </div>
-                <?php endif; ?>
 
                 <div class="content-header">
                     <h2>Project Teams</h2>
@@ -122,6 +122,14 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script>
+    <?php if ($successMsg): ?>
+    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+    <?php endif; ?>
+    <?php if ($errorMsg): ?>
+    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+    <?php endif; ?>
+    </script>
 </body>
 
 </html>

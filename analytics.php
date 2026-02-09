@@ -9,26 +9,38 @@ $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
 
 // Total counts
-$totalProjects = $pdo->query("SELECT COUNT(*) FROM projects")->fetchColumn();
-$totalUsers = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
-$totalDepartments = $pdo->query("SELECT COUNT(DISTINCT department) FROM projects WHERE department IS NOT NULL AND department != ''")->fetchColumn();
-$approvedProjects = $pdo->query("SELECT COUNT(*) FROM projects WHERE status = 'approved'")->fetchColumn();
+$totalProjects = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects"))['cnt'];
+$totalUsers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users"))['cnt'];
+$totalDepartments = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(DISTINCT department) as cnt FROM projects WHERE department IS NOT NULL AND department != ''"))['cnt'];
+$approvedProjects = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved'"))['cnt'];
 
 // Category breakdown
-$categoryQuery = $pdo->query("SELECT category, COUNT(*) as cnt FROM projects GROUP BY category ORDER BY cnt DESC");
-$categories = $categoryQuery->fetchAll(PDO::FETCH_ASSOC);
+$catResult = mysqli_query($conn, "SELECT category, COUNT(*) as cnt FROM projects GROUP BY category ORDER BY cnt DESC");
+$categories = [];
+while ($row = mysqli_fetch_assoc($catResult)) {
+    $categories[] = $row;
+}
 
 // Department breakdown
-$deptBreakdownQuery = $pdo->query("SELECT department, COUNT(*) as cnt FROM projects WHERE department != '' GROUP BY department ORDER BY cnt DESC");
-$deptBreakdown = $deptBreakdownQuery->fetchAll(PDO::FETCH_ASSOC);
+$deptResult = mysqli_query($conn, "SELECT department, COUNT(*) as cnt FROM projects WHERE department != '' GROUP BY department ORDER BY cnt DESC");
+$deptBreakdown = [];
+while ($row = mysqli_fetch_assoc($deptResult)) {
+    $deptBreakdown[] = $row;
+}
 
 // Status breakdown
-$statusQuery = $pdo->query("SELECT status, COUNT(*) as cnt FROM projects GROUP BY status");
-$statusBreakdown = $statusQuery->fetchAll(PDO::FETCH_ASSOC);
+$statusResult = mysqli_query($conn, "SELECT status, COUNT(*) as cnt FROM projects GROUP BY status");
+$statusBreakdown = [];
+while ($row = mysqli_fetch_assoc($statusResult)) {
+    $statusBreakdown[] = $row;
+}
 
 // Monthly submissions
-$monthlyQuery = $pdo->query("SELECT DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as cnt FROM projects GROUP BY month ORDER BY month DESC LIMIT 6");
-$monthlySubmissions = $monthlyQuery->fetchAll(PDO::FETCH_ASSOC);
+$monthlyResult = mysqli_query($conn, "SELECT DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as cnt FROM projects GROUP BY month ORDER BY month DESC LIMIT 6");
+$monthlySubmissions = [];
+while ($row = mysqli_fetch_assoc($monthlyResult)) {
+    $monthlySubmissions[] = $row;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,6 +51,7 @@ $monthlySubmissions = $monthlyQuery->fetchAll(PDO::FETCH_ASSOC);
     <title>Analytics | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>

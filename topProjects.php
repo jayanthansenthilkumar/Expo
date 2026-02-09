@@ -27,20 +27,31 @@ if (!empty($categoryFilter)) {
 }
 
 $sql .= " ORDER BY p.score DESC";
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$topProjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = mysqli_prepare($conn, $sql);
+if (!empty($params)) {
+    $types = str_repeat('s', count($params));
+    mysqli_stmt_bind_param($stmt, $types, ...$params);
+}
+mysqli_stmt_execute($stmt);
+$topResult = mysqli_stmt_get_result($stmt);
+$topProjects = [];
+while ($row = mysqli_fetch_assoc($topResult)) { $topProjects[] = $row; }
+mysqli_stmt_close($stmt);
 
 // Get distinct categories for filter
 $catSql = "SELECT DISTINCT category FROM projects WHERE category IS NOT NULL AND category != ''";
 if (strtolower($role) === 'departmentcoordinator') {
     $catSql .= " AND department = ?";
-    $catStmt = $pdo->prepare($catSql);
-    $catStmt->execute([$userDept]);
+    $catStmt = mysqli_prepare($conn, $catSql);
+    mysqli_stmt_bind_param($catStmt, 's', $userDept);
+    mysqli_stmt_execute($catStmt);
+    $catRes = mysqli_stmt_get_result($catStmt);
 } else {
-    $catStmt = $pdo->query($catSql);
+    $catRes = mysqli_query($conn, $catSql);
 }
-$categories = $catStmt->fetchAll(PDO::FETCH_COLUMN);
+$categories = [];
+while ($row = mysqli_fetch_assoc($catRes)) { $categories[] = $row['category']; }
+if (isset($catStmt)) { mysqli_stmt_close($catStmt); }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -51,6 +62,7 @@ $categories = $catStmt->fetchAll(PDO::FETCH_COLUMN);
     <title>Top Projects | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>

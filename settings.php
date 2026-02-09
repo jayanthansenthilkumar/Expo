@@ -23,6 +23,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <title>Settings | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -49,12 +50,7 @@ unset($_SESSION['success'], $_SESSION['error']);
             </header>
 
             <div class="dashboard-content">
-                <?php if ($success): ?>
-                    <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
-                <?php endif; ?>
-                <?php if ($error): ?>
-                    <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
-                <?php endif; ?>
+
                 <div class="settings-container">
                     <div class="settings-section">
                         <h3><i class="ri-user-line"></i> Profile Settings</h3>
@@ -140,6 +136,14 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script>
+    <?php if ($success): ?>
+    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($success); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+    <?php endif; ?>
+    <?php if ($error): ?>
+    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($error); ?>', confirmButtonColor: '#2563eb' });
+    <?php endif; ?>
+    </script>
 </body>
 
 </html>

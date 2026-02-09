@@ -569,6 +569,54 @@ switch ($action) {
         break;
 
     // ==========================================
+    // ADMIN: Edit user
+    // ==========================================
+    case 'edit_user':
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'studentaffairs'])) {
+            redirectWith('login.php', 'error', 'Unauthorized');
+        }
+
+        $editUserId = intval($_POST['user_id'] ?? 0);
+        $editName = trim($_POST['name'] ?? '');
+        $editEmail = trim($_POST['email'] ?? '');
+        $editRole = $_POST['role'] ?? '';
+        $editDept = trim($_POST['department'] ?? '');
+
+        if (empty($editName) || empty($editEmail)) {
+            redirectWith('users.php', 'error', 'Name and email are required');
+        }
+        if (!filter_var($editEmail, FILTER_VALIDATE_EMAIL)) {
+            redirectWith('users.php', 'error', 'Invalid email address');
+        }
+
+        $validRoles = ['student', 'admin', 'departmentcoordinator', 'studentaffairs'];
+        if (!in_array($editRole, $validRoles)) {
+            redirectWith('users.php', 'error', 'Invalid role');
+        }
+
+        // Check email uniqueness (exclude current user)
+        $checkStmt = mysqli_prepare($conn, "SELECT id FROM users WHERE email = ? AND id != ?");
+        mysqli_stmt_bind_param($checkStmt, "si", $editEmail, $editUserId);
+        mysqli_stmt_execute($checkStmt);
+        if (mysqli_fetch_assoc(mysqli_stmt_get_result($checkStmt))) {
+            mysqli_stmt_close($checkStmt);
+            redirectWith('users.php', 'error', 'Email already in use by another account');
+        }
+        mysqli_stmt_close($checkStmt);
+
+        $stmt = mysqli_prepare($conn, "UPDATE users SET name = ?, email = ?, role = ?, department = ? WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "ssssi", $editName, $editEmail, $editRole, $editDept, $editUserId);
+
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            redirectWith('users.php', 'success', 'User updated successfully');
+        } else {
+            mysqli_stmt_close($stmt);
+            redirectWith('users.php', 'error', 'Failed to update user');
+        }
+        break;
+
+    // ==========================================
     // ADMIN: Update user role
     // ==========================================
     case 'update_user_role':
@@ -630,7 +678,7 @@ switch ($action) {
         break;
 
     // ==========================================
-    // TEAMS: Create team
+    // TEAMS: Create team (student registers for SPARK)
     // ==========================================
     case 'create_team':
         if (!isset($_SESSION['user_id'])) {
@@ -638,18 +686,32 @@ switch ($action) {
         }
 
         $teamName = trim($_POST['teamName'] ?? '');
-        $projectId = !empty($_POST['project_id']) ? intval($_POST['project_id']) : null;
+        $description = trim($_POST['description'] ?? '');
         $leaderId = $_SESSION['user_id'];
         $department = $_SESSION['department'] ?? '';
 
         if (empty($teamName)) {
-            redirectWith('teams.php', 'error', 'Team name is required');
+            redirectWith('myTeam.php', 'error', 'Team name is required');
         }
 
+        // Check if student is already in a team
+        $checkStmt = mysqli_prepare($conn, "SELECT tm.team_id FROM team_members tm WHERE tm.user_id = ?");
+        mysqli_stmt_bind_param($checkStmt, "i", $leaderId);
+        mysqli_stmt_execute($checkStmt);
+        $checkResult = mysqli_stmt_get_result($checkStmt);
+        if (mysqli_fetch_assoc($checkResult)) {
+            mysqli_stmt_close($checkStmt);
+            redirectWith('myTeam.php', 'error', 'You are already part of a team');
+        }
+        mysqli_stmt_close($checkStmt);
+
+        // Generate unique team code
+        $teamCode = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 6));
+
         $stmt = mysqli_prepare($conn, 
-            "INSERT INTO teams (team_name, project_id, leader_id, department) VALUES (?, ?, ?, ?)"
+            "INSERT INTO teams (team_name, description, team_code, leader_id, department) VALUES (?, ?, ?, ?, ?)"
         );
-        mysqli_stmt_bind_param($stmt, "siis", $teamName, $projectId, $leaderId, $department);
+        mysqli_stmt_bind_param($stmt, "sssis", $teamName, $description, $teamCode, $leaderId, $department);
 
         if (mysqli_stmt_execute($stmt)) {
             $teamId = mysqli_insert_id($conn);
@@ -663,10 +725,193 @@ switch ($action) {
             mysqli_stmt_execute($memberStmt);
             mysqli_stmt_close($memberStmt);
 
-            redirectWith('teams.php', 'success', 'Team created successfully');
+            redirectWith('myTeam.php', 'success', 'Team created! Your team code is: ' . $teamCode);
         } else {
             mysqli_stmt_close($stmt);
-            redirectWith('teams.php', 'error', 'Failed to create team');
+            redirectWith('myTeam.php', 'error', 'Failed to create team');
+        }
+        break;
+
+    // ==========================================
+    // TEAMS: Join team using team code
+    // ==========================================
+    case 'join_team':
+        if (!isset($_SESSION['user_id'])) {
+            redirectWith('login.php', 'error', 'Please login first');
+        }
+
+        $teamCode = strtoupper(trim($_POST['teamCode'] ?? ''));
+        $userId = $_SESSION['user_id'];
+
+        if (empty($teamCode)) {
+            redirectWith('myTeam.php', 'error', 'Team code is required');
+        }
+
+        // Check if student is already in a team
+        $checkStmt = mysqli_prepare($conn, "SELECT tm.team_id FROM team_members tm WHERE tm.user_id = ?");
+        mysqli_stmt_bind_param($checkStmt, "i", $userId);
+        mysqli_stmt_execute($checkStmt);
+        if (mysqli_fetch_assoc(mysqli_stmt_get_result($checkStmt))) {
+            mysqli_stmt_close($checkStmt);
+            redirectWith('myTeam.php', 'error', 'You are already part of a team');
+        }
+        mysqli_stmt_close($checkStmt);
+
+        // Find team by code
+        $teamStmt = mysqli_prepare($conn, "SELECT * FROM teams WHERE team_code = ? AND status = 'open'");
+        mysqli_stmt_bind_param($teamStmt, "s", $teamCode);
+        mysqli_stmt_execute($teamStmt);
+        $team = mysqli_fetch_assoc(mysqli_stmt_get_result($teamStmt));
+        mysqli_stmt_close($teamStmt);
+
+        if (!$team) {
+            redirectWith('myTeam.php', 'error', 'Invalid team code or team is closed');
+        }
+
+        // Check max members
+        $countStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM team_members WHERE team_id = ?");
+        mysqli_stmt_bind_param($countStmt, "i", $team['id']);
+        mysqli_stmt_execute($countStmt);
+        $memberCount = mysqli_fetch_assoc(mysqli_stmt_get_result($countStmt))['cnt'];
+        mysqli_stmt_close($countStmt);
+
+        if ($memberCount >= $team['max_members']) {
+            redirectWith('myTeam.php', 'error', 'Team is full (max ' . $team['max_members'] . ' members)');
+        }
+
+        // Add to team
+        $joinStmt = mysqli_prepare($conn, "INSERT INTO team_members (team_id, user_id, role) VALUES (?, ?, 'member')");
+        mysqli_stmt_bind_param($joinStmt, "ii", $team['id'], $userId);
+
+        if (mysqli_stmt_execute($joinStmt)) {
+            mysqli_stmt_close($joinStmt);
+
+            // Auto-close team if now full
+            if ($memberCount + 1 >= $team['max_members']) {
+                mysqli_query($conn, "UPDATE teams SET status = 'closed' WHERE id = " . $team['id']);
+            }
+
+            redirectWith('myTeam.php', 'success', 'Successfully joined team: ' . $team['team_name']);
+        } else {
+            mysqli_stmt_close($joinStmt);
+            redirectWith('myTeam.php', 'error', 'Failed to join team');
+        }
+        break;
+
+    // ==========================================
+    // TEAMS: Leave team
+    // ==========================================
+    case 'leave_team':
+        if (!isset($_SESSION['user_id'])) {
+            redirectWith('login.php', 'error', 'Please login first');
+        }
+
+        $userId = $_SESSION['user_id'];
+        $teamId = intval($_POST['team_id'] ?? 0);
+
+        // Check if leader
+        $leaderCheck = mysqli_prepare($conn, "SELECT leader_id FROM teams WHERE id = ?");
+        mysqli_stmt_bind_param($leaderCheck, "i", $teamId);
+        mysqli_stmt_execute($leaderCheck);
+        $teamInfo = mysqli_fetch_assoc(mysqli_stmt_get_result($leaderCheck));
+        mysqli_stmt_close($leaderCheck);
+
+        if ($teamInfo && (int)$teamInfo['leader_id'] === (int)$userId) {
+            redirectWith('myTeam.php', 'error', 'Team leader cannot leave. Delete the team instead.');
+        }
+
+        $stmt = mysqli_prepare($conn, "DELETE FROM team_members WHERE team_id = ? AND user_id = ?");
+        mysqli_stmt_bind_param($stmt, "ii", $teamId, $userId);
+
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            // Reopen team if it was closed
+            mysqli_query($conn, "UPDATE teams SET status = 'open' WHERE id = $teamId");
+            redirectWith('myTeam.php', 'success', 'You have left the team');
+        } else {
+            mysqli_stmt_close($stmt);
+            redirectWith('myTeam.php', 'error', 'Failed to leave team');
+        }
+        break;
+
+    // ==========================================
+    // TEAMS: Delete team (leader only)
+    // ==========================================
+    case 'delete_team':
+        if (!isset($_SESSION['user_id'])) {
+            redirectWith('login.php', 'error', 'Please login first');
+        }
+
+        $userId = $_SESSION['user_id'];
+        $teamId = intval($_POST['team_id'] ?? 0);
+
+        // Verify leader
+        $leaderCheck = mysqli_prepare($conn, "SELECT leader_id FROM teams WHERE id = ?");
+        mysqli_stmt_bind_param($leaderCheck, "i", $teamId);
+        mysqli_stmt_execute($leaderCheck);
+        $teamInfo = mysqli_fetch_assoc(mysqli_stmt_get_result($leaderCheck));
+        mysqli_stmt_close($leaderCheck);
+
+        if (!$teamInfo || (int)$teamInfo['leader_id'] !== (int)$userId) {
+            $role = $_SESSION['role'] ?? '';
+            if (!in_array($role, ['admin', 'studentaffairs'])) {
+                redirectWith('myTeam.php', 'error', 'Only the team leader or admin can delete the team');
+            }
+        }
+
+        // Delete team members first, then team
+        mysqli_prepare($conn, "DELETE FROM team_members WHERE team_id = ?");
+        $delMembers = mysqli_prepare($conn, "DELETE FROM team_members WHERE team_id = ?");
+        mysqli_stmt_bind_param($delMembers, "i", $teamId);
+        mysqli_stmt_execute($delMembers);
+        mysqli_stmt_close($delMembers);
+
+        $delTeam = mysqli_prepare($conn, "DELETE FROM teams WHERE id = ?");
+        mysqli_stmt_bind_param($delTeam, "i", $teamId);
+
+        if (mysqli_stmt_execute($delTeam)) {
+            mysqli_stmt_close($delTeam);
+            $redirect = ($_SESSION['role'] === 'student') ? 'myTeam.php' : 'teams.php';
+            redirectWith($redirect, 'success', 'Team deleted successfully');
+        } else {
+            mysqli_stmt_close($delTeam);
+            redirectWith('myTeam.php', 'error', 'Failed to delete team');
+        }
+        break;
+
+    // ==========================================
+    // TEAMS: Remove member (leader only)
+    // ==========================================
+    case 'remove_member':
+        if (!isset($_SESSION['user_id'])) {
+            redirectWith('login.php', 'error', 'Please login first');
+        }
+
+        $leaderId = $_SESSION['user_id'];
+        $memberId = intval($_POST['member_id'] ?? 0);
+        $teamId = intval($_POST['team_id'] ?? 0);
+
+        // Verify requester is the leader
+        $leaderCheck = mysqli_prepare($conn, "SELECT leader_id FROM teams WHERE id = ?");
+        mysqli_stmt_bind_param($leaderCheck, "i", $teamId);
+        mysqli_stmt_execute($leaderCheck);
+        $teamInfo = mysqli_fetch_assoc(mysqli_stmt_get_result($leaderCheck));
+        mysqli_stmt_close($leaderCheck);
+
+        if (!$teamInfo || (int)$teamInfo['leader_id'] !== (int)$leaderId) {
+            redirectWith('myTeam.php', 'error', 'Only the team leader can remove members');
+        }
+
+        $stmt = mysqli_prepare($conn, "DELETE FROM team_members WHERE team_id = ? AND user_id = ?");
+        mysqli_stmt_bind_param($stmt, "ii", $teamId, $memberId);
+
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            mysqli_query($conn, "UPDATE teams SET status = 'open' WHERE id = $teamId");
+            redirectWith('myTeam.php', 'success', 'Member removed from team');
+        } else {
+            mysqli_stmt_close($stmt);
+            redirectWith('myTeam.php', 'error', 'Failed to remove member');
         }
         break;
 

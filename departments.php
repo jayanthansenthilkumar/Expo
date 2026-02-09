@@ -9,31 +9,41 @@ $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Admin');
 
 // Fetch all distinct departments from users and projects tables
-$deptQuery = $pdo->query("SELECT DISTINCT department FROM (SELECT department FROM users WHERE department IS NOT NULL AND department != '' UNION SELECT department FROM projects WHERE department IS NOT NULL AND department != '') as depts ORDER BY department");
-$deptNames = $deptQuery->fetchAll(PDO::FETCH_COLUMN);
+$deptResult = mysqli_query($conn, "SELECT DISTINCT department FROM (SELECT department FROM users WHERE department IS NOT NULL AND department != '' UNION SELECT department FROM projects WHERE department IS NOT NULL AND department != '') as depts ORDER BY department");
+$deptNames = [];
+while ($row = mysqli_fetch_assoc($deptResult)) {
+    $deptNames[] = $row['department'];
+}
 
 $departments = [];
 foreach ($deptNames as $deptName) {
     // Count students
-    $stmtStudents = $pdo->prepare("SELECT COUNT(*) FROM users WHERE role='student' AND department = ?");
-    $stmtStudents->execute([$deptName]);
-    $studentCount = $stmtStudents->fetchColumn();
+    $stmtS = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE role='student' AND department = ?");
+    mysqli_stmt_bind_param($stmtS, 's', $deptName);
+    mysqli_stmt_execute($stmtS);
+    $studentCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmtS))['cnt'];
+    mysqli_stmt_close($stmtS);
 
     // Count projects
-    $stmtProjects = $pdo->prepare("SELECT COUNT(*) FROM projects WHERE department = ?");
-    $stmtProjects->execute([$deptName]);
-    $projectCount = $stmtProjects->fetchColumn();
+    $stmtP = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department = ?");
+    mysqli_stmt_bind_param($stmtP, 's', $deptName);
+    mysqli_stmt_execute($stmtP);
+    $projectCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmtP))['cnt'];
+    mysqli_stmt_close($stmtP);
 
     // Find coordinator
-    $stmtCoord = $pdo->prepare("SELECT name FROM users WHERE role='departmentcoordinator' AND department = ? LIMIT 1");
-    $stmtCoord->execute([$deptName]);
-    $coordinatorName = $stmtCoord->fetchColumn();
+    $stmtC = mysqli_prepare($conn, "SELECT name FROM users WHERE role='departmentcoordinator' AND department = ? LIMIT 1");
+    mysqli_stmt_bind_param($stmtC, 's', $deptName);
+    mysqli_stmt_execute($stmtC);
+    $coordResult = mysqli_fetch_assoc(mysqli_stmt_get_result($stmtC));
+    $coordinatorName = $coordResult ? $coordResult['name'] : null;
+    mysqli_stmt_close($stmtC);
 
     $departments[] = [
         'name' => $deptName,
         'student_count' => $studentCount,
         'project_count' => $projectCount,
-        'coordinator_name' => $coordinatorName ?: null
+        'coordinator_name' => $coordinatorName
     ];
 }
 ?>
@@ -46,6 +56,7 @@ foreach ($deptNames as $deptName) {
     <title>Departments | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>

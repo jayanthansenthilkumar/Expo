@@ -9,17 +9,23 @@ $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Admin');
 
 // Fetch all coordinators with project and review counts
-$coordQuery = $pdo->query("SELECT u.*, (SELECT COUNT(*) FROM projects WHERE department = u.department) as project_count, (SELECT COUNT(*) FROM projects WHERE department = u.department AND reviewed_by = u.id) as reviewed_count FROM users u WHERE u.role = 'departmentcoordinator' ORDER BY u.department");
-$coordinators = $coordQuery->fetchAll(PDO::FETCH_ASSOC);
+$coordResult = mysqli_query($conn, "SELECT u.*, (SELECT COUNT(*) FROM projects WHERE department = u.department) as project_count, (SELECT COUNT(*) FROM projects WHERE department = u.department AND reviewed_by = u.id) as reviewed_count FROM users u WHERE u.role = 'departmentcoordinator' ORDER BY u.department");
+$coordinators = [];
+while ($row = mysqli_fetch_assoc($coordResult)) {
+    $coordinators[] = $row;
+}
 
 // Fetch non-coordinator users for the assign dropdown
-$nonCoordQuery = $pdo->query("SELECT id, name, email, department FROM users WHERE role != 'departmentcoordinator' ORDER BY name");
-$nonCoordinators = $nonCoordQuery->fetchAll(PDO::FETCH_ASSOC);
+$nonCoordResult = mysqli_query($conn, "SELECT id, name, email, department FROM users WHERE role != 'departmentcoordinator' ORDER BY name");
+$nonCoordinators = [];
+while ($row = mysqli_fetch_assoc($nonCoordResult)) {
+    $nonCoordinators[] = $row;
+}
 
 // Flash messages
-$flashSuccess = $_SESSION['flash_success'] ?? null;
-$flashError = $_SESSION['flash_error'] ?? null;
-unset($_SESSION['flash_success'], $_SESSION['flash_error']);
+$successMsg = $_SESSION['success'] ?? '';
+$errorMsg = $_SESSION['error'] ?? '';
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -30,6 +36,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
     <title>Coordinators | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -66,17 +73,6 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                         <i class="ri-add-line"></i> Assign Coordinator
                     </button>
                 </div>
-
-                <?php if ($flashSuccess): ?>
-                    <div class="alert alert-success" style="background:#d4edda;color:#155724;padding:1rem;border-radius:8px;margin-bottom:1rem;">
-                        <?php echo htmlspecialchars($flashSuccess); ?>
-                    </div>
-                <?php endif; ?>
-                <?php if ($flashError): ?>
-                    <div class="alert alert-error" style="background:#f8d7da;color:#721c24;padding:1rem;border-radius:8px;margin-bottom:1rem;">
-                        <?php echo htmlspecialchars($flashError); ?>
-                    </div>
-                <?php endif; ?>
 
                 <div class="coordinators-grid">
                     <?php if (empty($coordinators)): ?>
@@ -147,6 +143,14 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script>
+    <?php if ($successMsg): ?>
+    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+    <?php endif; ?>
+    <?php if ($errorMsg): ?>
+    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+    <?php endif; ?>
+    </script>
 </body>
 
 </html>

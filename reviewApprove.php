@@ -11,45 +11,55 @@ $userDepartment = $_SESSION['department'] ?? '';
 $role = $_SESSION['role'] ?? '';
 
 // Determine if user sees all projects or only their department
-$filterByDept = ($role === 'coordinator' || $role === 'department_coordinator');
+$filterByDept = ($role === 'departmentcoordinator');
 
 // Count pending projects
 if ($filterByDept) {
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM projects WHERE status = 'pending' AND department = ?");
-    $stmt->execute([$userDepartment]);
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'pending' AND department = ?");
+    mysqli_stmt_bind_param($stmt, 's', $userDepartment);
+    mysqli_stmt_execute($stmt);
+    $pendingCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+    mysqli_stmt_close($stmt);
 } else {
-    $stmt = $pdo->query("SELECT COUNT(*) FROM projects WHERE status = 'pending'");
+    $pendingCount = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'pending'"))['cnt'];
 }
-$pendingCount = $stmt->fetchColumn();
 
 // Count approved projects
 if ($filterByDept) {
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM projects WHERE status = 'approved' AND department = ?");
-    $stmt->execute([$userDepartment]);
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved' AND department = ?");
+    mysqli_stmt_bind_param($stmt, 's', $userDepartment);
+    mysqli_stmt_execute($stmt);
+    $approvedCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+    mysqli_stmt_close($stmt);
 } else {
-    $stmt = $pdo->query("SELECT COUNT(*) FROM projects WHERE status = 'approved'");
+    $approvedCount = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved'"))['cnt'];
 }
-$approvedCount = $stmt->fetchColumn();
 
 // Count rejected projects
 if ($filterByDept) {
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM projects WHERE status = 'rejected' AND department = ?");
-    $stmt->execute([$userDepartment]);
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'rejected' AND department = ?");
+    mysqli_stmt_bind_param($stmt, 's', $userDepartment);
+    mysqli_stmt_execute($stmt);
+    $rejectedCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+    mysqli_stmt_close($stmt);
 } else {
-    $stmt = $pdo->query("SELECT COUNT(*) FROM projects WHERE status = 'rejected'");
+    $rejectedCount = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'rejected'"))['cnt'];
 }
-$rejectedCount = $stmt->fetchColumn();
 
 $underReviewCount = 0;
 
 // Fetch pending projects with student name
 if ($filterByDept) {
-    $stmt = $pdo->prepare("SELECT p.*, u.name AS student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'pending' AND p.department = ? ORDER BY p.created_at DESC");
-    $stmt->execute([$userDepartment]);
+    $stmt = mysqli_prepare($conn, "SELECT p.*, u.name AS student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'pending' AND p.department = ? ORDER BY p.created_at DESC");
+    mysqli_stmt_bind_param($stmt, 's', $userDepartment);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
 } else {
-    $stmt = $pdo->query("SELECT p.*, u.name AS student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'pending' ORDER BY p.created_at DESC");
+    $res = mysqli_query($conn, "SELECT p.*, u.name AS student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'pending' ORDER BY p.created_at DESC");
 }
-$pendingProjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$pendingProjects = [];
+while ($row = mysqli_fetch_assoc($res)) { $pendingProjects[] = $row; }
+if (isset($stmt)) { mysqli_stmt_close($stmt); }
 
 // Flash messages
 $flashSuccess = $_SESSION['success'] ?? '';
@@ -65,6 +75,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <title>Review & Approve | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -91,18 +102,6 @@ unset($_SESSION['success'], $_SESSION['error']);
             </header>
 
             <div class="dashboard-content">
-                <?php if ($flashSuccess): ?>
-                    <div class="alert alert-success">
-                        <i class="ri-checkbox-circle-line"></i>
-                        <?php echo htmlspecialchars($flashSuccess); ?>
-                    </div>
-                <?php endif; ?>
-                <?php if ($flashError): ?>
-                    <div class="alert alert-danger">
-                        <i class="ri-error-warning-line"></i>
-                        <?php echo htmlspecialchars($flashError); ?>
-                    </div>
-                <?php endif; ?>
 
                 <div class="review-stats">
                     <div class="stat-card">
@@ -272,6 +271,14 @@ unset($_SESSION['success'], $_SESSION['error']);
         function closeReviewModal() {
             document.getElementById('reviewModal').style.display = 'none';
         }
+    </script>
+    <script>
+    <?php if ($flashSuccess): ?>
+    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($flashSuccess); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+    <?php endif; ?>
+    <?php if ($flashError): ?>
+    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($flashError); ?>', confirmButtonColor: '#2563eb' });
+    <?php endif; ?>
     </script>
 </body>
 

@@ -60,6 +60,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <title>Users | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -90,12 +91,6 @@ unset($_SESSION['success'], $_SESSION['error']);
             </header>
 
             <div class="dashboard-content">
-                <?php if ($successMsg): ?>
-                    <div style="background:#dcfce7;color:#166534;padding:1rem;border-radius:8px;margin-bottom:1rem;"><i class="ri-checkbox-circle-line"></i> <?php echo htmlspecialchars($successMsg); ?></div>
-                <?php endif; ?>
-                <?php if ($errorMsg): ?>
-                    <div style="background:#fef2f2;color:#991b1b;padding:1rem;border-radius:8px;margin-bottom:1rem;"><i class="ri-error-warning-line"></i> <?php echo htmlspecialchars($errorMsg); ?></div>
-                <?php endif; ?>
 
                 <div class="content-header">
                     <h2>All Users</h2>
@@ -156,6 +151,9 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     </td>
                                     <td>
                                         <div style="display:flex;gap:0.5rem;">
+                                            <button type="button" class="btn-icon" title="Edit" onclick="openEditUser(<?php echo $u['id']; ?>, '<?php echo addslashes($u['name']); ?>', '<?php echo addslashes($u['email']); ?>', '<?php echo $u['role']; ?>', '<?php echo addslashes($u['department'] ?? ''); ?>')" style="color:#6366f1;">
+                                                <i class="ri-edit-line"></i>
+                                            </button>
                                             <?php if ($u['id'] != $_SESSION['user_id']): ?>
                                             <form action="sparkBackend.php" method="POST" style="display:inline;">
                                                 <input type="hidden" name="action" value="toggle_user_status">
@@ -164,7 +162,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                                     <i class="ri-<?php echo $u['status']==='active' ? 'lock-line' : 'lock-unlock-line'; ?>"></i>
                                                 </button>
                                             </form>
-                                            <form action="sparkBackend.php" method="POST" style="display:inline;" onsubmit="return confirm('Delete user <?php echo addslashes($u['name']); ?>?');">
+                                            <form action="sparkBackend.php" method="POST" style="display:inline;" class="confirm-delete-form">
                                                 <input type="hidden" name="action" value="delete_user">
                                                 <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
                                                 <button type="submit" class="btn-icon" title="Delete" style="color:#ef4444;"><i class="ri-delete-bin-line"></i></button>
@@ -235,11 +233,90 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </form>
                     </div>
                 </div>
+
+                <!-- Edit User Modal -->
+                <div class="compose-modal" id="editUserModal" style="display:none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Edit User</h3>
+                            <button class="btn-icon" onclick="document.getElementById('editUserModal').style.display='none'"><i class="ri-close-line"></i></button>
+                        </div>
+                        <form action="sparkBackend.php" method="POST">
+                            <input type="hidden" name="action" value="edit_user">
+                            <input type="hidden" name="user_id" id="editUserId">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" name="name" id="editName" required placeholder="Enter full name">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" name="email" id="editEmail" required placeholder="Enter email">
+                            </div>
+                            <div class="form-group">
+                                <label>Role</label>
+                                <select name="role" id="editRole" required>
+                                    <option value="student">Student</option>
+                                    <option value="departmentcoordinator">Department Coordinator</option>
+                                    <option value="studentaffairs">Student Affairs</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Department</label>
+                                <select name="department" id="editDept">
+                                    <option value="">Select Department</option>
+                                    <?php foreach ($departments as $dept): ?>
+                                    <option value="<?php echo $dept; ?>"><?php echo $dept; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" class="btn-secondary" onclick="document.getElementById('editUserModal').style.display='none'">Cancel</button>
+                                <button type="submit" class="btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script>
+    function openEditUser(id, name, email, role, department) {
+        document.getElementById('editUserId').value = id;
+        document.getElementById('editName').value = name;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editRole').value = role;
+        document.getElementById('editDept').value = department;
+        document.getElementById('editUserModal').style.display = 'flex';
+    }
+    </script>
+    <script>
+    <?php if ($successMsg): ?>
+    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+    <?php endif; ?>
+    <?php if ($errorMsg): ?>
+    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+    <?php endif; ?>
+    document.querySelectorAll('.confirm-delete-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formEl = this;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) formEl.submit();
+            });
+        });
+    });
+    </script>
 </body>
 
 </html>

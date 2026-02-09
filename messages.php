@@ -69,6 +69,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <title>Messages | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -99,16 +100,6 @@ unset($_SESSION['success'], $_SESSION['error']);
             </header>
 
             <div class="dashboard-content">
-                <?php if ($successMsg): ?>
-                    <div class="alert alert-success" style="background:#dcfce7;color:#166534;padding:1rem;border-radius:8px;margin-bottom:1rem;">
-                        <i class="ri-checkbox-circle-line"></i> <?php echo htmlspecialchars($successMsg); ?>
-                    </div>
-                <?php endif; ?>
-                <?php if ($errorMsg): ?>
-                    <div class="alert alert-error" style="background:#fef2f2;color:#991b1b;padding:1rem;border-radius:8px;margin-bottom:1rem;">
-                        <i class="ri-error-warning-line"></i> <?php echo htmlspecialchars($errorMsg); ?>
-                    </div>
-                <?php endif; ?>
 
                 <div class="messages-container">
                     <div class="messages-sidebar">
@@ -220,6 +211,14 @@ unset($_SESSION['success'], $_SESSION['error']);
         function closeModal() {
             document.getElementById('composeModal').style.display = 'none';
         }
+    </script>
+    <script>
+    <?php if ($successMsg): ?>
+    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+    <?php endif; ?>
+    <?php if ($errorMsg): ?>
+    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+    <?php endif; ?>
     </script>
 </body>
 

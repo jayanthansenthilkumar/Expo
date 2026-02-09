@@ -30,6 +30,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <title>Announcements | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -60,12 +61,6 @@ unset($_SESSION['success'], $_SESSION['error']);
             </header>
 
             <div class="dashboard-content">
-                <?php if ($successMsg): ?>
-                    <div style="background:#dcfce7;color:#166534;padding:1rem;border-radius:8px;margin-bottom:1rem;"><i class="ri-checkbox-circle-line"></i> <?php echo htmlspecialchars($successMsg); ?></div>
-                <?php endif; ?>
-                <?php if ($errorMsg): ?>
-                    <div style="background:#fef2f2;color:#991b1b;padding:1rem;border-radius:8px;margin-bottom:1rem;"><i class="ri-error-warning-line"></i> <?php echo htmlspecialchars($errorMsg); ?></div>
-                <?php endif; ?>
 
                 <?php if ($canCreate): ?>
                 <div class="content-header" style="margin-bottom:1.5rem;">
@@ -98,7 +93,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <span><i class="ri-user-line"></i> <?php echo htmlspecialchars($ann['author_name']); ?></span>
                                 <span style="color:var(--text-muted);font-size:0.8rem;">For: <?php echo ucfirst($ann['target_role']); ?></span>
                                 <?php if ($canCreate): ?>
-                                <form action="sparkBackend.php" method="POST" style="display:inline;" onsubmit="return confirm('Delete this announcement?');">
+                                <form action="sparkBackend.php" method="POST" style="display:inline;" class="confirm-delete-form">
                                     <input type="hidden" name="action" value="delete_announcement">
                                     <input type="hidden" name="announcement_id" value="<?php echo $ann['id']; ?>">
                                     <button type="submit" class="btn-icon" style="color:#ef4444;font-size:0.85rem;"><i class="ri-delete-bin-line"></i></button>
@@ -155,6 +150,31 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script>
+    <?php if ($successMsg): ?>
+    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+    <?php endif; ?>
+    <?php if ($errorMsg): ?>
+    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+    <?php endif; ?>
+    document.querySelectorAll('.confirm-delete-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formEl = this;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) formEl.submit();
+            });
+        });
+    });
+    </script>
 </body>
 
 </html>

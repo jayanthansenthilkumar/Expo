@@ -8,6 +8,7 @@ $menus = [
     'student' => [
         'Main' => [
             ['link' => 'studentDashboard.php', 'icon' => 'ri-dashboard-line', 'text' => 'Dashboard'],
+            ['link' => 'myTeam.php', 'icon' => 'ri-team-line', 'text' => 'My Team'],
             ['link' => 'myProjects.php', 'icon' => 'ri-folder-line', 'text' => 'My Projects'],
             ['link' => 'submitProject.php', 'icon' => 'ri-add-circle-line', 'text' => 'Submit Project']
         ],

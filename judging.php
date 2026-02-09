@@ -63,6 +63,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
     <title>Judging | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -95,12 +96,6 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                         <i class="ri-add-line"></i> Add Judge
                     </button>
                 </div>
-
-                <?php if ($flashMessage): ?>
-                <div class="alert alert-<?php echo $flashType; ?>" style="padding: 12px 16px; margin-bottom: 20px; border-radius: 8px; background: <?php echo $flashType === 'success' ? '#d4edda' : '#f8d7da'; ?>; color: <?php echo $flashType === 'success' ? '#155724' : '#721c24'; ?>;">
-                    <?php echo htmlspecialchars($flashMessage); ?>
-                </div>
-                <?php endif; ?>
 
                 <div class="judging-section">
                     <div class="judging-criteria">
@@ -224,6 +219,11 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
         document.getElementById('scoreModal').addEventListener('click', function(e) {
             if (e.target === this) closeScoreModal();
         });
+    </script>
+    <script>
+    <?php if ($flashMessage): ?>
+    Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo addslashes($flashMessage); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
+    <?php endif; ?>
     </script>
 </body>
 

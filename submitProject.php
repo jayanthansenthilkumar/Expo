@@ -7,6 +7,28 @@ checkUserAccess();
 $userName = $_SESSION['name'] ?? 'Student';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Student');
+$userId = $_SESSION['user_id'];
+
+// Check if student has a team
+$myTeam = null;
+$teamCheck = mysqli_prepare($conn, "SELECT t.* FROM team_members tm JOIN teams t ON tm.team_id = t.id WHERE tm.user_id = ?");
+mysqli_stmt_bind_param($teamCheck, "i", $userId);
+mysqli_stmt_execute($teamCheck);
+$myTeam = mysqli_fetch_assoc(mysqli_stmt_get_result($teamCheck));
+mysqli_stmt_close($teamCheck);
+
+// Get team members for display
+$teamMemberNames = '';
+if ($myTeam) {
+    $memberStmt = mysqli_prepare($conn, "SELECT u.name FROM team_members tm JOIN users u ON tm.user_id = u.id WHERE tm.team_id = ? AND tm.user_id != ?");
+    mysqli_stmt_bind_param($memberStmt, "ii", $myTeam['id'], $userId);
+    mysqli_stmt_execute($memberStmt);
+    $memberRes = mysqli_stmt_get_result($memberStmt);
+    $names = [];
+    while ($row = mysqli_fetch_assoc($memberRes)) { $names[] = $row['name']; }
+    $teamMemberNames = implode(', ', $names);
+    mysqli_stmt_close($memberStmt);
+}
 
 $successMsg = $_SESSION['success'] ?? '';
 $errorMsg = $_SESSION['error'] ?? '';
@@ -21,6 +43,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <title>Submit Project | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -47,6 +70,19 @@ unset($_SESSION['success'], $_SESSION['error']);
             </header>
 
             <div class="dashboard-content">
+                <?php if (!$myTeam): ?>
+                <div style="background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);color:#92400e;padding:1.25rem 1.5rem;border-radius:12px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <i class="ri-error-warning-line" style="font-size:1.5rem;"></i>
+                        <div>
+                            <strong>Team Required!</strong>
+                            <p style="font-size:0.85rem;opacity:0.9;">You need to be part of a team to submit projects.</p>
+                        </div>
+                    </div>
+                    <a href="myTeam.php" style="background:#92400e;color:#fff;padding:0.5rem 1.25rem;border-radius:8px;font-weight:600;text-decoration:none;font-size:0.9rem;">Join/Create Team</a>
+                </div>
+                <?php endif; ?>
+
                 <div class="form-container">
                     <div class="form-card">
                         <h2>Project Submission Form</h2>
@@ -78,9 +114,16 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <textarea id="projectDescription" name="projectDescription" rows="5" required placeholder="Describe your project in detail"></textarea>
                             </div>
 
+                            <?php if ($myTeam): ?>
+                            <div class="form-group">
+                                <label>Team</label>
+                                <input type="text" value="<?php echo htmlspecialchars($myTeam['team_name']); ?>" disabled style="background:var(--bg-surface);">
+                            </div>
+                            <?php endif; ?>
+
                             <div class="form-group">
                                 <label for="teamMembers">Team Members</label>
-                                <input type="text" id="teamMembers" name="teamMembers" placeholder="Enter team member names (comma separated)">
+                                <input type="text" id="teamMembers" name="teamMembers" placeholder="Enter team member names (comma separated)" value="<?php echo htmlspecialchars($teamMemberNames); ?>">
                             </div>
 
                             <div class="form-group">
@@ -94,7 +137,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <div class="form-actions">
-                                <button type="submit" class="btn-primary">Submit Project</button>
+                                <button type="submit" class="btn-primary" <?php echo !$myTeam ? 'disabled title="Join a team first"' : ''; ?>>Submit Project</button>
                                 <a href="myProjects.php" class="btn-secondary">Cancel</a>
                             </div>
                         </form>
@@ -105,6 +148,31 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script>
+    <?php if ($successMsg): ?>
+    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+    <?php endif; ?>
+    <?php if ($errorMsg): ?>
+    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+    <?php endif; ?>
+
+    // SweetAlert form submission confirmation
+    document.querySelector('form[action="sparkBackend.php"]')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        Swal.fire({
+            title: 'Submit Project?',
+            text: 'Are you sure you want to submit this project for review?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#2563eb',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, submit it!'
+        }).then((result) => {
+            if (result.isConfirmed) form.submit();
+        });
+    });
+    </script>
 </body>
 
 </html>

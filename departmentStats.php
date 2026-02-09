@@ -10,34 +10,50 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator'
 $userDept = $_SESSION['department'] ?? '';
 
 // Count total projects in department
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM projects WHERE department = ?");
-$stmt->execute([$userDept]);
-$totalProjects = $stmt->fetchColumn();
+$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department = ?");
+mysqli_stmt_bind_param($stmt, 's', $userDept);
+mysqli_stmt_execute($stmt);
+$totalProjects = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+mysqli_stmt_close($stmt);
 
 // Count students in department
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE department = ? AND role = 'student'");
-$stmt->execute([$userDept]);
-$totalStudents = $stmt->fetchColumn();
+$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department = ? AND role = 'student'");
+mysqli_stmt_bind_param($stmt, 's', $userDept);
+mysqli_stmt_execute($stmt);
+$totalStudents = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+mysqli_stmt_close($stmt);
 
 // Count pending projects in department
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM projects WHERE department = ? AND status = 'pending'");
-$stmt->execute([$userDept]);
-$pendingProjects = $stmt->fetchColumn();
+$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department = ? AND status = 'pending'");
+mysqli_stmt_bind_param($stmt, 's', $userDept);
+mysqli_stmt_execute($stmt);
+$pendingProjects = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+mysqli_stmt_close($stmt);
 
 // Count teams in department
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM teams WHERE department = ?");
-$stmt->execute([$userDept]);
-$totalTeams = $stmt->fetchColumn();
+$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM teams WHERE department = ?");
+mysqli_stmt_bind_param($stmt, 's', $userDept);
+mysqli_stmt_execute($stmt);
+$totalTeams = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+mysqli_stmt_close($stmt);
 
 // Category breakdown
-$stmt = $pdo->prepare("SELECT category, COUNT(*) as cnt FROM projects WHERE department = ? GROUP BY category");
-$stmt->execute([$userDept]);
-$categoryBreakdown = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = mysqli_prepare($conn, "SELECT category, COUNT(*) as cnt FROM projects WHERE department = ? GROUP BY category");
+mysqli_stmt_bind_param($stmt, 's', $userDept);
+mysqli_stmt_execute($stmt);
+$catResult = mysqli_stmt_get_result($stmt);
+$categoryBreakdown = [];
+while ($row = mysqli_fetch_assoc($catResult)) { $categoryBreakdown[] = $row; }
+mysqli_stmt_close($stmt);
 
 // Status breakdown
-$stmt = $pdo->prepare("SELECT status, COUNT(*) as cnt FROM projects WHERE department = ? GROUP BY status");
-$stmt->execute([$userDept]);
-$statusBreakdown = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = mysqli_prepare($conn, "SELECT status, COUNT(*) as cnt FROM projects WHERE department = ? GROUP BY status");
+mysqli_stmt_bind_param($stmt, 's', $userDept);
+mysqli_stmt_execute($stmt);
+$statResult = mysqli_stmt_get_result($stmt);
+$statusBreakdown = [];
+while ($row = mysqli_fetch_assoc($statResult)) { $statusBreakdown[] = $row; }
+mysqli_stmt_close($stmt);
 
 // Build status counts
 $approvedCount = 0;
@@ -58,6 +74,7 @@ foreach ($statusBreakdown as $row) {
     <title>Department Stats | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>

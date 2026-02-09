@@ -55,9 +55,13 @@ CREATE TABLE IF NOT EXISTS projects (
 CREATE TABLE IF NOT EXISTS teams (
     id INT AUTO_INCREMENT PRIMARY KEY,
     team_name VARCHAR(100) NOT NULL,
+    description TEXT,
+    team_code VARCHAR(10) UNIQUE,
     project_id INT DEFAULT NULL,
     leader_id INT NOT NULL,
     department VARCHAR(50) DEFAULT NULL,
+    max_members INT DEFAULT 4,
+    status ENUM('open', 'closed') DEFAULT 'open',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL,
     FOREIGN KEY (leader_id) REFERENCES users(id) ON DELETE CASCADE

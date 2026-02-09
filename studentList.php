@@ -15,13 +15,15 @@ $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $perPage;
 
 // Count students in department
-$countStmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE department = ? AND role = 'student'");
-$countStmt->execute([$department]);
-$totalStudents = (int)$countStmt->fetchColumn();
+$countStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department = ? AND role = 'student'");
+mysqli_stmt_bind_param($countStmt, 's', $department);
+mysqli_stmt_execute($countStmt);
+$totalStudents = (int)mysqli_fetch_assoc(mysqli_stmt_get_result($countStmt))['cnt'];
+mysqli_stmt_close($countStmt);
 $totalPages = max(1, ceil($totalStudents / $perPage));
 
 // Fetch students with project count
-$stmt = $pdo->prepare("
+$stmt = mysqli_prepare($conn, "
     SELECT u.*, 
         (SELECT COUNT(*) FROM projects WHERE student_id = u.id) AS project_count
     FROM users u
@@ -29,13 +31,17 @@ $stmt = $pdo->prepare("
     ORDER BY u.created_at DESC
     LIMIT ? OFFSET ?
 ");
-$stmt->execute([$department, $perPage, $offset]);
-$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+mysqli_stmt_bind_param($stmt, 'sii', $department, $perPage, $offset);
+mysqli_stmt_execute($stmt);
+$stuResult = mysqli_stmt_get_result($stmt);
+$students = [];
+while ($row = mysqli_fetch_assoc($stuResult)) { $students[] = $row; }
+mysqli_stmt_close($stmt);
 
 // Flash messages
-$flashMessage = $_SESSION['flash_message'] ?? null;
-$flashType = $_SESSION['flash_type'] ?? 'info';
-unset($_SESSION['flash_message'], $_SESSION['flash_type']);
+$successMsg = $_SESSION['success'] ?? '';
+$errorMsg = $_SESSION['error'] ?? '';
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -46,6 +52,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
     <title>Student List | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -76,14 +83,9 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
             </header>
 
             <div class="dashboard-content">
-                <?php if ($flashMessage): ?>
-                    <div class="alert alert-<?php echo htmlspecialchars($flashType); ?>">
-                        <?php echo htmlspecialchars($flashMessage); ?>
-                    </div>
-                <?php endif; ?>
 
                 <div class="content-header">
-                    <h2>Students in Your Department <span class="badge"><?php echo $totalStudents; ?></span></h2>
+                    <h2>Students in Your Department - <span class="badge"><?php echo $totalStudents; ?></span></h2>
                     <div class="header-actions">
                         <button class="btn-secondary">
                             <i class="ri-download-line"></i> Export List
@@ -155,6 +157,14 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script>
+    <?php if ($successMsg): ?>
+    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+    <?php endif; ?>
+    <?php if ($errorMsg): ?>
+    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+    <?php endif; ?>
+    </script>
 </body>
 
 </html>
