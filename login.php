@@ -30,14 +30,14 @@
                 <h2>Welcome Back</h2>
                 <p style="color: var(--text-muted);">Login to manage your projects</p>
             </div>
-            <form action="studentDashboard.php"> <!-- For demo purposes linking to dashboard -->
+            <form id="loginForm">
                 <div class="form-group">
                     <label class="form-label">Email Address</label>
-                    <input type="email" class="form-input" placeholder="student@college.edu" required>
+                    <input type="email" name="email" class="form-input" placeholder="student@college.edu" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Password</label>
-                    <input type="password" class="form-input" placeholder="••••••••" required>
+                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
                 </div>
                 <div class="form-group" style="display: flex; justify-content: space-between; font-size: 0.9rem;">
                     <label style="display: flex; align-items: center; gap: 0.5rem;">
@@ -63,6 +63,33 @@
         </div>
     </footer>
 
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#loginForm').on('submit', function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'api/login.php',
+                    data: $(this).serialize(),
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            window.location.href = response.redirect;
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('An error occurred. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

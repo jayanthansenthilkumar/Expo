@@ -30,24 +30,24 @@
                 <h2>Create Account</h2>
                 <p style="color: var(--text-muted);">Register your team or join as a viewer</p>
             </div>
-            <form action="login.php">
+            <form id="registerForm">
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">First Name</label>
-                        <input type="text" class="form-input" placeholder="John" required>
+                        <input type="text" name="first_name" class="form-input" placeholder="John" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Last Name</label>
-                        <input type="text" class="form-input" placeholder="Doe" required>
+                        <input type="text" name="last_name" class="form-input" placeholder="Doe" required>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">College / Institution</label>
-                    <input type="text" class="form-input" placeholder="Institute of Technology" required>
+                    <input type="text" name="college" class="form-input" placeholder="Institute of Technology" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Role</label>
-                    <select class="form-select" required>
+                    <select name="role" class="form-select" required>
                         <option value="">Select Role...</option>
                         <option value="student">Student Innovator</option>
                         <option value="advisor">Faculty / Advisor</option>
@@ -56,11 +56,11 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Email Address</label>
-                    <input type="email" class="form-input" placeholder="john@example.com" required>
+                    <input type="email" name="email" class="form-input" placeholder="john@example.com" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Password</label>
-                    <input type="password" class="form-input" placeholder="Create a password" required>
+                    <input type="password" name="password" class="form-input" placeholder="Create a password" required>
                 </div>
 
                 <button type="submit" class="btn-primary" style="width: 100%; border: none; cursor: pointer;">Create
@@ -81,6 +81,34 @@
         </div>
     </footer>
 
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#registerForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                $.ajax({
+                    type: 'POST',
+                    url: 'api/register.php',
+                    data: $(this).serialize(),
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            alert(response.message);
+                            window.location.href = 'login.php';
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

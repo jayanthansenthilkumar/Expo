@@ -7,10 +7,17 @@
     <title>My Profile | SPARK'26</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-
 </head>
 
 <body>
+
+    <?php
+    session_start();
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
+    }
+    ?>
 
     <nav class="navbar">
         <div class="container nav-container">
@@ -19,7 +26,7 @@
                 SPARK <span>'26</span>
             </a>
             <div class="nav-menu">
-                <a href="index.php" class="nav-link">Home</a>
+                <a href="studentDashboard.php" class="nav-link">Dashboard</a>
             </div>
             <a href="login.php" class="btn-outline">Logout</a>
         </div>
@@ -40,8 +47,8 @@
                 </div>
             </div>
 
-            <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">Alex Morgan</h1>
-            <p style="color: var(--text-muted); margin-bottom: 1rem;">Computer Science Student • Class of 2026</p>
+            <h1 id="pName" style="font-size: 1.8rem; margin-bottom: 0.25rem;">Loading...</h1>
+            <p id="pRole" style="color: var(--text-muted); margin-bottom: 1rem;">...</p>
             <div style="display: flex; gap: 0.5rem;">
                 <button class="btn-outline" style="padding: 0.4rem 1rem; font-size: 0.9rem;">Edit Profile</button>
             </div>
@@ -59,18 +66,18 @@
                 <div class="info-row">
                     <div>
                         <div class="info-label">Email Address</div>
-                        <div class="info-val">alex.morgan@student.college.edu</div>
+                        <div class="info-val" id="pEmail">-</div>
                     </div>
                     <div>
                         <div class="info-label">Phone</div>
-                        <div class="info-val">+1 (555) 123-4567</div>
+                        <div class="info-val">+1 (555) 000-0000</div>
                     </div>
                 </div>
 
                 <div class="info-row">
                     <div>
-                        <div class="info-label">Student ID</div>
-                        <div class="info-val">CS-2022-045</div>
+                        <div class="info-label">College</div>
+                        <div class="info-val" id="pCollege">-</div>
                     </div>
                     <div>
                         <div class="info-label">Department</div>
@@ -83,7 +90,7 @@
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                         <span
                             style="padding: 0.5rem 1rem; background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">
-                            🏆 Hackathon Winner 2025
+                            🏆 Hackathon Participant
                         </span>
                         <span
                             style="padding: 0.5rem 1rem; background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">
@@ -105,6 +112,32 @@
             </div>
         </div>
     </footer>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: 'api/get_profile.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    if (response.status === 'success') {
+                        const user = response.data;
+                        $('#pName').text(user.first_name + ' ' + user.last_name);
+                        $('#pRole').text(user.role.charAt(0).toUpperCase() + user.role.slice(1) + ' • ' + (user.college || 'College'));
+                        $('#pEmail').text(user.email);
+                        $('#pCollege').text(user.college || 'Not set');
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    console.error('Error fetching profile');
+                }
+            });
+        });
+    </script>
 
 </body>
 

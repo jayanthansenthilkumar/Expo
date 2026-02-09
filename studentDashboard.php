@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'student') {
+    header("Location: login.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -44,7 +51,9 @@
                 <!-- Profile -->
                 <div class="header-profile" onclick="toggleDropdown()">
                     <div class="user-info">
-                        <span class="user-name">Alex Morgan</span>
+                        <span class="user-name">
+                            <?php echo htmlspecialchars($_SESSION['user_name']); ?>
+                        </span>
                         <span class="user-role">Student</span>
                     </div>
                     <div class="user-avatar">AM</div>
@@ -63,7 +72,9 @@
                 <!-- Welcome Card -->
                 <div class="welcome-card">
                     <div class="welcome-text">
-                        <h2>Hello, Alex! 👋</h2>
+                        <h2>Hello,
+                            <?php echo htmlspecialchars(explode(' ', $_SESSION['user_name'])[0]); ?>! 👋
+                        </h2>
                         <p>You have 1 project pending review. Check the feedback from your advisor.</p>
                     </div>
                     <div class="welcome-decoration">
