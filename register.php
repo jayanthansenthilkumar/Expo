@@ -21,22 +21,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Invalid email address';
     } else {
-        try {
-            // Check if username, email or reg_no already exists
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ? OR reg_no = ?");
-            $stmt->execute([$username, $email, $reg_no]);
+        // Check if username, email or reg_no already exists
+        $checkQuery = "SELECT id FROM users WHERE username = ? OR email = ? OR reg_no = ?";
+        $stmt = mysqli_prepare($conn, $checkQuery);
+        mysqli_stmt_bind_param($stmt, "sss", $username, $email, $reg_no);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
+        if (mysqli_fetch_assoc($result)) {
+            $error = 'Username, Email or Register Number already exists';
+        } else {
+            // Insert new user
+            $insertQuery = "INSERT INTO users (name, username, department, year, reg_no, email, password, role) VALUES (?, ?, ?, ?, ?, ?, ?, 'student')";
+            $stmt = mysqli_prepare($conn, $insertQuery);
+            mysqli_stmt_bind_param($stmt, "sssssss", $name, $username, $department, $year, $reg_no, $email, $password);
             
-            if ($stmt->fetch()) {
-                $error = 'Username, Email or Register Number already exists';
-            } else {
-                // Insert new user
-                $stmt = $pdo->prepare("INSERT INTO users (name, username, department, year, reg_no, email, password, role) VALUES (?, ?, ?, ?, ?, ?, ?, 'student')");
-                $stmt->execute([$name, $username, $department, $year, $reg_no, $email, $password]);
+            if (mysqli_stmt_execute($stmt)) {
                 $success = 'Registration successful! You can now login.';
+            } else {
+                $error = 'Registration failed. Please try again.';
             }
-        } catch (PDOException $e) {
-            $error = 'Registration failed. Please try again.';
         }
+        mysqli_stmt_close($stmt);
     }
 }
 ?>

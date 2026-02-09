@@ -11,46 +11,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($username) || empty($password)) {
         $error = 'Please enter both username and password';
     } else {
-        try {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
-            $stmt->execute([$username, $password]);
-            $user = $stmt->fetch();
+        $query = "SELECT * FROM users WHERE username = ? AND password = ?";
+        $stmt = mysqli_prepare($conn, $query);
+        mysqli_stmt_bind_param($stmt, "ss", $username, $password);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $user = mysqli_fetch_assoc($result);
 
-            if ($user) {
-                // Set session variables
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['name'] = $user['name'];
-                $_SESSION['role'] = $user['role'];
-                $_SESSION['department'] = $user['department'];
+        if ($user) {
+            // Set session variables
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['name'] = $user['name'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['department'] = $user['department'];
 
-                // Role-based redirection
-                $redirectUrl = '';
-                switch ($user['role']) {
-                    case 'student':
-                        $redirectUrl = 'studentDashboard.php';
-                        break;
-                    case 'studentaffairs':
-                        $redirectUrl = 'studentAffairs.php';
-                        break;
-                    case 'departmentcoordinator':
-                        $redirectUrl = 'departmentCoordinator.php';
-                        break;
-                    case 'admin':
-                        $redirectUrl = 'sparkAdmin.php';
-                        break;
-                    default:
-                        $redirectUrl = 'studentDashboard.php';
-                }
-
-                // Store redirect URL for JavaScript
-                $success = true;
-            } else {
-                $error = 'Invalid username or password';
+            // Role-based redirection
+            $redirectUrl = '';
+            switch ($user['role']) {
+                case 'student':
+                    $redirectUrl = 'studentDashboard.php';
+                    break;
+                case 'studentaffairs':
+                    $redirectUrl = 'studentAffairs.php';
+                    break;
+                case 'departmentcoordinator':
+                    $redirectUrl = 'departmentCoordinator.php';
+                    break;
+                case 'admin':
+                    $redirectUrl = 'sparkAdmin.php';
+                    break;
+                default:
+                    $redirectUrl = 'studentDashboard.php';
             }
-        } catch (PDOException $e) {
-            $error = 'Login failed. Please try again.';
+
+            // Store redirect URL for JavaScript
+            $success = true;
+        } else {
+            $error = 'Invalid username or password';
         }
+        mysqli_stmt_close($stmt);
     }
 }
 ?>
