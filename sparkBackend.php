@@ -502,7 +502,7 @@ switch ($action) {
     // ADMIN: Add user
     // ==========================================
     case 'add_user':
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'studentaffairs'])) {
             redirectWith('login.php', 'error', 'Unauthorized');
         }
 
@@ -545,7 +545,7 @@ switch ($action) {
     // ADMIN: Delete user
     // ==========================================
     case 'delete_user':
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'studentaffairs'])) {
             redirectWith('login.php', 'error', 'Unauthorized');
         }
 
@@ -572,7 +572,7 @@ switch ($action) {
     // ADMIN: Update user role
     // ==========================================
     case 'update_user_role':
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'studentaffairs'])) {
             redirectWith('login.php', 'error', 'Unauthorized');
         }
 
@@ -601,7 +601,7 @@ switch ($action) {
     // ADMIN: Toggle user status
     // ==========================================
     case 'toggle_user_status':
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'studentaffairs'])) {
             redirectWith('login.php', 'error', 'Unauthorized');
         }
 
@@ -674,7 +674,7 @@ switch ($action) {
     // ADMIN: Assign coordinator to department
     // ==========================================
     case 'assign_coordinator':
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'studentaffairs'])) {
             redirectWith('login.php', 'error', 'Unauthorized');
         }
 

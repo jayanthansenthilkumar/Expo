@@ -145,7 +145,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         </td>
                                         <td><?php echo date('M d, Y', strtotime($student['created_at'])); ?></td>
                                         <td>
-                                            <?php if (($_SESSION['role'] ?? '') === 'admin'): ?>
+                                            <?php if (in_array($_SESSION['role'] ?? '', ['admin', 'studentaffairs'])): ?>
                                                 <form action="sparkBackend.php" method="POST" style="display:inline;">
                                                     <input type="hidden" name="action" value="toggle_user_status">
                                                     <input type="hidden" name="user_id" value="<?php echo $student['id']; ?>">

@@ -186,7 +186,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                                 <button type="submit" class="btn-icon" title="Reject" style="color:#ef4444;"><i class="ri-close-circle-line"></i></button>
                                             </form>
                                             <?php endif; ?>
-                                            <?php if ($_SESSION['role'] === 'admin'): ?>
+                                            <?php if (in_array($_SESSION['role'], ['admin', 'studentaffairs'])): ?>
                                             <form action="sparkBackend.php" method="POST" style="display:inline;" onsubmit="return confirm('Delete this project?');">
                                                 <input type="hidden" name="action" value="delete_project">
                                                 <input type="hidden" name="project_id" value="<?php echo $p['id']; ?>">

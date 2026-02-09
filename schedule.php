@@ -8,7 +8,7 @@ $userName = $_SESSION['name'] ?? 'User';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
 $role = $_SESSION['role'];
-$canManage = in_array($role, ['admin']);
+$canManage = in_array($role, ['admin', 'studentaffairs']);
 
 // Fetch schedule events
 $events = [];

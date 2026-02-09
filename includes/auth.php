@@ -52,7 +52,9 @@ function checkUserAccess($isPublic = false)
         'studentaffairs' => [
             'studentAffairs.php', 'analytics.php', 'allProjects.php', 'approvals.php', 
             'students.php', 'announcements.php', 'messages.php', 'profile.php', 
-            'settings.php', 'logout.php', 'index.php'
+            'settings.php', 'logout.php', 'index.php',
+            'users.php', 'departments.php', 'coordinators.php', 'schedule.php',
+            'judging.php', 'database.php', 'guidelines.php'
         ],
         'student' => [
             'studentDashboard.php', 'myProjects.php', 'submitProject.php', 'schedule.php', 
