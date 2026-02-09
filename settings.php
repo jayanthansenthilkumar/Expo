@@ -8,6 +8,11 @@ $userName = $_SESSION['name'] ?? 'User';
 $userEmail = $_SESSION['email'] ?? '';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
+
+// Flash messages
+$success = $_SESSION['success'] ?? '';
+$error = $_SESSION['error'] ?? '';
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -44,6 +49,12 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
             </header>
 
             <div class="dashboard-content">
+                <?php if ($success): ?>
+                    <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
+                <?php endif; ?>
+                <?php if ($error): ?>
+                    <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+                <?php endif; ?>
                 <div class="settings-container">
                     <div class="settings-section">
                         <h3><i class="ri-user-line"></i> Profile Settings</h3>

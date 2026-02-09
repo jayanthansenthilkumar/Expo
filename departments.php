@@ -7,6 +7,35 @@ checkUserAccess();
 $userName = $_SESSION['name'] ?? 'Admin';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Admin');
+
+// Fetch all distinct departments from users and projects tables
+$deptQuery = $pdo->query("SELECT DISTINCT department FROM (SELECT department FROM users WHERE department IS NOT NULL AND department != '' UNION SELECT department FROM projects WHERE department IS NOT NULL AND department != '') as depts ORDER BY department");
+$deptNames = $deptQuery->fetchAll(PDO::FETCH_COLUMN);
+
+$departments = [];
+foreach ($deptNames as $deptName) {
+    // Count students
+    $stmtStudents = $pdo->prepare("SELECT COUNT(*) FROM users WHERE role='student' AND department = ?");
+    $stmtStudents->execute([$deptName]);
+    $studentCount = $stmtStudents->fetchColumn();
+
+    // Count projects
+    $stmtProjects = $pdo->prepare("SELECT COUNT(*) FROM projects WHERE department = ?");
+    $stmtProjects->execute([$deptName]);
+    $projectCount = $stmtProjects->fetchColumn();
+
+    // Find coordinator
+    $stmtCoord = $pdo->prepare("SELECT name FROM users WHERE role='departmentcoordinator' AND department = ? LIMIT 1");
+    $stmtCoord->execute([$deptName]);
+    $coordinatorName = $stmtCoord->fetchColumn();
+
+    $departments[] = [
+        'name' => $deptName,
+        'student_count' => $studentCount,
+        'project_count' => $projectCount,
+        'coordinator_name' => $coordinatorName ?: null
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -51,64 +80,36 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Admin');
                 </div>
 
                 <div class="departments-grid">
-                    <div class="department-card">
-                        <div class="dept-icon">
-                            <i class="ri-computer-line"></i>
+                    <?php if (empty($departments)): ?>
+                        <div class="empty-state" style="grid-column: 1/-1; text-align:center; padding:2rem;">
+                            <i class="ri-building-line" style="font-size:3rem; color:var(--text-secondary);"></i>
+                            <p>No departments found.</p>
                         </div>
-                        <h3>Computer Science</h3>
-                        <div class="dept-stats">
-                            <span><i class="ri-user-line"></i> 0 Students</span>
-                            <span><i class="ri-folder-line"></i> 0 Projects</span>
+                    <?php else: ?>
+                        <?php
+                        $deptIcons = ['ri-computer-line', 'ri-cpu-line', 'ri-settings-line', 'ri-building-line', 'ri-flask-line'];
+                        foreach ($departments as $index => $dept):
+                            $icon = $deptIcons[$index % count($deptIcons)];
+                        ?>
+                        <div class="department-card">
+                            <div class="dept-icon">
+                                <i class="<?php echo $icon; ?>"></i>
+                            </div>
+                            <h3><?php echo htmlspecialchars($dept['name']); ?></h3>
+                            <div class="dept-stats">
+                                <span><i class="ri-user-line"></i> <?php echo (int)$dept['student_count']; ?> Students</span>
+                                <span><i class="ri-folder-line"></i> <?php echo (int)$dept['project_count']; ?> Projects</span>
+                            </div>
+                            <div class="dept-coordinator">
+                                <span>Coordinator: <?php echo $dept['coordinator_name'] ? htmlspecialchars($dept['coordinator_name']) : 'Not Assigned'; ?></span>
+                            </div>
+                            <div class="dept-actions">
+                                <button class="btn-icon" title="Edit"><i class="ri-edit-line"></i></button>
+                                <button class="btn-icon" title="View"><i class="ri-eye-line"></i></button>
+                            </div>
                         </div>
-                        <div class="dept-coordinator">
-                            <span>Coordinator: Not Assigned</span>
-                        </div>
-                        <div class="dept-actions">
-                            <button class="btn-icon" title="Edit"><i class="ri-edit-line"></i></button>
-                            <button class="btn-icon" title="View"><i class="ri-eye-line"></i></button>
-                        </div>
-                    </div>
-
-                    <div class="department-card">
-                        <div class="dept-icon">
-                            <i class="ri-cpu-line"></i>
-                        </div>
-                        <h3>Electronics</h3>
-                        <div class="dept-stats">
-                            <span><i class="ri-user-line"></i> 0 Students</span>
-                            <span><i class="ri-folder-line"></i> 0 Projects</span>
-                        </div>
-                        <div class="dept-coordinator">
-                            <span>Coordinator: Not Assigned</span>
-                        </div>
-                        <div class="dept-actions">
-                            <button class="btn-icon" title="Edit"><i class="ri-edit-line"></i></button>
-                            <button class="btn-icon" title="View"><i class="ri-eye-line"></i></button>
-                        </div>
-                    </div>
-
-                    <div class="department-card">
-                        <div class="dept-icon">
-                            <i class="ri-settings-line"></i>
-                        </div>
-                        <h3>Mechanical</h3>
-                        <div class="dept-stats">
-                            <span><i class="ri-user-line"></i> 0 Students</span>
-                            <span><i class="ri-folder-line"></i> 0 Projects</span>
-                        </div>
-                        <div class="dept-coordinator">
-                            <span>Coordinator: Not Assigned</span>
-                        </div>
-                        <div class="dept-actions">
-                            <button class="btn-icon" title="Edit"><i class="ri-edit-line"></i></button>
-                            <button class="btn-icon" title="View"><i class="ri-eye-line"></i></button>
-                        </div>
-                    </div>
-
-                    <div class="department-card add-new">
-                        <i class="ri-add-line"></i>
-                        <span>Add New Department</span>
-                    </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </main>

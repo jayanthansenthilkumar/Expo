@@ -7,6 +7,10 @@ checkUserAccess();
 $userName = $_SESSION['name'] ?? 'Student';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Student');
+
+$successMsg = $_SESSION['success'] ?? '';
+$errorMsg = $_SESSION['error'] ?? '';
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -7,6 +7,40 @@ checkUserAccess();
 $userName = $_SESSION['name'] ?? 'Coordinator';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator');
+$userDept = $_SESSION['department'] ?? '';
+$role = $_SESSION['role'] ?? $_SESSION['user_role'] ?? '';
+
+$categoryFilter = $_GET['category'] ?? '';
+
+// Build query for top scored approved projects
+$sql = "SELECT p.*, u.name as student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'approved' AND p.score > 0";
+$params = [];
+
+if (strtolower($role) === 'departmentcoordinator') {
+    $sql .= " AND p.department = ?";
+    $params[] = $userDept;
+}
+
+if (!empty($categoryFilter)) {
+    $sql .= " AND p.category = ?";
+    $params[] = $categoryFilter;
+}
+
+$sql .= " ORDER BY p.score DESC";
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$topProjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get distinct categories for filter
+$catSql = "SELECT DISTINCT category FROM projects WHERE category IS NOT NULL AND category != ''";
+if (strtolower($role) === 'departmentcoordinator') {
+    $catSql .= " AND department = ?";
+    $catStmt = $pdo->prepare($catSql);
+    $catStmt->execute([$userDept]);
+} else {
+    $catStmt = $pdo->query($catSql);
+}
+$categories = $catStmt->fetchAll(PDO::FETCH_COLUMN);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -44,18 +78,22 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator'
 
             <div class="dashboard-content">
                 <div class="content-header">
-                    <h2>Best Projects in Your Department</h2>
+                    <h2>Best Projects <?php echo strtolower($role) === 'departmentcoordinator' ? 'in Your Department' : 'Overall'; ?></h2>
                     <div class="filter-controls">
-                        <select class="filter-select">
-                            <option value="">All Categories</option>
-                            <option value="web">Web Development</option>
-                            <option value="mobile">Mobile Application</option>
-                            <option value="ai">AI/Machine Learning</option>
-                            <option value="iot">IoT</option>
-                        </select>
+                        <form method="GET" action="topProjects.php">
+                            <select class="filter-select" name="category" onchange="this.form.submit()">
+                                <option value="">All Categories</option>
+                                <?php foreach ($categories as $cat): ?>
+                                    <option value="<?php echo htmlspecialchars($cat); ?>" <?php echo ($categoryFilter === $cat) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($cat); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </form>
                     </div>
                 </div>
 
+                <?php if (empty($topProjects)): ?>
                 <div class="top-projects-grid">
                     <div class="empty-state">
                         <i class="ri-trophy-line"></i>
@@ -63,45 +101,35 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator'
                         <p>Top projects will appear here once projects are reviewed and scored.</p>
                     </div>
                 </div>
-
-                <div class="leaderboard-section" style="display: none;">
+                <?php else: ?>
+                <div class="leaderboard-section">
                     <h3>Project Leaderboard</h3>
                     <div class="leaderboard">
-                        <div class="leaderboard-item gold">
-                            <span class="rank">1</span>
+                        <?php foreach ($topProjects as $index => $project):
+                            $rank = $index + 1;
+                            $rankClass = '';
+                            if ($rank === 1) $rankClass = 'gold';
+                            elseif ($rank === 2) $rankClass = 'silver';
+                            elseif ($rank === 3) $rankClass = 'bronze';
+                        ?>
+                        <div class="leaderboard-item <?php echo $rankClass; ?>">
+                            <span class="rank"><?php echo $rank; ?></span>
                             <div class="project-info">
-                                <h4>Project Name</h4>
-                                <p>Team Lead Name</p>
+                                <h4><?php echo htmlspecialchars($project['title']); ?></h4>
+                                <p><?php echo htmlspecialchars($project['student_name'] ?? 'Unknown'); ?></p>
                             </div>
                             <div class="score">
                                 <i class="ri-star-fill"></i>
-                                <span>0.0</span>
+                                <span><?php echo number_format($project['score'], 1); ?></span>
                             </div>
+                            <span class="category-badge" style="margin-left:10px;font-size:0.8rem;background:#e9ecef;padding:3px 8px;border-radius:12px;">
+                                <?php echo htmlspecialchars($project['category'] ?? 'N/A'); ?>
+                            </span>
                         </div>
-                        <div class="leaderboard-item silver">
-                            <span class="rank">2</span>
-                            <div class="project-info">
-                                <h4>Project Name</h4>
-                                <p>Team Lead Name</p>
-                            </div>
-                            <div class="score">
-                                <i class="ri-star-fill"></i>
-                                <span>0.0</span>
-                            </div>
-                        </div>
-                        <div class="leaderboard-item bronze">
-                            <span class="rank">3</span>
-                            <div class="project-info">
-                                <h4>Project Name</h4>
-                                <p>Team Lead Name</p>
-                            </div>
-                            <div class="score">
-                                <i class="ri-star-fill"></i>
-                                <span>0.0</span>
-                            </div>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
+                <?php endif; ?>
             </div>
         </main>
     </div>

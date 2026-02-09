@@ -7,6 +7,58 @@ checkUserAccess();
 $userName = $_SESSION['name'] ?? 'User';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
+$userId = $_SESSION['user_id'];
+$selectedMsgId = isset($_GET['msg']) ? intval($_GET['msg']) : null;
+
+// Fetch inbox messages
+$inboxStmt = mysqli_prepare($conn, "SELECT m.*, u.name as sender_name FROM messages m LEFT JOIN users u ON m.sender_id = u.id WHERE m.recipient_id = ? ORDER BY m.created_at DESC");
+mysqli_stmt_bind_param($inboxStmt, "i", $userId);
+mysqli_stmt_execute($inboxStmt);
+$inboxMessages = mysqli_fetch_all(mysqli_stmt_get_result($inboxStmt), MYSQLI_ASSOC);
+mysqli_stmt_close($inboxStmt);
+
+// Fetch sent messages
+$sentStmt = mysqli_prepare($conn, "SELECT m.*, u.name as recipient_name FROM messages m LEFT JOIN users u ON m.recipient_id = u.id WHERE m.sender_id = ? ORDER BY m.created_at DESC");
+mysqli_stmt_bind_param($sentStmt, "i", $userId);
+mysqli_stmt_execute($sentStmt);
+$sentMessages = mysqli_fetch_all(mysqli_stmt_get_result($sentStmt), MYSQLI_ASSOC);
+mysqli_stmt_close($sentStmt);
+
+// If a message is selected, fetch it and mark as read
+$selectedMessage = null;
+if ($selectedMsgId) {
+    $msgStmt = mysqli_prepare($conn, "SELECT m.*, u.name as sender_name FROM messages m LEFT JOIN users u ON m.sender_id = u.id WHERE m.id = ?");
+    mysqli_stmt_bind_param($msgStmt, "i", $selectedMsgId);
+    mysqli_stmt_execute($msgStmt);
+    $selectedMessage = mysqli_fetch_assoc(mysqli_stmt_get_result($msgStmt));
+    mysqli_stmt_close($msgStmt);
+
+    if ($selectedMessage && $selectedMessage['recipient_id'] == $userId) {
+        $readStmt = mysqli_prepare($conn, "UPDATE messages SET is_read = 1 WHERE id = ? AND recipient_id = ?");
+        mysqli_stmt_bind_param($readStmt, "ii", $selectedMsgId, $userId);
+        mysqli_stmt_execute($readStmt);
+        mysqli_stmt_close($readStmt);
+    }
+}
+
+// Count unread messages
+$unreadStmt = mysqli_prepare($conn, "SELECT COUNT(*) as unread FROM messages WHERE recipient_id = ? AND is_read = 0");
+mysqli_stmt_bind_param($unreadStmt, "i", $userId);
+mysqli_stmt_execute($unreadStmt);
+$unreadCount = mysqli_fetch_assoc(mysqli_stmt_get_result($unreadStmt))['unread'];
+mysqli_stmt_close($unreadStmt);
+
+// Fetch all users for compose dropdown (except current user)
+$usersStmt = mysqli_prepare($conn, "SELECT id, name, email FROM users WHERE id != ? ORDER BY name ASC");
+mysqli_stmt_bind_param($usersStmt, "i", $userId);
+mysqli_stmt_execute($usersStmt);
+$allUsers = mysqli_fetch_all(mysqli_stmt_get_result($usersStmt), MYSQLI_ASSOC);
+mysqli_stmt_close($usersStmt);
+
+// Flash messages
+$successMsg = $_SESSION['success'] ?? '';
+$errorMsg = $_SESSION['error'] ?? '';
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,11 +99,22 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
             </header>
 
             <div class="dashboard-content">
+                <?php if ($successMsg): ?>
+                    <div class="alert alert-success" style="background:#dcfce7;color:#166534;padding:1rem;border-radius:8px;margin-bottom:1rem;">
+                        <i class="ri-checkbox-circle-line"></i> <?php echo htmlspecialchars($successMsg); ?>
+                    </div>
+                <?php endif; ?>
+                <?php if ($errorMsg): ?>
+                    <div class="alert alert-error" style="background:#fef2f2;color:#991b1b;padding:1rem;border-radius:8px;margin-bottom:1rem;">
+                        <i class="ri-error-warning-line"></i> <?php echo htmlspecialchars($errorMsg); ?>
+                    </div>
+                <?php endif; ?>
+
                 <div class="messages-container">
                     <div class="messages-sidebar">
                         <div class="messages-header">
-                            <h3>Inbox</h3>
-                            <button class="btn-icon" title="Compose">
+                            <h3>Inbox <?php if ($unreadCount > 0): ?><span class="badge badge-primary"><?php echo $unreadCount; ?></span><?php endif; ?></h3>
+                            <button class="btn-icon" title="Compose" onclick="openModal()">
                                 <i class="ri-edit-line"></i>
                             </button>
                         </div>
@@ -60,19 +123,52 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
                             <input type="text" placeholder="Search messages...">
                         </div>
                         <div class="messages-list">
-                            <div class="empty-state small">
-                                <i class="ri-mail-line"></i>
-                                <p>No messages yet</p>
-                            </div>
+                            <?php if (count($inboxMessages) > 0): ?>
+                                <?php foreach ($inboxMessages as $msg): ?>
+                                    <a href="?msg=<?php echo $msg['id']; ?>" class="message-item <?php echo (!$msg['is_read']) ? 'unread' : ''; ?> <?php echo ($selectedMsgId == $msg['id']) ? 'active' : ''; ?>" style="display:block;padding:0.75rem 1rem;border-bottom:1px solid #e5e7eb;text-decoration:none;color:inherit;<?php echo (!$msg['is_read']) ? 'background:#eff6ff;font-weight:600;' : ''; ?><?php echo ($selectedMsgId == $msg['id']) ? 'background:#dbeafe;' : ''; ?>">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+                                            <span style="font-size:0.9rem;"><?php echo htmlspecialchars($msg['sender_name'] ?? 'Unknown'); ?></span>
+                                            <span style="font-size:0.75rem;color:#6b7280;"><?php echo date('M d', strtotime($msg['created_at'])); ?></span>
+                                        </div>
+                                        <div style="font-size:0.85rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                            <?php echo htmlspecialchars(mb_strimwidth($msg['subject'] ?? '(No subject)', 0, 40, '...')); ?>
+                                        </div>
+                                        <?php if (!$msg['is_read']): ?>
+                                            <span style="display:inline-block;width:8px;height:8px;background:#3b82f6;border-radius:50;position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);"></span>
+                                        <?php endif; ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="empty-state small">
+                                    <i class="ri-mail-line"></i>
+                                    <p>No messages yet</p>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
 
                     <div class="messages-content">
-                        <div class="empty-state">
-                            <i class="ri-mail-open-line"></i>
-                            <h3>No Message Selected</h3>
-                            <p>Select a message from the list to view its contents</p>
-                        </div>
+                        <?php if ($selectedMessage): ?>
+                            <div class="message-view" style="padding:1.5rem;">
+                                <div style="margin-bottom:1.5rem;border-bottom:1px solid #e5e7eb;padding-bottom:1rem;">
+                                    <h3 style="margin:0 0 0.75rem 0;"><?php echo htmlspecialchars($selectedMessage['subject'] ?? '(No subject)'); ?></h3>
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <div>
+                                            <span style="font-weight:600;">From:</span>
+                                            <span><?php echo htmlspecialchars($selectedMessage['sender_name'] ?? 'Unknown'); ?></span>
+                                        </div>
+                                        <span style="font-size:0.85rem;color:#6b7280;"><?php echo date('M d, Y \a\t h:i A', strtotime($selectedMessage['created_at'])); ?></span>
+                                    </div>
+                                </div>
+                                <div class="message-body" style="line-height:1.7;color:#374151;white-space:pre-wrap;"><?php echo htmlspecialchars($selectedMessage['message']); ?></div>
+                            </div>
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <i class="ri-mail-open-line"></i>
+                                <h3>No Message Selected</h3>
+                                <p>Select a message from the list to view its contents</p>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -88,7 +184,14 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
                             <input type="hidden" name="action" value="send_message">
                             <div class="form-group">
                                 <label for="recipient">To</label>
-                                <input type="text" id="recipient" name="recipient" placeholder="Enter recipient email">
+                                <select id="recipient" name="recipient" required style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;">
+                                    <option value="">Select a recipient...</option>
+                                    <?php foreach ($allUsers as $user): ?>
+                                        <option value="<?php echo htmlspecialchars($user['email']); ?>">
+                                            <?php echo htmlspecialchars($user['name']); ?> (<?php echo htmlspecialchars($user['email']); ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="subject">Subject</label>

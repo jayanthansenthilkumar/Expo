@@ -7,6 +7,31 @@ checkUserAccess();
 $userName = $_SESSION['name'] ?? 'Coordinator';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator');
+$userDept = $_SESSION['department'] ?? '';
+$role = $_SESSION['role'] ?? $_SESSION['user_role'] ?? '';
+
+// Query teams with project and leader info
+$sql = "SELECT t.*, p.title as project_title, u.name as leader_name,
+        (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count
+        FROM teams t
+        LEFT JOIN projects p ON t.project_id = p.id
+        LEFT JOIN users u ON t.leader_id = u.id";
+
+if (strtolower($role) === 'departmentcoordinator') {
+    $sql .= " WHERE t.department = ?";
+    $sql .= " ORDER BY t.created_at DESC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$userDept]);
+} else {
+    $sql .= " ORDER BY t.created_at DESC";
+    $stmt = $pdo->query($sql);
+}
+$teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Flash messages
+$flashMessage = $_SESSION['flash_message'] ?? null;
+$flashType = $_SESSION['flash_type'] ?? 'info';
+unset($_SESSION['flash_message'], $_SESSION['flash_type']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,10 +72,17 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator'
             </header>
 
             <div class="dashboard-content">
+                <?php if ($flashMessage): ?>
+                    <div class="alert alert-<?php echo htmlspecialchars($flashType); ?>" style="padding:12px 16px;border-radius:8px;margin-bottom:16px;background:<?php echo $flashType === 'success' ? '#d4edda' : ($flashType === 'error' ? '#f8d7da' : '#d1ecf1'); ?>;color:<?php echo $flashType === 'success' ? '#155724' : ($flashType === 'error' ? '#721c24' : '#0c5460'); ?>;">
+                        <?php echo htmlspecialchars($flashMessage); ?>
+                    </div>
+                <?php endif; ?>
+
                 <div class="content-header">
                     <h2>Project Teams</h2>
                 </div>
 
+                <?php if (empty($teams)): ?>
                 <div class="teams-grid">
                     <div class="empty-state">
                         <i class="ri-team-line"></i>
@@ -58,39 +90,33 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator'
                         <p>Teams will appear here once students submit projects with team members.</p>
                     </div>
                 </div>
-
-                <!-- Team Card Template (hidden, for reference) -->
-                <div class="team-card-template" style="display: none;">
+                <?php else: ?>
+                <div class="teams-grid">
+                    <?php foreach ($teams as $team):
+                        $leaderInitials = strtoupper(substr($team['leader_name'] ?? 'NA', 0, 2));
+                    ?>
                     <div class="team-card">
                         <div class="team-header">
-                            <h3>Team Name</h3>
-                            <span class="team-badge">4 Members</span>
+                            <h3><?php echo htmlspecialchars($team['team_name']); ?></h3>
+                            <span class="team-badge"><?php echo (int)$team['member_count']; ?> Members</span>
                         </div>
                         <div class="team-project">
                             <i class="ri-folder-line"></i>
-                            <span>Project Name</span>
+                            <span><?php echo htmlspecialchars($team['project_title'] ?? 'No project assigned'); ?></span>
                         </div>
                         <div class="team-members">
                             <div class="member">
-                                <div class="member-avatar">JD</div>
+                                <div class="member-avatar"><?php echo $leaderInitials; ?></div>
                                 <div class="member-info">
-                                    <span class="member-name">John Doe</span>
+                                    <span class="member-name"><?php echo htmlspecialchars($team['leader_name'] ?? 'Unassigned'); ?></span>
                                     <span class="member-role">Team Lead</span>
                                 </div>
                             </div>
-                            <div class="member">
-                                <div class="member-avatar">JS</div>
-                                <div class="member-info">
-                                    <span class="member-name">Jane Smith</span>
-                                    <span class="member-role">Member</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="team-actions">
-                            <button class="btn-secondary">View Details</button>
                         </div>
                     </div>
+                    <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
             </div>
         </main>
     </div>

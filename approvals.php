@@ -7,6 +7,33 @@ checkUserAccess();
 $userName = $_SESSION['name'] ?? 'User';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
+
+// Count projects by status
+$pendingCount = $conn->query("SELECT COUNT(*) FROM projects WHERE status='pending'")->fetch_row()[0];
+$approvedCount = $conn->query("SELECT COUNT(*) FROM projects WHERE status='approved'")->fetch_row()[0];
+$rejectedCount = $conn->query("SELECT COUNT(*) FROM projects WHERE status='rejected'")->fetch_row()[0];
+
+// Department filter
+$deptFilter = isset($_GET['department']) ? trim($_GET['department']) : '';
+
+// Fetch distinct departments for filter dropdown
+$deptResult = $conn->query("SELECT DISTINCT department FROM projects WHERE department IS NOT NULL AND department != '' ORDER BY department ASC");
+$departments = [];
+while ($row = $deptResult->fetch_assoc()) {
+    $departments[] = $row['department'];
+}
+
+// Fetch pending projects with student name
+$sql = "SELECT p.*, u.name AS student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status='pending'";
+if ($deptFilter !== '') {
+    $sql .= " AND p.department = '" . $conn->real_escape_string($deptFilter) . "'";
+}
+$sql .= " ORDER BY p.created_at DESC";
+$pendingProjects = $conn->query($sql);
+
+// Flash messages
+$flash = $_SESSION['flash'] ?? null;
+unset($_SESSION['flash']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,13 +74,19 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
             </header>
 
             <div class="dashboard-content">
+                <?php if ($flash): ?>
+                    <div class="alert alert-<?php echo $flash['type'] === 'success' ? 'success' : 'danger'; ?>">
+                        <?php echo htmlspecialchars($flash['message']); ?>
+                    </div>
+                <?php endif; ?>
+
                 <div class="approval-stats">
                     <div class="stat-card">
                         <div class="stat-icon amber">
                             <i class="ri-time-line"></i>
                         </div>
                         <div class="stat-info">
-                            <h3>0</h3>
+                            <h3><?php echo $pendingCount; ?></h3>
                             <p>Pending Approval</p>
                         </div>
                     </div>
@@ -62,7 +95,7 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
                             <i class="ri-checkbox-circle-line"></i>
                         </div>
                         <div class="stat-info">
-                            <h3>0</h3>
+                            <h3><?php echo $approvedCount; ?></h3>
                             <p>Approved</p>
                         </div>
                     </div>
@@ -71,7 +104,7 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
                             <i class="ri-close-circle-line"></i>
                         </div>
                         <div class="stat-info">
-                            <h3>0</h3>
+                            <h3><?php echo $rejectedCount; ?></h3>
                             <p>Rejected</p>
                         </div>
                     </div>
@@ -80,21 +113,63 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
                 <div class="content-header">
                     <h2>Pending Approvals</h2>
                     <div class="filter-controls">
-                        <select class="filter-select">
-                            <option value="">All Departments</option>
-                            <option value="cs">Computer Science</option>
-                            <option value="ece">Electronics</option>
-                            <option value="mech">Mechanical</option>
-                        </select>
+                        <form method="GET" action="approvals.php">
+                            <select name="department" class="filter-select" onchange="this.form.submit()">
+                                <option value="">All Departments</option>
+                                <?php foreach ($departments as $dept): ?>
+                                    <option value="<?php echo htmlspecialchars($dept); ?>" <?php echo $deptFilter === $dept ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($dept); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </form>
                     </div>
                 </div>
 
                 <div class="approval-list">
-                    <div class="empty-state">
-                        <i class="ri-checkbox-circle-line"></i>
-                        <h3>No Pending Approvals</h3>
-                        <p>All projects have been reviewed. Check back later for new submissions.</p>
-                    </div>
+                    <?php if ($pendingProjects && $pendingProjects->num_rows > 0): ?>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Student</th>
+                                    <th>Department</th>
+                                    <th>Category</th>
+                                    <th>Submitted</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php while ($project = $pendingProjects->fetch_assoc()): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($project['title']); ?></td>
+                                        <td><?php echo htmlspecialchars($project['student_name'] ?? 'Unknown'); ?></td>
+                                        <td><?php echo htmlspecialchars($project['department'] ?? '-'); ?></td>
+                                        <td><?php echo htmlspecialchars($project['category'] ?? '-'); ?></td>
+                                        <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
+                                        <td>
+                                            <form method="POST" action="sparkBackend.php" style="display:inline-flex;gap:6px;">
+                                                <input type="hidden" name="action" value="review_project">
+                                                <input type="hidden" name="project_id" value="<?php echo $project['id']; ?>">
+                                                <button type="submit" name="decision" value="approved" class="btn btn-sm btn-success" title="Approve">
+                                                    <i class="ri-checkbox-circle-line"></i> Approve
+                                                </button>
+                                                <button type="submit" name="decision" value="rejected" class="btn btn-sm btn-danger" title="Reject">
+                                                    <i class="ri-close-circle-line"></i> Reject
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <i class="ri-checkbox-circle-line"></i>
+                            <h3>No Pending Approvals</h3>
+                            <p>All projects have been reviewed. Check back later for new submissions.</p>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </main>

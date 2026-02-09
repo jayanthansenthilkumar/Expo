@@ -7,6 +7,21 @@ checkUserAccess();
 $userName = $_SESSION['name'] ?? 'Admin';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Admin');
+
+// Get database name
+$dbName = $conn->query("SELECT DATABASE()")->fetch_row()[0];
+
+// Get table list and row counts
+$tables = [];
+$tablesResult = $conn->query("SHOW TABLES");
+if ($tablesResult) {
+    while ($row = $tablesResult->fetch_row()) {
+        $tableName = $row[0];
+        $countResult = $conn->query("SELECT COUNT(*) FROM `" . $conn->real_escape_string($tableName) . "`");
+        $rowCount = $countResult ? $countResult->fetch_row()[0] : 0;
+        $tables[] = ['name' => $tableName, 'row_count' => $rowCount];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -60,7 +75,7 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Admin');
                             </div>
                             <div class="db-info-item">
                                 <span class="db-label">Tables</span>
-                                <span class="db-value">0</span>
+                                <span class="db-value"><?php echo count($tables); ?></span>
                             </div>
                         </div>
                     </div>
@@ -103,42 +118,19 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Admin');
                                     <tr>
                                         <th>Table Name</th>
                                         <th>Rows</th>
-                                        <th>Size</th>
-                                        <th>Last Updated</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <?php foreach ($tables as $table): ?>
                                     <tr>
-                                        <td>users</td>
-                                        <td>0</td>
-                                        <td>16 KB</td>
-                                        <td>-</td>
+                                        <td><?php echo htmlspecialchars($table['name']); ?></td>
+                                        <td><?php echo $table['row_count']; ?></td>
                                         <td>
                                             <button class="btn-icon" title="View"><i class="ri-eye-line"></i></button>
-                                            <button class="btn-icon" title="Export"><i class="ri-download-line"></i></button>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td>projects</td>
-                                        <td>0</td>
-                                        <td>16 KB</td>
-                                        <td>-</td>
-                                        <td>
-                                            <button class="btn-icon" title="View"><i class="ri-eye-line"></i></button>
-                                            <button class="btn-icon" title="Export"><i class="ri-download-line"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>departments</td>
-                                        <td>0</td>
-                                        <td>16 KB</td>
-                                        <td>-</td>
-                                        <td>
-                                            <button class="btn-icon" title="View"><i class="ri-eye-line"></i></button>
-                                            <button class="btn-icon" title="Export"><i class="ri-download-line"></i></button>
-                                        </td>
-                                    </tr>
+                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>

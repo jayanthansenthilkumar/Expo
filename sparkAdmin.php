@@ -6,6 +6,23 @@ checkUserAccess();
 
 $userName = $_SESSION['name'] ?? 'Admin';
 $userInitials = strtoupper(substr($userName, 0, 2));
+
+// Fetch admin stats
+$totalProjects = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects"))['cnt'];
+$totalUsers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users"))['cnt'];
+$totalDepartments = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(DISTINCT department) as cnt FROM users WHERE department IS NOT NULL AND department != ''"))['cnt'];
+$pendingProjects = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'pending'"))['cnt'];
+
+// Days to event
+$eventDate = '2026-02-15';
+$daysToEvent = max(0, (int)((strtotime($eventDate) - time()) / 86400));
+
+// Recent activity (last 5 projects)
+$recentProjects = [];
+$result = mysqli_query($conn, "SELECT p.title, p.status, p.created_at, u.name as student_name FROM projects p JOIN users u ON p.student_id = u.id ORDER BY p.created_at DESC LIMIT 5");
+while ($row = mysqli_fetch_assoc($result)) {
+    $recentProjects[] = $row;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -61,7 +78,7 @@ $userInitials = strtoupper(substr($userName, 0, 2));
                     <h2>Welcome, Admin! 🛡️</h2>
                     <p>Full control over SPARK'26. Manage users, projects, departments, and event settings from here.
                     </p>
-                    <a href="#" class="btn-light">System Settings</a>
+                    <a href="settings.php" class="btn-light">System Settings</a>
                     <div class="welcome-decoration">
                         <i class="ri-shield-star-line"></i>
                     </div>
@@ -74,7 +91,7 @@ $userInitials = strtoupper(substr($userName, 0, 2));
                             <i class="ri-folder-line"></i>
                         </div>
                         <div class="stat-info">
-                            <h3>0</h3>
+                            <h3><?php echo $totalProjects; ?></h3>
                             <p>Total Projects</p>
                         </div>
                     </div>
@@ -83,7 +100,7 @@ $userInitials = strtoupper(substr($userName, 0, 2));
                             <i class="ri-user-line"></i>
                         </div>
                         <div class="stat-info">
-                            <h3>0</h3>
+                            <h3><?php echo $totalUsers; ?></h3>
                             <p>Registered Users</p>
                         </div>
                     </div>
@@ -92,7 +109,7 @@ $userInitials = strtoupper(substr($userName, 0, 2));
                             <i class="ri-building-line"></i>
                         </div>
                         <div class="stat-info">
-                            <h3>13</h3>
+                            <h3><?php echo $totalDepartments; ?></h3>
                             <p>Departments</p>
                         </div>
                     </div>
@@ -101,7 +118,7 @@ $userInitials = strtoupper(substr($userName, 0, 2));
                             <i class="ri-calendar-event-line"></i>
                         </div>
                         <div class="stat-info">
-                            <h3>6</h3>
+                            <h3><?php echo $daysToEvent; ?></h3>
                             <p>Days to Event</p>
                         </div>
                     </div>
@@ -110,7 +127,7 @@ $userInitials = strtoupper(substr($userName, 0, 2));
                 <!-- Quick Actions -->
                 <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Quick Actions</h3>
                 <div class="quick-actions">
-                    <div class="action-card">
+                    <a href="users.php" class="action-card" style="text-decoration:none;color:inherit;">
                         <div class="action-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
                             <i class="ri-user-add-line"></i>
                         </div>
@@ -118,8 +135,8 @@ $userInitials = strtoupper(substr($userName, 0, 2));
                             <h4>Add User</h4>
                             <p>Create new user account</p>
                         </div>
-                    </div>
-                    <div class="action-card">
+                    </a>
+                    <a href="announcements.php" class="action-card" style="text-decoration:none;color:inherit;">
                         <div class="action-icon">
                             <i class="ri-megaphone-line"></i>
                         </div>
@@ -127,8 +144,8 @@ $userInitials = strtoupper(substr($userName, 0, 2));
                             <h4>Announcement</h4>
                             <p>Broadcast to all users</p>
                         </div>
-                    </div>
-                    <div class="action-card">
+                    </a>
+                    <a href="analytics.php" class="action-card" style="text-decoration:none;color:inherit;">
                         <div class="action-icon">
                             <i class="ri-file-chart-line"></i>
                         </div>
@@ -136,8 +153,8 @@ $userInitials = strtoupper(substr($userName, 0, 2));
                             <h4>Reports</h4>
                             <p>Generate system reports</p>
                         </div>
-                    </div>
-                    <div class="action-card">
+                    </a>
+                    <a href="users.php" class="action-card" style="text-decoration:none;color:inherit;">
                         <div class="action-icon">
                             <i class="ri-shield-check-line"></i>
                         </div>
@@ -145,7 +162,7 @@ $userInitials = strtoupper(substr($userName, 0, 2));
                             <h4>Permissions</h4>
                             <p>Manage user roles</p>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
                 <!-- Dashboard Grid -->
@@ -156,7 +173,24 @@ $userInitials = strtoupper(substr($userName, 0, 2));
                             <a href="#" style="color: var(--primary); font-size: 0.9rem;">View All</a>
                         </div>
                         <div class="dash-card-body">
-                            <p style="color: var(--text-muted);">No recent activity.</p>
+                            <?php if (empty($recentProjects)): ?>
+                                <p style="color: var(--text-muted);">No recent activity.</p>
+                            <?php else: ?>
+                                <?php foreach ($recentProjects as $rp): ?>
+                                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border);">
+                                    <div>
+                                        <span style="font-size:0.9rem;font-weight:500;"><?php echo htmlspecialchars($rp['title']); ?></span>
+                                        <p style="font-size:0.8rem;color:var(--text-muted);">by <?php echo htmlspecialchars($rp['student_name']); ?></p>
+                                    </div>
+                                    <span style="padding:0.2rem 0.6rem;border-radius:12px;font-size:0.75rem;font-weight:600;
+                                        <?php if($rp['status']==='approved') echo 'background:#dcfce7;color:#166534;';
+                                        elseif($rp['status']==='rejected') echo 'background:#fef2f2;color:#991b1b;';
+                                        else echo 'background:#fef3c7;color:#92400e;'; ?>">
+                                        <?php echo ucfirst($rp['status']); ?>
+                                    </span>
+                                </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="dash-card">

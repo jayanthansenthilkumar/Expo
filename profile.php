@@ -8,6 +8,53 @@ $userName = $_SESSION['name'] ?? 'User';
 $userEmail = $_SESSION['email'] ?? '';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
+$userId = $_SESSION['user_id'] ?? 0;
+$department = $_SESSION['department'] ?? '';
+$year = $_SESSION['year'] ?? '';
+$regNo = $_SESSION['reg_no'] ?? '';
+$username = $_SESSION['username'] ?? '';
+
+// Query project counts
+$totalProjects = 0;
+$approvedProjects = 0;
+$pendingProjects = 0;
+
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM projects WHERE user_id = ?");
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+$totalProjects = $result->fetch_assoc()['total'] ?? 0;
+$stmt->close();
+
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM projects WHERE user_id = ? AND status = 'approved'");
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+$approvedProjects = $result->fetch_assoc()['total'] ?? 0;
+$stmt->close();
+
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM projects WHERE user_id = ? AND status = 'pending'");
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+$pendingProjects = $result->fetch_assoc()['total'] ?? 0;
+$stmt->close();
+
+// Get user's joined date
+$joinedDate = 'Unknown';
+$stmt = $conn->prepare("SELECT created_at FROM users WHERE id = ?");
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+if ($row = $result->fetch_assoc()) {
+    $joinedDate = date('F Y', strtotime($row['created_at']));
+}
+$stmt->close();
+
+// Flash messages
+$success = $_SESSION['success'] ?? '';
+$error = $_SESSION['error'] ?? '';
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -74,8 +121,20 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
                                     <p><?php echo htmlspecialchars($userRole); ?></p>
                                 </div>
                                 <div class="info-item">
+                                    <label>Department</label>
+                                    <p><?php echo htmlspecialchars($department); ?></p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Year</label>
+                                    <p><?php echo htmlspecialchars($year); ?></p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Register No</label>
+                                    <p><?php echo htmlspecialchars($regNo); ?></p>
+                                </div>
+                                <div class="info-item">
                                     <label>Joined</label>
-                                    <p>February 2026</p>
+                                    <p><?php echo htmlspecialchars($joinedDate); ?></p>
                                 </div>
                             </div>
                         </div>
@@ -84,15 +143,15 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
                             <h3>Activity Summary</h3>
                             <div class="stats-row">
                                 <div class="stat-item">
-                                    <span class="stat-number">0</span>
+                                    <span class="stat-number"><?php echo $totalProjects; ?></span>
                                     <span class="stat-label">Projects</span>
                                 </div>
                                 <div class="stat-item">
-                                    <span class="stat-number">0</span>
+                                    <span class="stat-number"><?php echo $approvedProjects; ?></span>
                                     <span class="stat-label">Approved</span>
                                 </div>
                                 <div class="stat-item">
-                                    <span class="stat-number">0</span>
+                                    <span class="stat-number"><?php echo $pendingProjects; ?></span>
                                     <span class="stat-label">Pending</span>
                                 </div>
                             </div>

@@ -7,6 +7,19 @@ checkUserAccess();
 $userName = $_SESSION['name'] ?? 'User';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
+$role = $_SESSION['role'];
+$canCreate = in_array($role, ['admin', 'studentaffairs']);
+
+// Fetch announcements for this user's role
+$announcements = [];
+$result = mysqli_query($conn, "SELECT a.*, u.name as author_name FROM announcements a JOIN users u ON a.author_id = u.id WHERE a.target_role IN ('all', '$role') ORDER BY a.is_featured DESC, a.created_at DESC");
+while ($row = mysqli_fetch_assoc($result)) {
+    $announcements[] = $row;
+}
+
+$successMsg = $_SESSION['success'] ?? '';
+$errorMsg = $_SESSION['error'] ?? '';
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,42 +60,96 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
             </header>
 
             <div class="dashboard-content">
+                <?php if ($successMsg): ?>
+                    <div style="background:#dcfce7;color:#166534;padding:1rem;border-radius:8px;margin-bottom:1rem;"><i class="ri-checkbox-circle-line"></i> <?php echo htmlspecialchars($successMsg); ?></div>
+                <?php endif; ?>
+                <?php if ($errorMsg): ?>
+                    <div style="background:#fef2f2;color:#991b1b;padding:1rem;border-radius:8px;margin-bottom:1rem;"><i class="ri-error-warning-line"></i> <?php echo htmlspecialchars($errorMsg); ?></div>
+                <?php endif; ?>
+
+                <?php if ($canCreate): ?>
+                <div class="content-header" style="margin-bottom:1.5rem;">
+                    <h2>Announcements</h2>
+                    <button class="btn-primary" onclick="document.getElementById('announcementModal').style.display='flex'">
+                        <i class="ri-add-line"></i> New Announcement
+                    </button>
+                </div>
+                <?php endif; ?>
+
                 <div class="announcements-container">
-                    <div class="announcement-card featured">
-                        <div class="announcement-header">
-                            <span class="announcement-badge new">New</span>
-                            <span class="announcement-date">February 9, 2026</span>
+                    <?php if (empty($announcements)): ?>
+                        <div class="empty-state">
+                            <i class="ri-notification-off-line"></i>
+                            <h3>No Announcements</h3>
+                            <p>There are no announcements at this time.</p>
                         </div>
-                        <h3>Welcome to SPARK'26!</h3>
-                        <p>We're excited to announce that SPARK'26 registration is now open! This year's event promises to be bigger and better than ever. Get ready to showcase your innovative projects and compete with the brightest minds on campus.</p>
-                        <div class="announcement-footer">
-                            <span><i class="ri-user-line"></i> Admin</span>
+                    <?php else: ?>
+                        <?php foreach ($announcements as $ann): ?>
+                        <div class="announcement-card <?php echo $ann['is_featured'] ? 'featured' : ''; ?>">
+                            <div class="announcement-header">
+                                <?php if ($ann['is_featured']): ?>
+                                    <span class="announcement-badge new">Featured</span>
+                                <?php endif; ?>
+                                <span class="announcement-date"><?php echo date('F j, Y', strtotime($ann['created_at'])); ?></span>
+                            </div>
+                            <h3><?php echo htmlspecialchars($ann['title']); ?></h3>
+                            <p><?php echo nl2br(htmlspecialchars($ann['message'])); ?></p>
+                            <div class="announcement-footer">
+                                <span><i class="ri-user-line"></i> <?php echo htmlspecialchars($ann['author_name']); ?></span>
+                                <span style="color:var(--text-muted);font-size:0.8rem;">For: <?php echo ucfirst($ann['target_role']); ?></span>
+                                <?php if ($canCreate): ?>
+                                <form action="sparkBackend.php" method="POST" style="display:inline;" onsubmit="return confirm('Delete this announcement?');">
+                                    <input type="hidden" name="action" value="delete_announcement">
+                                    <input type="hidden" name="announcement_id" value="<?php echo $ann['id']; ?>">
+                                    <button type="submit" class="btn-icon" style="color:#ef4444;font-size:0.85rem;"><i class="ri-delete-bin-line"></i></button>
+                                </form>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                    </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
 
-                    <div class="announcement-card">
-                        <div class="announcement-header">
-                            <span class="announcement-badge">Important</span>
-                            <span class="announcement-date">February 8, 2026</span>
+                <?php if ($canCreate): ?>
+                <!-- Create Announcement Modal -->
+                <div class="compose-modal" id="announcementModal" style="display:none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>New Announcement</h3>
+                            <button class="btn-icon" onclick="document.getElementById('announcementModal').style.display='none'"><i class="ri-close-line"></i></button>
                         </div>
-                        <h3>Submission Guidelines Updated</h3>
-                        <p>Please review the updated project submission guidelines. We've added new categories and revised the documentation requirements. Make sure to check the Guidelines page for complete details.</p>
-                        <div class="announcement-footer">
-                            <span><i class="ri-user-line"></i> Event Committee</span>
-                        </div>
-                    </div>
-
-                    <div class="announcement-card">
-                        <div class="announcement-header">
-                            <span class="announcement-date">February 5, 2026</span>
-                        </div>
-                        <h3>Workshop: Project Presentation Tips</h3>
-                        <p>Join us for a special workshop on how to effectively present your projects. Learn tips and tricks from previous winners and industry experts.</p>
-                        <div class="announcement-footer">
-                            <span><i class="ri-user-line"></i> Student Affairs</span>
-                        </div>
+                        <form action="sparkBackend.php" method="POST">
+                            <input type="hidden" name="action" value="create_announcement">
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input type="text" name="announcementTitle" required placeholder="Announcement title">
+                            </div>
+                            <div class="form-group">
+                                <label>Message</label>
+                                <textarea name="announcementMessage" rows="5" required placeholder="Write your announcement..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Target Audience</label>
+                                <select name="targetRole">
+                                    <option value="all">All Users</option>
+                                    <option value="student">Students Only</option>
+                                    <option value="departmentcoordinator">Coordinators Only</option>
+                                    <option value="studentaffairs">Student Affairs Only</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="display:flex;align-items:center;gap:0.5rem;">
+                                    <input type="checkbox" name="isFeatured"> Mark as Featured
+                                </label>
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" class="btn-secondary" onclick="document.getElementById('announcementModal').style.display='none'">Cancel</button>
+                                <button type="submit" class="btn-primary">Post Announcement</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
+                <?php endif; ?>
             </div>
         </main>
     </div>

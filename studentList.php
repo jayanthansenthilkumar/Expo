@@ -7,6 +7,35 @@ checkUserAccess();
 $userName = $_SESSION['name'] ?? 'Coordinator';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator');
+$department = $_SESSION['department'] ?? '';
+
+// Pagination
+$perPage = 10;
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$offset = ($page - 1) * $perPage;
+
+// Count students in department
+$countStmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE department = ? AND role = 'student'");
+$countStmt->execute([$department]);
+$totalStudents = (int)$countStmt->fetchColumn();
+$totalPages = max(1, ceil($totalStudents / $perPage));
+
+// Fetch students with project count
+$stmt = $pdo->prepare("
+    SELECT u.*, 
+        (SELECT COUNT(*) FROM projects WHERE student_id = u.id) AS project_count
+    FROM users u
+    WHERE u.department = ? AND u.role = 'student'
+    ORDER BY u.created_at DESC
+    LIMIT ? OFFSET ?
+");
+$stmt->execute([$department, $perPage, $offset]);
+$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Flash messages
+$flashMessage = $_SESSION['flash_message'] ?? null;
+$flashType = $_SESSION['flash_type'] ?? 'info';
+unset($_SESSION['flash_message'], $_SESSION['flash_type']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,8 +76,14 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator'
             </header>
 
             <div class="dashboard-content">
+                <?php if ($flashMessage): ?>
+                    <div class="alert alert-<?php echo htmlspecialchars($flashType); ?>">
+                        <?php echo htmlspecialchars($flashMessage); ?>
+                    </div>
+                <?php endif; ?>
+
                 <div class="content-header">
-                    <h2>Students in Your Department</h2>
+                    <h2>Students in Your Department <span class="badge"><?php echo $totalStudents; ?></span></h2>
                     <div class="header-actions">
                         <button class="btn-secondary">
                             <i class="ri-download-line"></i> Export List
@@ -64,26 +99,56 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator'
                                 <th>Email</th>
                                 <th>Year</th>
                                 <th>Projects</th>
-                                <th>Team</th>
                                 <th>Status</th>
+                                <th>Registered</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td colspan="7" class="empty-table">
-                                    <i class="ri-user-line"></i>
-                                    <p>No students in your department yet</p>
-                                </td>
-                            </tr>
+                            <?php if (count($students) > 0): ?>
+                                <?php foreach ($students as $student): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($student['name']); ?></td>
+                                        <td><?php echo htmlspecialchars($student['email']); ?></td>
+                                        <td><?php echo htmlspecialchars($student['year'] ?? '—'); ?></td>
+                                        <td><?php echo (int)$student['project_count']; ?></td>
+                                        <td>
+                                            <span class="badge badge-<?php echo ($student['status'] === 'active') ? 'success' : 'danger'; ?>">
+                                                <?php echo ucfirst(htmlspecialchars($student['status'] ?? 'inactive')); ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo date('M d, Y', strtotime($student['created_at'])); ?></td>
+                                        <td>
+                                            <a href="profile.php?id=<?php echo (int)$student['id']; ?>" class="btn-icon" title="View Profile">
+                                                <i class="ri-eye-line"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" class="empty-table">
+                                        <i class="ri-user-line"></i>
+                                        <p>No students in your department yet</p>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
 
                 <div class="pagination">
-                    <button class="btn-pagination" disabled>&laquo; Previous</button>
-                    <span class="page-info">Page 1 of 1</span>
-                    <button class="btn-pagination" disabled>Next &raquo;</button>
+                    <?php if ($page > 1): ?>
+                        <a href="?page=<?php echo $page - 1; ?>" class="btn-pagination">&laquo; Previous</a>
+                    <?php else: ?>
+                        <button class="btn-pagination" disabled>&laquo; Previous</button>
+                    <?php endif; ?>
+                    <span class="page-info">Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
+                    <?php if ($page < $totalPages): ?>
+                        <a href="?page=<?php echo $page + 1; ?>" class="btn-pagination">Next &raquo;</a>
+                    <?php else: ?>
+                        <button class="btn-pagination" disabled>Next &raquo;</button>
+                    <?php endif; ?>
                 </div>
             </div>
         </main>
