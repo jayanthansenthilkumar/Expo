@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'db.php';
-require_once 'auth.php';
+require_once 'includes/auth.php';
 
 // Check if already logged in
 if (isset($_SESSION['user_id'])) {

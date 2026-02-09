@@ -1,5 +1,5 @@
 <?php
-require_once 'auth.php';
+require_once 'includes/auth.php';
 require_once 'db.php';
 
 checkUserAccess();
@@ -21,65 +21,9 @@ $userInitials = strtoupper(substr($userName, 0, 2));
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <a href="index.php" class="logo">
-                    <div style="width:30px; height:30px; background:var(--primary); border-radius:8px;"></div>
-                    SPARK <span>'26</span>
-                </a>
-            </div>
-            <nav class="sidebar-menu">
-                <div class="menu-label">Overview</div>
-                <a href="studentAffairs.php" class="menu-item active">
-                    <i class="ri-dashboard-line"></i>
-                    Dashboard
-                </a>
-                <a href="#" class="menu-item">
-                    <i class="ri-bar-chart-line"></i>
-                    Analytics
-                </a>
+        <!-- Sidebar -->
+        <?php include 'includes/sidebar.php'; ?>
 
-                <div class="menu-label">Management</div>
-                <a href="#" class="menu-item">
-                    <i class="ri-folder-line"></i>
-                    All Projects
-                </a>
-                <a href="#" class="menu-item">
-                    <i class="ri-checkbox-circle-line"></i>
-                    Approvals
-                </a>
-                <a href="#" class="menu-item">
-                    <i class="ri-group-line"></i>
-                    Students
-                </a>
-
-                <div class="menu-label">Communication</div>
-                <a href="#" class="menu-item">
-                    <i class="ri-megaphone-line"></i>
-                    Announcements
-                </a>
-                <a href="#" class="menu-item">
-                    <i class="ri-mail-line"></i>
-                    Messages
-                </a>
-
-                <div class="menu-label">Account</div>
-                <a href="#" class="menu-item">
-                    <i class="ri-user-line"></i>
-                    Profile
-                </a>
-                <a href="#" class="menu-item">
-                    <i class="ri-settings-line"></i>
-                    Settings
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="logout.php" class="menu-item" style="color: #ef4444;">
-                    <i class="ri-logout-box-line"></i>
-                    Logout
-                </a>
-            </div>
-        </aside>
 
         <!-- Main Content -->
         <main class="main-content">

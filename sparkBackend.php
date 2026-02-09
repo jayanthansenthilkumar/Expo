@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'db.php';
-require_once 'auth.php'; // Include auth.php to access checkUserAccess function if needed, or ensuring standardization
+require_once 'includes/auth.php'; // Include auth.php to access checkUserAccess function if needed, or ensuring standardization
 
 // Initialize variables to store in session if needed, though we will set them directly before redirect code
 // Validation helper functions could go here

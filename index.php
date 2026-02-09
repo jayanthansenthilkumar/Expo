@@ -1,5 +1,5 @@
 <?php
-require_once 'auth.php';
+require_once './includes/auth.php';
 require_once 'db.php';
 
 // Check access for public page (starts session, checks timeout, etc.)
