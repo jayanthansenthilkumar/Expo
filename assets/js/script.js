@@ -61,9 +61,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const statsObserver = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && !counted) {
         counted = true;
-        animateValue("stat-stud", 0, 500, 2000);
-        animateValue("stat-proj", 0, 120, 2000);
-        animateValue("stat-prize", 0, 50, 2000); // 50k
+        // Animate all stat items dynamically using data-target attributes
+        document.querySelectorAll(".stats-strip [data-target]").forEach((el) => {
+          const target = parseInt(el.getAttribute("data-target")) || 0;
+          animateValue(el.id, 0, target, 2000);
+        });
       }
     });
     statsObserver.observe(statsSection);
@@ -76,9 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      obj.innerHTML =
-        Math.floor(progress * (end - start) + start) +
-        (id === "stat-prize" ? "k+" : "+");
+      const current = Math.floor(progress * (end - start) + start);
+      obj.innerHTML = current + (end > 0 ? "+" : "");
       if (progress < 1) {
         window.requestAnimationFrame(step);
       }

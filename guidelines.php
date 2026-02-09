@@ -7,6 +7,25 @@ checkUserAccess();
 $userName = $_SESSION['name'] ?? 'User';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
+
+// Load settings for dynamic values
+$settingsResult = mysqli_query($conn, "SELECT setting_key, setting_value FROM settings");
+$settings = [];
+while ($row = mysqli_fetch_assoc($settingsResult)) {
+    $settings[$row['setting_key']] = $row['setting_value'];
+}
+$eventName = $settings['event_name'] ?? "SPARK'26";
+$maxTeamSize = $settings['max_team_size'] ?? '4';
+$submissionDeadline = $settings['submission_deadline'] ?? '2026-02-15 23:59:00';
+$registrationOpen = ($settings['registration_open'] ?? '1') === '1';
+
+// Get real stats
+$totalProjects = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects"))['cnt'];
+$approvedProjects = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved'"))['cnt'];
+$totalStudents = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users WHERE role = 'student'"))['cnt'];
+
+// Get upcoming schedule events
+$upcomingEvents = mysqli_query($conn, "SELECT * FROM schedule WHERE event_date >= NOW() ORDER BY event_date ASC LIMIT 3");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -44,13 +63,53 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
 
             <div class="dashboard-content">
                 <div class="guidelines-container">
+                    <!-- Quick Stats Bar -->
+                    <div class="stats-grid" style="margin-bottom: 2rem;">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <i class="ri-calendar-line"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3><?php echo date('M d, Y', strtotime($submissionDeadline)); ?></h3>
+                                <p>Submission Deadline</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <i class="ri-team-line"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Max <?php echo $maxTeamSize; ?></h3>
+                                <p>Team Members</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon amber">
+                                <i class="ri-folder-line"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3><?php echo $totalProjects; ?></h3>
+                                <p>Projects Submitted</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon <?php echo $registrationOpen ? 'green' : 'red'; ?>">
+                                <i class="ri-<?php echo $registrationOpen ? 'check' : 'close'; ?>-circle-line"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3><?php echo $registrationOpen ? 'Open' : 'Closed'; ?></h3>
+                                <p>Registration Status</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="guideline-section">
                         <h2><i class="ri-information-line"></i> General Guidelines</h2>
                         <ul>
                             <li>All projects must be original work created by the team members</li>
-                            <li>Teams can have a maximum of 4 members</li>
+                            <li>Teams can have a maximum of <?php echo $maxTeamSize; ?> members</li>
                             <li>Each participant can only be part of one team</li>
-                            <li>Projects must be submitted before the deadline</li>
+                            <li>Projects must be submitted before the deadline: <strong><?php echo date('F d, Y \a\t h:i A', strtotime($submissionDeadline)); ?></strong></li>
                             <li>All team members must be currently enrolled students</li>
                         </ul>
                     </div>
@@ -63,6 +122,7 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
                             <li>Source code must be submitted via GitHub repository</li>
                             <li>A working demo or prototype is mandatory</li>
                             <li>Projects should be innovative and practical</li>
+                            <li>Only PDF files are accepted for documentation upload (max 10MB)</li>
                         </ul>
                     </div>
 
@@ -87,6 +147,23 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'User');
                             <li><strong>Documentation (15%)</strong> - Code quality and documentation</li>
                         </ul>
                     </div>
+
+                    <?php if (mysqli_num_rows($upcomingEvents) > 0): ?>
+                    <div class="guideline-section">
+                        <h2><i class="ri-calendar-event-line"></i> Upcoming Deadlines</h2>
+                        <ul>
+                            <?php while ($event = mysqli_fetch_assoc($upcomingEvents)): ?>
+                            <li>
+                                <strong><?php echo htmlspecialchars($event['title']); ?></strong> &mdash; 
+                                <?php echo date('F d, Y \a\t h:i A', strtotime($event['event_date'])); ?>
+                                <?php if (!empty($event['description'])): ?>
+                                    <br><span style="color: var(--text-muted); font-size: 0.9rem;"><?php echo htmlspecialchars($event['description']); ?></span>
+                                <?php endif; ?>
+                            </li>
+                            <?php endwhile; ?>
+                        </ul>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </main>

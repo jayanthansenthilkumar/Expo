@@ -26,6 +26,30 @@ if ($isLoggedIn) {
             $dashboardLink = 'login.php';
     }
 }
+
+// Dynamic stats from database
+$totalStudents = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users WHERE role = 'student'"))['cnt'];
+$totalProjects = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects"))['cnt'];
+$approvedProjects = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved'"))['cnt'];
+$totalDepartments = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(DISTINCT department) as cnt FROM users WHERE department IS NOT NULL AND department != ''"))['cnt'];
+
+// Load settings
+$settingsResult = mysqli_query($conn, "SELECT setting_key, setting_value FROM settings");
+$settings = [];
+while ($row = mysqli_fetch_assoc($settingsResult)) {
+    $settings[$row['setting_key']] = $row['setting_value'];
+}
+$eventName = $settings['event_name'] ?? "SPARK'26";
+$eventDate = $settings['event_date'] ?? '2026-02-15';
+$maxTeamSize = $settings['max_team_size'] ?? '4';
+$registrationOpen = ($settings['registration_open'] ?? '1') === '1';
+
+// Load schedule events from DB
+$scheduleEvents = mysqli_query($conn, "SELECT * FROM schedule ORDER BY event_date ASC");
+
+// Featured announcements for landing
+$featuredAnn = mysqli_query($conn, "SELECT title, message FROM announcements WHERE is_featured = 1 ORDER BY created_at DESC LIMIT 1");
+$featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,7 +94,7 @@ if ($isLoggedIn) {
     <header class="hero">
         <div class="container hero-grid">
             <div class="hero-content">
-                <span class="hero-chips">🚀 Feb 15, 2026 • College Auditorium</span>
+                <span class="hero-chips">🚀 <?php echo date('M d, Y', strtotime($eventDate)); ?> • College Auditorium</span>
                 <h1 class="hero-title">Where Student Ideas <br> <span class="text-gradient">Take Flight.</span></h1>
                 <p class="hero-desc">
                     Join the largest annual gathering of student innovators, developers, and creators.
@@ -115,16 +139,20 @@ if ($isLoggedIn) {
     <div class="stats-strip">
         <div class="container stats-grid">
             <div class="stat-item">
-                <h3 id="stat-stud">0</h3>
+                <h3 id="stat-stud" data-target="<?php echo $totalStudents; ?>">0</h3>
                 <p>Students</p>
             </div>
             <div class="stat-item">
-                <h3 id="stat-proj">0</h3>
+                <h3 id="stat-proj" data-target="<?php echo $totalProjects; ?>">0</h3>
                 <p>Projects</p>
             </div>
             <div class="stat-item">
-                <h3 id="stat-prize">0</h3>
-                <p>Prize Pool</p>
+                <h3 id="stat-dept" data-target="<?php echo $totalDepartments; ?>">0</h3>
+                <p>Departments</p>
+            </div>
+            <div class="stat-item">
+                <h3 id="stat-approved" data-target="<?php echo $approvedProjects; ?>">0</h3>
+                <p>Approved</p>
             </div>
         </div>
     </div>
@@ -209,58 +237,55 @@ if ($isLoggedIn) {
                 <h2 class="section-title">Event Schedule</h2>
             </div>
             <div class="schedule-grid">
-                <!-- Card 1 -->
+                <?php
+                $now = time();
+                $eventIndex = 0;
+                $totalEvents = mysqli_num_rows($scheduleEvents);
+                while ($event = mysqli_fetch_assoc($scheduleEvents)):
+                    $eventIndex++;
+                    $eventTimestamp = strtotime($event['event_date']);
+                    $isPast = $eventTimestamp < $now;
+                    $isToday = date('Y-m-d', $eventTimestamp) === date('Y-m-d');
+                    $isLast = ($eventIndex === $totalEvents);
+
+                    if ($isPast) {
+                        $statusClass = 'open';
+                        $statusText = 'Completed';
+                    } elseif ($isToday) {
+                        $statusClass = 'event';
+                        $statusText = 'Today';
+                    } else {
+                        $statusClass = 'upcoming';
+                        $statusText = 'Upcoming';
+                    }
+
+                    $highlightClass = $isLast ? ' highlight-card' : '';
+                    if ($event['event_type'] === 'event' && !$isPast) {
+                        $statusClass = 'event';
+                        $statusText = ucfirst($event['event_type']);
+                    }
+                ?>
+                <div class="schedule-card<?php echo $highlightClass; ?>">
+                    <div class="sc-date">
+                        <span class="sc-day"><?php echo date('d', $eventTimestamp); ?></span>
+                        <span class="sc-month"><?php echo strtoupper(date('M', $eventTimestamp)); ?></span>
+                    </div>
+                    <div class="sc-content">
+                        <h3><?php echo htmlspecialchars($event['title']); ?></h3>
+                        <p><?php echo htmlspecialchars($event['description'] ?? ''); ?></p>
+                        <span class="sc-status <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
+                    </div>
+                </div>
+                <?php endwhile; ?>
+
+                <?php if ($eventIndex === 0): ?>
                 <div class="schedule-card">
-                    <div class="sc-date">
-                        <span class="sc-day">10</span>
-                        <span class="sc-month">FEB</span>
-                    </div>
                     <div class="sc-content">
-                        <h3>Registration Opens</h3>
-                        <p>Portal opens for team registration. Form your teams (max 4 members) and start drafting your
-                            abstract.</p>
-                        <span class="sc-status open">Open Now</span>
+                        <h3>Schedule Coming Soon</h3>
+                        <p>Event schedule will be announced shortly. Stay tuned!</p>
                     </div>
                 </div>
-                <!-- Card 2 -->
-                <div class="schedule-card">
-                    <div class="sc-date">
-                        <span class="sc-day">25</span>
-                        <span class="sc-month">FEB</span>
-                    </div>
-                    <div class="sc-content">
-                        <h3>Abstract Submission</h3>
-                        <p>Deadline to submit your project abstract. Ensure it covers the problem statement and proposed
-                            solution clearly.</p>
-                        <span class="sc-status upcoming">Upcoming</span>
-                    </div>
-                </div>
-                <!-- Card 3 -->
-                <div class="schedule-card">
-                    <div class="sc-date">
-                        <span class="sc-day">05</span>
-                        <span class="sc-month">MAR</span>
-                    </div>
-                    <div class="sc-content">
-                        <h3>Shortlist & Mentoring</h3>
-                        <p>Selected teams announced. Assigned mentors will guide you to refine the project before the
-                            finale.</p>
-                        <span class="sc-status upcoming">Upcoming</span>
-                    </div>
-                </div>
-                <!-- Card 4 -->
-                <div class="schedule-card highlight-card">
-                    <div class="sc-date">
-                        <span class="sc-day">15</span>
-                        <span class="sc-month">MAR</span>
-                    </div>
-                    <div class="sc-content">
-                        <h3>Grand Expo Day</h3>
-                        <p>8:00 AM - Stall Setup<br>10:00 AM - Judging Begins<br>4:00 PM - Valedictory & Prize
-                            Distribution</p>
-                        <span class="sc-status event">Main Event</span>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -320,7 +345,7 @@ if ($isLoggedIn) {
                     <span class="section-label">Rules & Regulations</span>
                     <h2 class="section-title">Participation Guidelines</h2>
                     <ul class="check-list">
-                        <li>Each team must have a minimum of 2 and maximum of 4 members.</li>
+                        <li>Each team must have a minimum of 2 and maximum of <?php echo $maxTeamSize; ?> members.</li>
                         <li>Inter-departmental teams are highly encouraged to promote multidisciplinary solutions.</li>
                         <li>Projects must be original. Plagiarism will lead to immediate disqualification.</li>
                         <li>Hardware projects must have a working prototype; software projects must have a live demo.
