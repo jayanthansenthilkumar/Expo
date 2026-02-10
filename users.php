@@ -45,7 +45,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 mysqli_stmt_close($stmt);
 
 // Departments list for add user form
-$departments = ['AIDS','AIML','CSE','CSBS','CYBER','ECE','EEE','MECH','CIVIL','IT','VLSI','MBA','MCA'];
+$departments = ['FE','AIDS','AIML','CSE','CSBS','CYBER','ECE','EEE','MECH','CIVIL','IT','VLSI','MBA','MCA'];
 
 $successMsg = $_SESSION['success'] ?? '';
 $errorMsg = $_SESSION['error'] ?? '';

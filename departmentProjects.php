@@ -115,11 +115,12 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                     <form method="GET" class="filter-controls">
                         <select name="category" class="filter-select" onchange="this.form.submit()">
                             <option value="">All Categories</option>
-                            <option value="Web Development" <?php echo $categoryFilter === 'Web Development' ? 'selected' : ''; ?>>Web Development</option>
-                            <option value="Mobile Application" <?php echo $categoryFilter === 'Mobile Application' ? 'selected' : ''; ?>>Mobile Application</option>
-                            <option value="AI/Machine Learning" <?php echo $categoryFilter === 'AI/Machine Learning' ? 'selected' : ''; ?>>AI/Machine Learning</option>
-                            <option value="IoT" <?php echo $categoryFilter === 'IoT' ? 'selected' : ''; ?>>IoT</option>
-                            <option value="Other" <?php echo $categoryFilter === 'Other' ? 'selected' : ''; ?>>Other</option>
+                            <option value="web" <?php echo $categoryFilter === 'web' ? 'selected' : ''; ?>>Web Development</option>
+                            <option value="mobile" <?php echo $categoryFilter === 'mobile' ? 'selected' : ''; ?>>Mobile Application</option>
+                            <option value="ai" <?php echo $categoryFilter === 'ai' ? 'selected' : ''; ?>>AI/Machine Learning</option>
+                            <option value="iot" <?php echo $categoryFilter === 'iot' ? 'selected' : ''; ?>>IoT</option>
+                            <option value="blockchain" <?php echo $categoryFilter === 'blockchain' ? 'selected' : ''; ?>>Blockchain</option>
+                            <option value="other" <?php echo $categoryFilter === 'other' ? 'selected' : ''; ?>>Other</option>
                         </select>
                         <select name="status" class="filter-select" onchange="this.form.submit()">
                             <option value="">All Status</option>
@@ -160,9 +161,13 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                                     <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
                                     <td>
                                         <?php if ($project['status'] === 'pending'): ?>
-                                            <a href="reviewApprove.php?id=<?php echo $project['id']; ?>" class="btn btn-sm btn-primary">Review</a>
+                                            <a href="reviewApprove.php" class="btn-primary btn-sm" style="text-decoration:none;">
+                                                <i class="ri-eye-line"></i> Review
+                                            </a>
                                         <?php else: ?>
-                                            <a href="reviewApprove.php?id=<?php echo $project['id']; ?>" class="btn btn-sm">View</a>
+                                            <button class="btn-view btn-sm" onclick="openViewModal(<?php echo $project['id']; ?>, <?php echo htmlspecialchars(json_encode($project['title'])); ?>, <?php echo htmlspecialchars(json_encode($project['description'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['student_name'] ?? 'Unknown')); ?>, <?php echo htmlspecialchars(json_encode($project['category'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['department'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['github_link'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['team_members'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['review_comments'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['status'])); ?>)">
+                                                <i class="ri-eye-line"></i> View
+                                            </button>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
@@ -192,8 +197,102 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
     <script src="assets/js/script.js"></script>
     <script>
     <?php if ($flashMessage): ?>
-    Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo addslashes($flashMessage); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
+    Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
     <?php endif; ?>
+
+    function openViewModal(projectId, title, description, student, category, department, github, team, comments, currentStatus) {
+        const githubHtml = github
+            ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#2563eb;">${escapeHtml(github)}</a></p>`
+            : '';
+
+        const statusColor = currentStatus === 'approved' ? '#22c55e' : '#ef4444';
+        const statusLabel = currentStatus === 'approved' ? 'Approved' : 'Rejected';
+        const statusIcon = currentStatus === 'approved' ? 'ri-checkbox-circle-line' : 'ri-close-circle-line';
+
+        Swal.fire({
+            title: 'Project Details',
+            html: `
+                <div style="text-align:left;">
+                    <div style="background:#f8fafc;border-radius:8px;padding:1rem;margin-bottom:1rem;border:1px solid #e2e8f0;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                            <h4 style="margin:0;color:#1e293b;">${escapeHtml(title)}</h4>
+                            <span style="background:${statusColor}20;color:${statusColor};padding:0.25rem 0.75rem;border-radius:20px;font-size:0.8rem;font-weight:600;"><i class="${statusIcon}"></i> ${statusLabel}</span>
+                        </div>
+                        <p style="margin:0 0 0.75rem 0;color:#475569;font-size:0.9rem;">${escapeHtml(description || 'No description provided.')}</p>
+                        <div style="font-size:0.85rem;color:#64748b;line-height:1.8;">
+                            <p style="margin:0;"><strong>Student:</strong> ${escapeHtml(student)}</p>
+                            <p style="margin:0;"><strong>Category:</strong> ${escapeHtml(category)}</p>
+                            <p style="margin:0;"><strong>Department:</strong> ${escapeHtml(department)}</p>
+                            <p style="margin:0;"><strong>Team:</strong> ${escapeHtml(team || 'N/A')}</p>
+                            ${githubHtml}
+                        </div>
+                    </div>
+                    ${comments ? `<div style="background:#fef9c3;border-radius:8px;padding:0.75rem 1rem;margin-bottom:1rem;border:1px solid #fde047;"><strong style="font-size:0.85rem;">Review Comments:</strong><p style="margin:0.25rem 0 0 0;font-size:0.9rem;color:#713f12;">${escapeHtml(comments)}</p></div>` : ''}
+                    <div style="margin-bottom:0.75rem;">
+                        <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:0.5rem;">Change Decision</label>
+                        <div style="display:flex;gap:0.75rem;">
+                            ${currentStatus !== 'approved' ? `<label style="display:flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;border:2px solid #22c55e;border-radius:8px;cursor:pointer;flex:1;justify-content:center;transition:all 0.2s;" id="swal-view-approve-label">
+                                <input type="radio" name="swal-view-decision" value="approved" style="cursor:pointer;" onchange="this.closest('.swal2-html-container').querySelectorAll('[id^=swal-view-]').forEach(l => { if(l.tagName==='LABEL') l.style.background='transparent'; }); this.closest('label').style.background='#dcfce7';">
+                                <i class="ri-checkbox-circle-line" style="color:#22c55e;"></i> <span style="font-weight:500;">Approve</span>
+                            </label>` : ''}
+                            <label style="display:flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;border:2px solid #f59e0b;border-radius:8px;cursor:pointer;flex:1;justify-content:center;transition:all 0.2s;" id="swal-view-pending-label">
+                                <input type="radio" name="swal-view-decision" value="pending" style="cursor:pointer;" onchange="this.closest('.swal2-html-container').querySelectorAll('[id^=swal-view-]').forEach(l => { if(l.tagName==='LABEL') l.style.background='transparent'; }); this.closest('label').style.background='#fef3c7';">
+                                <i class="ri-arrow-go-back-line" style="color:#f59e0b;"></i> <span style="font-weight:500;">Revert to Pending</span>
+                            </label>
+                            ${currentStatus !== 'rejected' ? `<label style="display:flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;border:2px solid #ef4444;border-radius:8px;cursor:pointer;flex:1;justify-content:center;transition:all 0.2s;" id="swal-view-reject-label">
+                                <input type="radio" name="swal-view-decision" value="rejected" style="cursor:pointer;" onchange="this.closest('.swal2-html-container').querySelectorAll('[id^=swal-view-]').forEach(l => { if(l.tagName==='LABEL') l.style.background='transparent'; }); this.closest('label').style.background='#fef2f2';">
+                                <i class="ri-close-circle-line" style="color:#ef4444;"></i> <span style="font-weight:500;">Reject</span>
+                            </label>` : ''}
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:0.3rem;">Updated Comments</label>
+                        <textarea id="swal-view-comments" class="swal2-textarea" rows="3" placeholder="Add updated comments..." style="margin:0;width:100%;box-sizing:border-box;"></textarea>
+                    </div>
+                </div>
+            `,
+            confirmButtonText: '<i class="ri-refresh-line"></i> Update Decision',
+            confirmButtonColor: '#2563eb',
+            showDenyButton: true,
+            denyButtonText: 'Close',
+            denyButtonColor: '#6b7280',
+            showCancelButton: false,
+            width: '600px',
+            focusConfirm: false,
+            preConfirm: () => {
+                const decision = document.querySelector('input[name="swal-view-decision"]:checked');
+                if (!decision) {
+                    Swal.showValidationMessage('Please select a new decision');
+                    return false;
+                }
+                return {
+                    decision: decision.value,
+                    comments: document.getElementById('swal-view-comments').value.trim()
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const d = result.value;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'sparkBackend.php';
+                form.innerHTML = `
+                    <input type="hidden" name="action" value="review_project">
+                    <input type="hidden" name="project_id" value="${projectId}">
+                    <input type="hidden" name="decision" value="${escapeHtml(d.decision)}">
+                    <input type="hidden" name="comments" value="${escapeHtml(d.comments)}">
+                `;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
     </script>
 </body>
 

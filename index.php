@@ -175,7 +175,7 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
                     <p>Find teammates for future hackathons and network with peers from other departments.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="f-icon">�</div>
+                    <div class="f-icon">🎯</div>
                     <h3>Placement Edge</h3>
                     <p>A winning project is a resume highlight that sets you apart during campus placements.</p>
                 </div>
@@ -430,7 +430,7 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
         <div class="container">
             <div class="footer-top">
                 <div class="f-brand">
-                    <h2>EXPO 2026</h2>
+                    <h2>SPARK'26</h2>
                     <p>Fostering a culture of innovation and engineering excellence among students.</p>
                 </div>
                 <div class="f-links">

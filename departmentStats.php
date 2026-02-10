@@ -8,6 +8,7 @@ $userName = $_SESSION['name'] ?? 'Coordinator';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator');
 $userDept = $_SESSION['department'] ?? '';
+$isFE = (strtoupper($userDept) === 'FE');
 
 // Multi-department support (AIDS & AIML share one coordinator)
 $deptFilter = buildDeptFilter($userDept);
@@ -22,9 +23,21 @@ mysqli_stmt_execute($stmt);
 $totalProjects = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
 mysqli_stmt_close($stmt);
 
-// Count students in department
-$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department IN ($dp) AND role = 'student'");
-mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+// Count students in department (FE: all first-year non-MBA/MCA)
+if ($isFE) {
+    $feFilter = buildFEStudentFilter();
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users u WHERE " . $feFilter['where'] . " AND u.role = 'student'");
+    mysqli_stmt_bind_param($stmt, $feFilter['types'], ...$feFilter['values']);
+} elseif (in_array(strtoupper($userDept), ['MBA', 'MCA'])) {
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department IN ($dp) AND role = 'student'");
+    mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+} else {
+    $excl = buildExcludeFirstYearFilter();
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users u WHERE u.department IN ($dp) AND u.role = 'student' AND " . $excl['where']);
+    $allTypes = $dt . $excl['types'];
+    $allValues = array_merge($dv, $excl['values']);
+    mysqli_stmt_bind_param($stmt, $allTypes, ...$allValues);
+}
 mysqli_stmt_execute($stmt);
 $totalStudents = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
 mysqli_stmt_close($stmt);

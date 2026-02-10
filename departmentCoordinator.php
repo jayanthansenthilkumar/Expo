@@ -38,8 +38,22 @@ $approvedProjects = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
 mysqli_stmt_close($stmt);
 
 // Department students
-$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department IN ($dp) AND role = 'student'");
-mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+if (strtoupper($userDepartment) === 'FE') {
+    $feFilter = buildFEStudentFilter();
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users u WHERE " . $feFilter['where'] . " AND u.role = 'student'");
+    mysqli_stmt_bind_param($stmt, $feFilter['types'], ...$feFilter['values']);
+} elseif (in_array(strtoupper($userDepartment), ['MBA', 'MCA'])) {
+    // MBA/MCA keep all their students including first-year
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department IN ($dp) AND role = 'student'");
+    mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+} else {
+    // Other depts: exclude first-year students (they go to FE)
+    $excl = buildExcludeFirstYearFilter();
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users u WHERE u.department IN ($dp) AND u.role = 'student' AND " . $excl['where']);
+    $allTypes = $dt . $excl['types'];
+    $allValues = array_merge($dv, $excl['values']);
+    mysqli_stmt_bind_param($stmt, $allTypes, ...$allValues);
+}
 mysqli_stmt_execute($stmt);
 $deptStudents = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
 mysqli_stmt_close($stmt);
@@ -74,8 +88,6 @@ unset($_SESSION['success'], $_SESSION['error']);
 
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <!-- Sidebar -->
         <?php include 'includes/sidebar.php'; ?>
 
 

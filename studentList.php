@@ -8,6 +8,7 @@ $userName = $_SESSION['name'] ?? 'Coordinator';
 $userInitials = strtoupper(substr($userName, 0, 2));
 $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Coordinator');
 $department = $_SESSION['department'] ?? '';
+$isFE = (strtoupper($department) === 'FE');
 
 // Multi-department support (AIDS & AIML share one coordinator)
 $deptFilter = buildDeptFilter($department);
@@ -20,25 +21,65 @@ $perPage = 10;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $perPage;
 
-// Count students in department
-$countStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department IN ($dp) AND role = 'student'");
-mysqli_stmt_bind_param($countStmt, $dt, ...$dv);
+$isMbaOrMca = in_array(strtoupper($department), ['MBA', 'MCA']);
+
+// Count students in department (FE coordinator: all first-year non-MBA/MCA students)
+if ($isFE) {
+    $feFilter = buildFEStudentFilter();
+    $countStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users u WHERE " . $feFilter['where'] . " AND u.role = 'student'");
+    mysqli_stmt_bind_param($countStmt, $feFilter['types'], ...$feFilter['values']);
+} elseif ($isMbaOrMca) {
+    $countStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department IN ($dp) AND role = 'student'");
+    mysqli_stmt_bind_param($countStmt, $dt, ...$dv);
+} else {
+    $excl = buildExcludeFirstYearFilter();
+    $countStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users u WHERE u.department IN ($dp) AND u.role = 'student' AND " . $excl['where']);
+    $allTypes = $dt . $excl['types'];
+    $allValues = array_merge($dv, $excl['values']);
+    mysqli_stmt_bind_param($countStmt, $allTypes, ...$allValues);
+}
 mysqli_stmt_execute($countStmt);
 $totalStudents = (int)mysqli_fetch_assoc(mysqli_stmt_get_result($countStmt))['cnt'];
 mysqli_stmt_close($countStmt);
 $totalPages = max(1, ceil($totalStudents / $perPage));
 
 // Fetch students with project count
-$fetchTypes = $dt . 'ii';
-$fetchParams = array_merge($dv, [$perPage, $offset]);
-$stmt = mysqli_prepare($conn, "
-    SELECT u.*, 
-        (SELECT COUNT(*) FROM projects WHERE student_id = u.id) AS project_count
-    FROM users u
-    WHERE u.department IN ($dp) AND u.role = 'student'
-    ORDER BY u.created_at DESC
-    LIMIT ? OFFSET ?
-");
+if ($isFE) {
+    $feFilter = buildFEStudentFilter();
+    $fetchTypes = $feFilter['types'] . 'ii';
+    $fetchParams = array_merge($feFilter['values'], [$perPage, $offset]);
+    $stmt = mysqli_prepare($conn, "
+        SELECT u.*, 
+            (SELECT COUNT(*) FROM projects WHERE student_id = u.id) AS project_count
+        FROM users u
+        WHERE " . $feFilter['where'] . " AND u.role = 'student'
+        ORDER BY u.created_at DESC
+        LIMIT ? OFFSET ?
+    ");
+} elseif ($isMbaOrMca) {
+    $fetchTypes = $dt . 'ii';
+    $fetchParams = array_merge($dv, [$perPage, $offset]);
+    $stmt = mysqli_prepare($conn, "
+        SELECT u.*, 
+            (SELECT COUNT(*) FROM projects WHERE student_id = u.id) AS project_count
+        FROM users u
+        WHERE u.department IN ($dp) AND u.role = 'student'
+        ORDER BY u.created_at DESC
+        LIMIT ? OFFSET ?
+    ");
+} else {
+    $excl = buildExcludeFirstYearFilter();
+    $fetchTypes = $dt . $excl['types'] . 'ii';
+    $fetchParams = array_merge($dv, $excl['values'], [$perPage, $offset]);
+    $stmt = mysqli_prepare($conn, "
+        SELECT u.*, 
+            (SELECT COUNT(*) FROM projects WHERE student_id = u.id) AS project_count
+        FROM users u
+        WHERE u.department IN ($dp) AND u.role = 'student' AND " . $excl['where'] . "
+        ORDER BY u.created_at DESC
+        LIMIT ? OFFSET ?
+    ");
+}
 mysqli_stmt_bind_param($stmt, $fetchTypes, ...$fetchParams);
 mysqli_stmt_execute($stmt);
 $stuResult = mysqli_stmt_get_result($stmt);

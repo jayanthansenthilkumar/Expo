@@ -1791,6 +1791,84 @@ ul {
   background: #dc2626;
 }
 
+.btn-warning {
+  background: #f59e0b;
+  color: white;
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-warning:hover {
+  background: #d97706;
+}
+
+.btn-success {
+  background: #22c55e;
+  color: white;
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-success:hover {
+  background: #16a34a;
+}
+
+.btn-view {
+  background: #6366f1;
+  color: white;
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-view:hover {
+  background: #4f46e5;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  gap: 0.3rem;
+}
+
+.status-badge.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.status-approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.status-rejected {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
 .btn-icon {
   width: 36px;
   height: 36px;

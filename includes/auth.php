@@ -41,13 +41,13 @@ function checkUserAccess($isPublic = false)
         'admin' => [
             'sparkAdmin.php', 'analytics.php', 'allProjects.php', 'users.php', 
             'departments.php', 'coordinators.php', 'schedule.php', 'announcements.php', 
-            'judging.php', 'settings.php', 'database.php', 'profile.php',
-            'logout.php', 'index.php'
+            'judging.php', 'settings.php', 'database.php', 'departmentStats.php',
+            'messages.php', 'profile.php', 'logout.php', 'index.php'
         ],
         'departmentcoordinator' => [
             'departmentCoordinator.php', 'departmentStats.php', 'departmentProjects.php', 
             'reviewApprove.php', 'topProjects.php', 'studentList.php', 'teams.php', 
-            'profile.php', 'settings.php', 'logout.php', 'index.php'
+            'messages.php', 'announcements.php', 'profile.php', 'settings.php', 'logout.php', 'index.php'
         ],
         'studentaffairs' => [
             'studentAffairs.php', 'analytics.php', 'allProjects.php', 'approvals.php', 
@@ -82,8 +82,8 @@ function checkUserAccess($isPublic = false)
         exit();
     }
 
-    // Verify session integrity
-    if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
+    // Verify session integrity (check both keys set during login)
+    if (!isset($_SESSION['userid']) || !isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
         session_unset();
         session_destroy();
         header('Location: login.php');
@@ -117,5 +117,103 @@ function buildDeptFilter($department) {
     $placeholders = implode(',', array_fill(0, count($depts), '?'));
     $types = str_repeat('s', count($depts));
     return ['placeholders' => $placeholders, 'types' => $types, 'values' => $depts];
+}
+
+/**
+ * Normalizes various representations of "first year" to a canonical form.
+ * Handles: "I year", "I Year", "1", "1st year", "First year", "first", "I" etc.
+ * Returns the canonical year string (e.g. "I year") or the original value if no match.
+ */
+function normalizeYear($year) {
+    $y = strtolower(trim($year));
+    // Match first year variants
+    if (preg_match('/^(i\s*year|i\s*$|1st?\s*(year)?|first\s*(year)?|1\s*$)/i', $y)) {
+        return 'I year';
+    }
+    if (preg_match('/^(ii\s*year|ii\s*$|2nd?\s*(year)?|second\s*(year)?|2\s*$)/i', $y)) {
+        return 'II year';
+    }
+    if (preg_match('/^(iii\s*year|iii\s*$|3rd?\s*(year)?|third\s*(year)?|3\s*$)/i', $y)) {
+        return 'III year';
+    }
+    if (preg_match('/^(iv\s*year|iv\s*$|4th?\s*(year)?|fourth\s*(year)?|4\s*$)/i', $y)) {
+        return 'IV year';
+    }
+    return $year; // Return original if no match
+}
+
+/**
+ * Checks if a student is a first-year engineering student (not MBA/MCA).
+ * These students are routed to the FE (Freshmen Engineering) coordinator.
+ */
+function isFirstYearEngineering($year, $department) {
+    $normalizedYear = normalizeYear($year);
+    $excludedDepts = ['MBA', 'MCA'];
+    return ($normalizedYear === 'I year' && !in_array(strtoupper($department), $excludedDepts));
+}
+
+/**
+ * Returns the routing department for coordinator assignment.
+ * First-year students (except MBA/MCA) are routed to 'FE' coordinator.
+ * All others go to their actual department coordinator.
+ */
+function getRoutingDepartment($year, $department) {
+    if (isFirstYearEngineering($year, $department)) {
+        return 'FE';
+    }
+    return $department;
+}
+
+/**
+ * Builds a SQL WHERE clause fragment for the FE coordinator to query students.
+ * FE coordinator needs: all students with year='I year' AND department NOT IN ('MBA','MCA').
+ * Returns ['where' => "u.year = ? AND u.department NOT IN ('MBA','MCA')", 'types' => 's', 'values' => ['I year']]
+ */
+function buildFEStudentFilter() {
+    return [
+        'where' => "u.year = ? AND u.department NOT IN ('MBA','MCA')",
+        'types' => 's',
+        'values' => ['I year']
+    ];
+}
+
+/**
+ * Builds a SQL WHERE clause fragment for the FE coordinator to query teams.
+ * Teams created by first-year students are tagged with department='FE'.
+ */
+function buildFETeamFilter() {
+    return [
+        'where' => "t.department = ?",
+        'types' => 's',
+        'values' => ['FE']
+    ];
+}
+
+/**
+ * Builds a SQL WHERE clause fragment for the FE coordinator to query projects.
+ * Since projects use the student's actual department (not 'FE'), we must JOIN
+ * on users to find projects submitted by first-year non-MBA/MCA students.
+ * Returns conditions to be used with:
+ *   SELECT p.* FROM projects p JOIN users u ON p.student_id = u.id WHERE {where}
+ */
+function buildFEProjectFilter() {
+    return [
+        'where' => "u.year = ? AND u.department NOT IN ('MBA','MCA')",
+        'types' => 's',
+        'values' => ['I year']
+    ];
+}
+
+/**
+ * For non-FE, non-MBA/MCA department coordinators: builds a WHERE clause that
+ * excludes first-year students from their student list (those go to FE).
+ * Usage: WHERE u.department IN ($dp) AND u.role='student' AND {exclude_where}
+ */
+function buildExcludeFirstYearFilter() {
+    return [
+        'where' => "(u.year IS NULL OR u.year != ?)",
+        'types' => 's',
+        'values' => ['I year']
+    ];
 }
 ?>

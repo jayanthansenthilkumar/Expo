@@ -6,7 +6,7 @@ checkUserAccess();
 
 $userName = $_SESSION['name'] ?? 'Admin';
 $userInitials = strtoupper(substr($userName, 0, 2));
-$userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Admin');
+$userRole = ucfirst($_SESSION['role'] ?? 'Admin');
 
 // Fetch approved projects with student name using prepared statement
 $projects = [];
@@ -211,7 +211,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type'], $_SESSION['success'],
     </script>
     <script>
     <?php if ($flashMessage): ?>
-    Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo addslashes($flashMessage); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
+    Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
     <?php endif; ?>
     </script>
 </body>

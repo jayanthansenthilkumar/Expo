@@ -13,8 +13,9 @@ $totalUsers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FRO
 $totalDepartments = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(DISTINCT department) as cnt FROM users WHERE department IS NOT NULL AND department != ''"))['cnt'];
 $pendingProjects = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'pending'"))['cnt'];
 
-// Days to event
-$eventDate = '2026-02-15';
+// Days to event (read from settings table)
+$eventDateRow = mysqli_fetch_assoc(mysqli_query($conn, "SELECT setting_value FROM settings WHERE setting_key = 'event_date'"));
+$eventDate = $eventDateRow ? $eventDateRow['setting_value'] : '2026-02-15';
 $daysToEvent = max(0, (int)((strtotime($eventDate) - time()) / 86400));
 
 // Recent activity (last 5 projects)
@@ -37,8 +38,6 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <!-- Sidebar -->
         <?php include 'includes/sidebar.php'; ?>
 
 

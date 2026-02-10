@@ -6,7 +6,7 @@ checkUserAccess();
 
 $userName = $_SESSION['name'] ?? 'Admin';
 $userInitials = strtoupper(substr($userName, 0, 2));
-$userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Admin');
+$userRole = ucfirst($_SESSION['role'] ?? 'Admin');
 
 // Get database name
 $dbName = $conn->query("SELECT DATABASE()")->fetch_row()[0];
@@ -67,11 +67,11 @@ if ($tablesResult) {
                         <div class="db-info">
                             <div class="db-info-item">
                                 <span class="db-label">Database Name</span>
-                                <span class="db-value">spark</span>
+                                <span class="db-value"><?php echo htmlspecialchars($dbName); ?></span>
                             </div>
                             <div class="db-info-item">
                                 <span class="db-label">Server</span>
-                                <span class="db-value">localhost</span>
+                                <span class="db-value"><?php echo htmlspecialchars($conn->host_info); ?></span>
                             </div>
                             <div class="db-info-item">
                                 <span class="db-label">Tables</span>

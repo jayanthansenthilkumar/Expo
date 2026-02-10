@@ -237,6 +237,7 @@ INSERT INTO `users` (`id`, `name`, `username`, `email`, `password`, `department`
 (8, 'Ramesh C', 'samkce', 'studentaffairs@mkce.ac.in', 'samkce', NULL, NULL, NULL, 'studentaffairs', 'active', '2026-02-10 04:53:17'),
 (9, 'AIDS', 'sparkaids', 'aidscoordinator@gmail.com', 'sparkaids', 'AIDS', NULL, NULL, 'departmentcoordinator', 'active', '2026-02-10 04:57:49'),
 (10, 'AIML', 'sparkaiml', 'aimlcoordinator@gmail.com', 'sparkaiml', 'AIML', NULL, NULL, 'departmentcoordinator', 'active', '2026-02-10 04:58:21'),
+(13, 'FE Coordinator', 'sparkfe', 'fecoordinator@gmail.com', 'sparkfe', 'FE', NULL, NULL, 'departmentcoordinator', 'active', '2026-02-10 06:00:00'),
 (11, 'JAYANTHAN S', 'jayanthan', 'itsmejayanthan@gmail.com', '123456', 'AIML', 'IV year', '927622BAL016', 'student', 'active', '2026-02-10 04:59:46'),
 (12, 'Hari', 'hari', 'hari@gmail.com', '123456', 'CSE', 'I year', '927625BCS001', 'student', 'active', '2026-02-10 05:04:39');
 
@@ -372,7 +373,7 @@ ALTER TABLE `team_members`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- Constraints for dumped tables

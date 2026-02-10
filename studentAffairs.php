@@ -44,8 +44,6 @@ unset($_SESSION['success'], $_SESSION['error']);
 
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <!-- Sidebar -->
         <?php include 'includes/sidebar.php'; ?>
 
 

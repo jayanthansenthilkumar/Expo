@@ -104,8 +104,15 @@ unset($_SESSION['success'], $_SESSION['error']);
                     <div class="empty-state">
                         <i class="ri-folder-open-line"></i>
                         <h3>No Projects Yet</h3>
+                        <?php if ($isLeader): ?>
                         <p>You haven't submitted any projects. Start by creating your first project!</p>
                         <a href="submitProject.php" class="btn-primary">Submit Your First Project</a>
+                        <?php elseif ($myTeamId): ?>
+                        <p>Your team hasn't submitted any projects yet. Only the team leader can submit projects.</p>
+                        <?php else: ?>
+                        <p>Join or create a team first, then submit your project.</p>
+                        <a href="myTeam.php" class="btn-primary">Go to My Team</a>
+                        <?php endif; ?>
                     </div>
                     <?php else: ?>
                         <?php foreach ($projects as $project): ?>

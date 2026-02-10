@@ -148,7 +148,9 @@ switch ($action) {
         $teamMembers = trim($_POST['teamMembers'] ?? '');
         $githubLink = trim($_POST['githubLink'] ?? '');
         $studentId = $_SESSION['user_id'];
-        $department = $_SESSION['department'] ?? '';
+        $studentDept = $_SESSION['department'] ?? '';
+        $studentYear = $_SESSION['year'] ?? '';
+        $department = getRoutingDepartment($studentYear, $studentDept);
 
         if (empty($title) || empty($category) || empty($description)) {
             redirectWith('submitProject.php', 'error', 'Title, category, and description are required');
@@ -272,15 +274,23 @@ switch ($action) {
         $reviewerId = $_SESSION['user_id'];
         $role = $_SESSION['role'];
 
-        if (!in_array($decision, ['approved', 'rejected'])) {
+        if (!in_array($decision, ['approved', 'rejected', 'pending'])) {
             $redirect = ($role === 'departmentcoordinator') ? 'reviewApprove.php' : 'approvals.php';
             redirectWith($redirect, 'error', 'Invalid review decision');
         }
 
-        $stmt = mysqli_prepare($conn, 
-            "UPDATE projects SET status = ?, reviewed_by = ?, review_comments = ?, reviewed_at = NOW() WHERE id = ?"
-        );
-        mysqli_stmt_bind_param($stmt, "sisi", $decision, $reviewerId, $comments, $projectId);
+        // If reverting to pending, clear review fields
+        if ($decision === 'pending') {
+            $stmt = mysqli_prepare($conn, 
+                "UPDATE projects SET status = 'pending', reviewed_by = NULL, review_comments = NULL, reviewed_at = NULL WHERE id = ?"
+            );
+            mysqli_stmt_bind_param($stmt, "i", $projectId);
+        } else {
+            $stmt = mysqli_prepare($conn, 
+                "UPDATE projects SET status = ?, reviewed_by = ?, review_comments = ?, reviewed_at = NOW() WHERE id = ?"
+            );
+            mysqli_stmt_bind_param($stmt, "sisi", $decision, $reviewerId, $comments, $projectId);
+        }
 
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
@@ -722,7 +732,9 @@ switch ($action) {
         $teamName = trim($_POST['teamName'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $leaderId = $_SESSION['user_id'];
-        $department = $_SESSION['department'] ?? '';
+        $studentDept = $_SESSION['department'] ?? '';
+        $studentYear = $_SESSION['year'] ?? '';
+        $department = getRoutingDepartment($studentYear, $studentDept);
 
         if (empty($teamName)) {
             redirectWith('myTeam.php', 'error', 'Team name is required');
@@ -1029,6 +1041,31 @@ switch ($action) {
         } else {
             mysqli_stmt_close($stmt);
             redirectWith('coordinators.php', 'error', 'Failed to assign coordinator');
+        }
+        break;
+
+    // ==========================================
+    // COORDINATOR: Remove coordinator role
+    // ==========================================
+    case 'remove_coordinator':
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'studentaffairs'])) {
+            redirectWith('login.php', 'error', 'Unauthorized');
+        }
+
+        $userId = intval($_POST['user_id'] ?? 0);
+        if ($userId <= 0) {
+            redirectWith('coordinators.php', 'error', 'Invalid user');
+        }
+
+        $stmt = mysqli_prepare($conn, "UPDATE users SET role = 'student' WHERE id = ? AND role = 'departmentcoordinator'");
+        mysqli_stmt_bind_param($stmt, "i", $userId);
+
+        if (mysqli_stmt_execute($stmt) && mysqli_stmt_affected_rows($stmt) > 0) {
+            mysqli_stmt_close($stmt);
+            redirectWith('coordinators.php', 'success', 'Coordinator removed successfully');
+        } else {
+            mysqli_stmt_close($stmt);
+            redirectWith('coordinators.php', 'error', 'Failed to remove coordinator');
         }
         break;
 

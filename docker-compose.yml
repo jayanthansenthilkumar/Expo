@@ -1,0 +1,59 @@
+services:
+  # PHP Application on port 8085
+  spark-app:
+    build: .
+    container_name: spark-app
+    ports:
+      - "8085:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - DB_HOST=spark-db
+      - DB_USER=spark_user
+      - DB_PASSWORD=spark_password
+      - DB_NAME=spark
+    depends_on:
+      - spark-db
+    networks:
+      - spark-network
+    restart: unless-stopped
+
+  # MySQL Database Service (internal only, accessed via PhpMyAdmin or app)
+  spark-db:
+    image: mysql:8.0
+    container_name: spark-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: spark
+      MYSQL_USER: spark_user
+      MYSQL_PASSWORD: spark_password
+    volumes:
+      - spark-db-volume:/var/lib/mysql
+      - ./assets/schema/spark.sql:/docker-entrypoint-initdb.d/spark.sql
+    networks:
+      - spark-network
+    restart: unless-stopped
+
+  # PhpMyAdmin for Database Management on port 8086
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: spark-phpmyadmin
+    environment:
+      PMA_HOST: spark-db
+      PMA_USER: spark_user
+      PMA_PASSWORD: spark_password
+      PMA_ROOT_PASSWORD: root_password
+    ports:
+      - "8086:80"
+    networks:
+      - spark-network
+    depends_on:
+      - spark-db
+    restart: unless-stopped
+
+volumes:
+  spark-db-volume:
+
+networks:
+  spark-network:
+    driver: bridge

@@ -1,7 +1,7 @@
 <?php
 // Get current page to set active class
 $current_page = basename($_SERVER['PHP_SELF']);
-$user_role = $_SESSION['role'] ?? strtolower($_SESSION['user_role'] ?? 'guest');
+$user_role = $_SESSION['role'] ?? 'guest';
 
 // Check if student is a team leader (for sidebar display)
 $_isTeamLeader = false;
