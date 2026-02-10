@@ -118,4 +118,19 @@ function buildDeptFilter($department) {
     $types = str_repeat('s', count($depts));
     return ['placeholders' => $placeholders, 'types' => $types, 'values' => $depts];
 }
+
+/**
+ * For the FE (Freshmen Engineering) coordinator, students are identified by year='I year'
+ * rather than by department, since students register under their actual dept (CSE, ECE, etc.).
+ * Returns ['sql' => 'condition', 'types' => '...', 'values' => [...]]
+ */
+function buildStudentFilter($department) {
+    if (strtoupper(trim($department)) === 'FE') {
+        return ['sql' => "year = ?", 'types' => 's', 'values' => ['I year']];
+    }
+    $depts = getUserDepartments($department);
+    $placeholders = implode(',', array_fill(0, count($depts), '?'));
+    $types = str_repeat('s', count($depts));
+    return ['sql' => "department IN ($placeholders)", 'types' => $types, 'values' => $depts];
+}
 ?>

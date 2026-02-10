@@ -149,6 +149,12 @@ switch ($action) {
         $githubLink = trim($_POST['githubLink'] ?? '');
         $studentId = $_SESSION['user_id'];
         $department = $_SESSION['department'] ?? '';
+        $studentYear = $_SESSION['year'] ?? '';
+
+        // First-year students belong to Freshmen Engineering (FE) department
+        if (strtolower(trim($studentYear)) === 'i year') {
+            $department = 'FE';
+        }
 
         if (empty($title) || empty($category) || empty($description)) {
             redirectWith('submitProject.php', 'error', 'Title, category, and description are required');
@@ -723,6 +729,12 @@ switch ($action) {
         $description = trim($_POST['description'] ?? '');
         $leaderId = $_SESSION['user_id'];
         $department = $_SESSION['department'] ?? '';
+        $leaderYear = $_SESSION['year'] ?? '';
+
+        // First-year students belong to Freshmen Engineering (FE) department
+        if (strtolower(trim($leaderYear)) === 'i year') {
+            $department = 'FE';
+        }
 
         if (empty($teamName)) {
             redirectWith('myTeam.php', 'error', 'Team name is required');

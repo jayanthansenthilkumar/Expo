@@ -14,7 +14,7 @@ $deptFilter = buildDeptFilter($userDepartment);
 $dp = $deptFilter['placeholders'];
 $dt = $deptFilter['types'];
 $dv = $deptFilter['values'];
-$deptLabel = implode(' & ', $deptFilter['values']);
+$deptLabel = strtoupper(trim($userDepartment)) === 'FE' ? 'Freshmen Engineering' : implode(' & ', $deptFilter['values']);
 
 // Department projects count
 $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department IN ($dp)");
@@ -37,9 +37,10 @@ mysqli_stmt_execute($stmt);
 $approvedProjects = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
 mysqli_stmt_close($stmt);
 
-// Department students
-$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department IN ($dp) AND role = 'student'");
-mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+// Department students (use year-based filter for FE coordinator)
+$studentFilter = buildStudentFilter($userDepartment);
+$stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE " . $studentFilter['sql'] . " AND role = 'student'");
+mysqli_stmt_bind_param($stmt, $studentFilter['types'], ...$studentFilter['values']);
 mysqli_stmt_execute($stmt);
 $deptStudents = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
 mysqli_stmt_close($stmt);

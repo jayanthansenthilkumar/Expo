@@ -15,27 +15,30 @@ $dp = $deptFilter['placeholders'];
 $dt = $deptFilter['types'];
 $dv = $deptFilter['values'];
 
+// Student filter (FE coordinator uses year-based filter)
+$studentFilter = buildStudentFilter($department);
+
 // Pagination
 $perPage = 10;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $perPage;
 
 // Count students in department
-$countStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department IN ($dp) AND role = 'student'");
-mysqli_stmt_bind_param($countStmt, $dt, ...$dv);
+$countStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE " . $studentFilter['sql'] . " AND role = 'student'");
+mysqli_stmt_bind_param($countStmt, $studentFilter['types'], ...$studentFilter['values']);
 mysqli_stmt_execute($countStmt);
 $totalStudents = (int)mysqli_fetch_assoc(mysqli_stmt_get_result($countStmt))['cnt'];
 mysqli_stmt_close($countStmt);
 $totalPages = max(1, ceil($totalStudents / $perPage));
 
 // Fetch students with project count
-$fetchTypes = $dt . 'ii';
-$fetchParams = array_merge($dv, [$perPage, $offset]);
+$fetchTypes = $studentFilter['types'] . 'ii';
+$fetchParams = array_merge($studentFilter['values'], [$perPage, $offset]);
 $stmt = mysqli_prepare($conn, "
     SELECT u.*, 
         (SELECT COUNT(*) FROM projects WHERE student_id = u.id) AS project_count
     FROM users u
-    WHERE u.department IN ($dp) AND u.role = 'student'
+    WHERE " . $studentFilter['sql'] . " AND u.role = 'student'
     ORDER BY u.created_at DESC
     LIMIT ? OFFSET ?
 ");
