@@ -93,7 +93,7 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
     <header class="hero">
         <div class="container hero-grid">
             <div class="hero-content">
-                <span class="hero-chips">🚀 <?php echo date('M d, Y', strtotime($eventDate)); ?> • College Auditorium</span>
+                <span class="hero-chips">🚀A Space for Innovators</span>
                 <h1 class="hero-title">Where Student Ideas <br> <span class="text-gradient">Take Flight.</span></h1>
                 <p class="hero-desc">
                     Join the largest annual gathering of student innovators, developers, and creators.
@@ -263,27 +263,27 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
                         $statusClass = 'event';
                         $statusText = ucfirst($event['event_type']);
                     }
-                ?>
-                <div class="schedule-card<?php echo $highlightClass; ?>">
-                    <div class="sc-date">
-                        <span class="sc-day"><?php echo date('d', $eventTimestamp); ?></span>
-                        <span class="sc-month"><?php echo strtoupper(date('M', $eventTimestamp)); ?></span>
+                    ?>
+                    <div class="schedule-card<?php echo $highlightClass; ?>">
+                        <div class="sc-date">
+                            <span class="sc-day"><?php echo date('d', $eventTimestamp); ?></span>
+                            <span class="sc-month"><?php echo strtoupper(date('M', $eventTimestamp)); ?></span>
+                        </div>
+                        <div class="sc-content">
+                            <h3><?php echo htmlspecialchars($event['title']); ?></h3>
+                            <p><?php echo htmlspecialchars($event['description'] ?? ''); ?></p>
+                            <span class="sc-status <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
+                        </div>
                     </div>
-                    <div class="sc-content">
-                        <h3><?php echo htmlspecialchars($event['title']); ?></h3>
-                        <p><?php echo htmlspecialchars($event['description'] ?? ''); ?></p>
-                        <span class="sc-status <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
-                    </div>
-                </div>
                 <?php endwhile; ?>
 
                 <?php if ($eventIndex === 0): ?>
-                <div class="schedule-card">
-                    <div class="sc-content">
-                        <h3>Schedule Coming Soon</h3>
-                        <p>Event schedule will be announced shortly. Stay tuned!</p>
+                    <div class="schedule-card">
+                        <div class="sc-content">
+                            <h3>Schedule Coming Soon</h3>
+                            <p>Event schedule will be announced shortly. Stay tuned!</p>
+                        </div>
                     </div>
-                </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -453,7 +453,55 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
         </div>
     </footer>
 
+    <!-- Syraa AI Chat Widget -->
+    <div class="chat-widget-container">
+        <button class="chat-toggle-btn">
+            <i class="ri-chat-smile-3-line"></i>
+        </button>
+        <div class="chat-window">
+            <div class="chat-header">
+                <div class="chat-avatar">
+                    <i class="ri-robot-2-line"></i>
+                </div>
+                <div class="chat-info">
+                    <h3>Syraa AI</h3>
+                    <p>SPARK'26 Assistant</p>
+                </div>
+                <div class="chat-controls">
+                    <button class="chat-notification-btn" title="Notifications">
+                        <i class="ri-notification-3-line"></i>
+                        <span class="notification-dot"></span>
+                    </button>
+                    <button class="close-chat"
+                        style="background:none; border:none; color: #64748b; cursor:pointer; font-size:1.2rem;"
+                        onclick="$('.chat-toggle-btn').click()">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chat-messages">
+                <div class="chat-message bot">
+                    Hello! I'm Syraa, your personal assistant for SPARK'26. How can I help you today?
+                </div>
+                <div class="typing-dots">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" placeholder="Ask me about schedule, registration...">
+                <button class="chat-send-btn">
+                    <i class="ri-send-plane-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="assets/js/script.js"></script>
+    <script src="assets/js/chat.js"></script>
 </body>
 
 </html>

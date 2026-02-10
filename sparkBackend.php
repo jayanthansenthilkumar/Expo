@@ -142,6 +142,451 @@ $action = $_POST['action'] ?? $_GET['action'] ?? '';
 switch ($action) {
 
     // ==========================================
+    // CHAT: Syraa AI Bot (Expanded with State Machine)
+    // ==========================================
+    case 'chat_query':
+        header('Content-Type: application/json');
+        $rawInput = file_get_contents('php://input');
+        $data = json_decode($rawInput, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $data = ['message' => ''];
+        }
+        $message = trim($data['message'] ?? '');
+        $lowerMsg = strtolower($message);
+
+        // Initialize Chat State
+        if (!isset($_SESSION['chat_state'])) {
+            $_SESSION['chat_state'] = 'IDLE';
+            $_SESSION['chat_data'] = [];
+        }
+
+        $response = ['reply' => '', 'action' => null];
+        $currentState = $_SESSION['chat_state'];
+
+        // GLOBAL: Cancel Command
+        if (in_array($lowerMsg, ['cancel', 'stop', 'exit', 'quit'])) {
+            $_SESSION['chat_state'] = 'IDLE';
+            $_SESSION['chat_data'] = [];
+            echo json_encode(['reply' => "Action cancelled. How else can I help you?", 'action' => 'reset_ui']);
+            exit;
+        }
+
+        // ============================================================
+        // STATE MACHINE
+        // ============================================================
+
+        switch ($currentState) {
+            case 'IDLE':
+                // --- Check Notifications (Button Trigger) ---
+                if ($message === '__check_notifications__') {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login to check notifications.";
+                    } else {
+                        // Check for pending invitations
+                        $invStmt = mysqli_prepare($conn, "SELECT ti.id, t.team_name, ti.team_id FROM team_invitations ti JOIN teams t ON ti.team_id = t.id WHERE ti.invited_user_id = ? AND ti.status = 'pending' LIMIT 1");
+                        mysqli_stmt_bind_param($invStmt, "i", $_SESSION['user_id']);
+                        mysqli_stmt_execute($invStmt);
+                        $invRes = mysqli_stmt_get_result($invStmt);
+
+                        if ($row = mysqli_fetch_assoc($invRes)) {
+                            $_SESSION['chat_state'] = 'INVITE_DECISION';
+                            $_SESSION['chat_data']['invite_id'] = $row['id'];
+                            $_SESSION['chat_data']['team_id'] = $row['team_id'];
+                            $_SESSION['chat_data']['team_name'] = $row['team_name'];
+
+                            $response['reply'] = "🔔 You have an invitation to join **" . $row['team_name'] . "**. Do you want to accept?";
+                            $response['options'] = ['Accept', 'Decline'];
+                        } else {
+                            $response['reply'] = "You have no new notifications involved with teams.";
+                        }
+                    }
+                }
+
+                // --- Start Registration ---
+                elseif (strpos($lowerMsg, 'register') !== false || strpos($lowerMsg, 'signup') !== false) {
+                    if (isset($_SESSION['user_id'])) {
+                        $response['reply'] = "You are already logged in as " . $_SESSION['name'] . ". Please logout first to register a new account.";
+                    } else {
+                        $_SESSION['chat_state'] = 'REG_ASK_NAME';
+                        $_SESSION['chat_data'] = [];
+                        $response['reply'] = "Let's create your account! First, what is your **Full Name**?";
+                    }
+                }
+                // --- Start Login ---
+                elseif (strpos($lowerMsg, 'login') !== false || strpos($lowerMsg, 'signin') !== false) {
+                    if (isset($_SESSION['user_id'])) {
+                        $response['reply'] = "You are already logged in as " . $_SESSION['name'] . ".";
+                    } else {
+                        $_SESSION['chat_state'] = 'LOGIN_ASK_USER';
+                        $_SESSION['chat_data'] = [];
+                        $response['reply'] = "Secure Login: Please enter your **Username**.";
+                        $response['input_type'] = 'text';
+                    }
+                }
+                // --- Start Create Team ---
+                elseif (strpos($lowerMsg, 'create team') !== false) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "You need to login first to create a team. Type 'login' to start.";
+                    } else {
+                        // Check if already in a team
+                        $chk = mysqli_query($conn, "SELECT id FROM team_members WHERE user_id = " . $_SESSION['user_id']);
+                        if (mysqli_num_rows($chk) > 0) {
+                            $response['reply'] = "You are already part of a team. You cannot create another one.";
+                        } else {
+                            $_SESSION['chat_state'] = 'TEAM_CREATE_ASK_NAME';
+                            $_SESSION['chat_data'] = [];
+                            $response['reply'] = "Exciting! Let's build your squad. What will be your **Team Name**?";
+                        }
+                    }
+                }
+                // --- Start Join Team ---
+                elseif (strpos($lowerMsg, 'join team') !== false) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first to join a team.";
+                    } else {
+                        // Check if already in a team
+                        $chk = mysqli_query($conn, "SELECT id FROM team_members WHERE user_id = " . $_SESSION['user_id']);
+                        if (mysqli_num_rows($chk) > 0) {
+                            $response['reply'] = "You are already part of a team.";
+                        } else {
+                            $_SESSION['chat_state'] = 'TEAM_JOIN_ASK_CODE';
+                            $response['reply'] = "Please enter the **Team Invite Code** shared by your leader.";
+                        }
+                    }
+                }
+                // --- Start Invite Member ---
+                elseif (strpos($lowerMsg, 'invite') !== false) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                    } else {
+                        // Check leader status
+                        $chk = mysqli_query($conn, "SELECT id FROM teams WHERE leader_id = " . $_SESSION['user_id']);
+                        if (mysqli_num_rows($chk) == 0) {
+                            $response['reply'] = "Only team leaders can invite members.";
+                        } else {
+                            $_SESSION['chat_state'] = 'TEAM_INVITE_ASK_USER';
+                            $response['reply'] = "Who would you like to invite? Enter their **Username** or **Email**.";
+                        }
+                    }
+                }
+                // --- General Queries (Fallback) ---
+                else {
+                    // Include previous general Q&A logic here
+                    if (preg_match('/(hi|hello|hey|greetings)/', $lowerMsg)) {
+                        $user = $_SESSION['name'] ?? 'Friend';
+                        $response['reply'] = "Hello $user! I'm Syraa. I can help you register, login, create teams, or check notifications.";
+                    } elseif (strpos($lowerMsg, 'schedule') !== false || strpos($lowerMsg, 'date') !== false) {
+                        $response['reply'] = "SPARK'26 is on Feb 15, 2026. Check the schedule section below.";
+                        $response['action'] = 'scroll_schedule';
+                    } elseif (strpos($lowerMsg, 'track') !== false || strpos($lowerMsg, 'topic') !== false) {
+                        $response['reply'] = "Tracks include AI, Software, Health, Green Energy, and Open Innovation.";
+                        $response['action'] = 'scroll_tracks';
+                    } else {
+                        $response['reply'] = "I can help with Registration, Login, and Teams. Try saying 'Register', 'Login', or 'Check Notifications'.";
+                    }
+                }
+                break;
+
+            // ==========================================
+            // NOTIFICATION DECISION FLOW
+            // ==========================================
+            case 'INVITE_DECISION':
+                if ($lowerMsg === 'accept') {
+                    $inviteId = $_SESSION['chat_data']['invite_id'];
+                    $teamId = $_SESSION['chat_data']['team_id'];
+                    $userId = $_SESSION['user_id'];
+
+                    // Add to team
+                    mysqli_query($conn, "INSERT INTO team_members (team_id, user_id, role) VALUES ($teamId, $userId, 'member')");
+                    // Update invite
+                    mysqli_query($conn, "UPDATE team_invitations SET status = 'accepted' WHERE id = $inviteId");
+
+                    $response['reply'] = "🎉 Accepted! You are now a member of **" . $_SESSION['chat_data']['team_name'] . "**. Reloading dashboard...";
+                    $response['action'] = 'reload';
+                    $_SESSION['chat_state'] = 'IDLE';
+                } elseif ($lowerMsg === 'decline') {
+                    $inviteId = $_SESSION['chat_data']['invite_id'];
+                    mysqli_query($conn, "UPDATE team_invitations SET status = 'declined' WHERE id = $inviteId");
+                    $response['reply'] = "Invitation declined.";
+                    $_SESSION['chat_state'] = 'IDLE';
+                } else {
+                    $response['reply'] = "Please type **Accept** or **Decline**.";
+                    $response['options'] = ['Accept', 'Decline'];
+                }
+                break;
+
+            // ==========================================
+            // REGISTRATION FLOW
+            // ==========================================
+            case 'REG_ASK_NAME':
+                $_SESSION['chat_data']['name'] = $message;
+                $_SESSION['chat_state'] = 'REG_ASK_USER';
+                $response['reply'] = "Nice to meet you, " . $message . "! Now, choose a unique **Username**.";
+                break;
+
+            case 'REG_ASK_USER':
+                // Check if username exists
+                $stmt = mysqli_prepare($conn, "SELECT id FROM users WHERE username = ?");
+                mysqli_stmt_bind_param($stmt, "s", $message);
+                mysqli_stmt_execute($stmt);
+                if (mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))) {
+                    $response['reply'] = "That username is taken. Please try another one.";
+                } else {
+                    $_SESSION['chat_data']['username'] = $message;
+                    $_SESSION['chat_state'] = 'REG_ASK_DEPT';
+                    $response['reply'] = "Got it. What is your **Department**? (e.g., CSE, ECE, AIDS)";
+                }
+                break;
+
+            case 'REG_ASK_DEPT':
+                $_SESSION['chat_data']['department'] = strtoupper($message);
+                $_SESSION['chat_state'] = 'REG_ASK_YEAR';
+                $response['reply'] = "And which **Year** are you in? (I, II, III, IV)";
+                break;
+
+            case 'REG_ASK_YEAR':
+                $_SESSION['chat_data']['year'] = strtoupper($message);
+                $_SESSION['chat_state'] = 'REG_ASK_REGNO';
+                $response['reply'] = "Please enter your **12-digit Register Number**.";
+                break;
+
+            case 'REG_ASK_REGNO':
+                if (strlen($message) !== 12) {
+                    $response['reply'] = "Register number must be exactly 12 characters. Please try again.";
+                } else {
+                    // Check req no uniqueness
+                    $stmt = mysqli_prepare($conn, "SELECT id FROM users WHERE reg_no = ?");
+                    mysqli_stmt_bind_param($stmt, "s", $message);
+                    mysqli_stmt_execute($stmt);
+                    if (mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))) {
+                        $response['reply'] = "That Register Number is already registered.";
+                    } else {
+                        $_SESSION['chat_data']['reg_no'] = $message;
+                        $_SESSION['chat_state'] = 'REG_ASK_EMAIL';
+                        $response['reply'] = "Almost there! What is your **Email Address**?";
+                    }
+                }
+                break;
+
+            case 'REG_ASK_EMAIL':
+                if (!filter_var($message, FILTER_VALIDATE_EMAIL)) {
+                    $response['reply'] = "That doesn't look like a valid email. Please try again.";
+                } else {
+                    // Check email uniqueness
+                    $stmt = mysqli_prepare($conn, "SELECT id FROM users WHERE email = ?");
+                    mysqli_stmt_bind_param($stmt, "s", $message);
+                    mysqli_stmt_execute($stmt);
+                    if (mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))) {
+                        $response['reply'] = "That email is already in use.";
+                    } else {
+                        $_SESSION['chat_data']['email'] = $message;
+                        $_SESSION['chat_state'] = 'REG_ASK_PASS';
+                        $response['reply'] = "Last step! Create a strong **Password**.";
+                        $response['input_type'] = 'password';
+                    }
+                }
+                break;
+
+            case 'REG_ASK_PASS':
+                $password = $message;
+                $d = $_SESSION['chat_data'];
+
+                // Insert User
+                $stmt = mysqli_prepare($conn, "INSERT INTO users (name, username, department, year, reg_no, email, password, role) VALUES (?, ?, ?, ?, ?, ?, ?, 'student')");
+                mysqli_stmt_bind_param($stmt, "sssssss", $d['name'], $d['username'], $d['department'], $d['year'], $d['reg_no'], $d['email'], $password);
+
+                if (mysqli_stmt_execute($stmt)) {
+                    $_SESSION['chat_state'] = 'IDLE';
+                    $_SESSION['chat_data'] = [];
+                    $response['reply'] = "Registration Successful! 🎉 Type 'Login' to sign in to your new account.";
+                } else {
+                    $response['reply'] = "An error occurred during registration. Please try again later or use the main register page.";
+                    $_SESSION['chat_state'] = 'IDLE';
+                }
+                break;
+
+            // ==========================================
+            // LOGIN FLOW
+            // ==========================================
+            case 'LOGIN_ASK_USER':
+                $_SESSION['chat_data']['username'] = $message;
+                $_SESSION['chat_state'] = 'LOGIN_ASK_PASS';
+                $response['reply'] = "Enter your **Password**.";
+                $response['input_type'] = 'password';
+                break;
+
+            case 'LOGIN_ASK_PASS':
+                $username = $_SESSION['chat_data']['username'];
+                $password = $message;
+
+                $stmt = mysqli_prepare($conn, "SELECT * FROM users WHERE username = ? AND password = ?");
+                mysqli_stmt_bind_param($stmt, "ss", $username, $password);
+                mysqli_stmt_execute($stmt);
+                $result = mysqli_stmt_get_result($stmt);
+                $user = mysqli_fetch_assoc($result);
+
+                if ($user) {
+                    if ($user['status'] === 'inactive') {
+                        $response['reply'] = "Account is inactive. Contact admin.";
+                        $_SESSION['chat_state'] = 'IDLE';
+                    } else {
+                        // Set Session
+                        $_SESSION['user_id'] = $user['id'];
+                        $_SESSION['userid'] = $user['id'];
+                        $_SESSION['name'] = $user['name'];
+                        $_SESSION['username'] = $user['username'];
+                        $_SESSION['email'] = $user['email'];
+                        $_SESSION['role'] = $user['role'];
+                        $_SESSION['department'] = $user['department'];
+                        $_SESSION['year'] = $user['year'];
+
+                        $_SESSION['chat_state'] = 'IDLE';
+                        $_SESSION['chat_data'] = [];
+                        $response['reply'] = "Welcome back, " . $user['name'] . "! You are now logged in. ✨";
+                        $response['action'] = 'reload'; // Reload page to update UI
+                    }
+                } else {
+                    $response['reply'] = "Invalid credentials. Please try logging in again.";
+                    $_SESSION['chat_state'] = 'IDLE';
+                }
+                break;
+
+            // ==========================================
+            // CREATE TEAM FLOW
+            // ==========================================
+            case 'TEAM_CREATE_ASK_NAME':
+                $_SESSION['chat_data']['team_name'] = $message;
+                $_SESSION['chat_state'] = 'TEAM_CREATE_ASK_DESC';
+                $response['reply'] = "Great name. Briefly describe your team's goal or project idea.";
+                break;
+
+            case 'TEAM_CREATE_ASK_DESC':
+                $desc = $message;
+                $tName = $_SESSION['chat_data']['team_name'];
+                $leaderId = $_SESSION['user_id'];
+
+                // Use routing logic for department (FE vs Department)
+                $studentDept = $_SESSION['department'] ?? '';
+                $studentYear = $_SESSION['year'] ?? '';
+                $dept = getRoutingDepartment($studentYear, $studentDept);
+
+                // Generate code
+                $teamCode = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 6));
+
+                $stmt = mysqli_prepare($conn, "INSERT INTO teams (team_name, description, team_code, leader_id, department) VALUES (?, ?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt, "sssis", $tName, $desc, $teamCode, $leaderId, $dept);
+
+                if (mysqli_stmt_execute($stmt)) {
+                    $teamId = mysqli_insert_id($conn);
+                    // Add leader
+                    mysqli_query($conn, "INSERT INTO team_members (team_id, user_id, role) VALUES ($teamId, $leaderId, 'leader')");
+
+                    $_SESSION['chat_state'] = 'IDLE';
+                    $response['reply'] = "Team '$tName' created successfully! 🚀\nYour Team Code is **$teamCode**. Share this with members to join.";
+                } else {
+                    $_SESSION['chat_state'] = 'IDLE';
+                    $response['reply'] = "Failed to create team. Please try again.";
+                }
+                break;
+
+            // ==========================================
+            // JOIN TEAM FLOW
+            // ==========================================
+            case 'TEAM_JOIN_ASK_CODE':
+                $code = strtoupper(trim($message));
+                $userId = $_SESSION['user_id'];
+
+                $stmt = mysqli_prepare($conn, "SELECT * FROM teams WHERE team_code = ? AND status = 'open'");
+                mysqli_stmt_bind_param($stmt, "s", $code);
+                mysqli_stmt_execute($stmt);
+                $team = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+
+                if (!$team) {
+                    $response['reply'] = "Invalid or closed team code. Type 'join team' to try again.";
+                    $_SESSION['chat_state'] = 'IDLE';
+                } else {
+                    // Check max members
+                    $cnt = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c FROM team_members WHERE team_id = " . $team['id']))['c'];
+                    if ($cnt >= $team['max_members']) {
+                        $response['reply'] = "That team is full.";
+                        $_SESSION['chat_state'] = 'IDLE';
+                    } else {
+                        mysqli_query($conn, "INSERT INTO team_members (team_id, user_id, role) VALUES (" . $team['id'] . ", $userId, 'member')");
+
+                        // Auto close if full
+                        if ($cnt + 1 >= $team['max_members']) {
+                            mysqli_query($conn, "UPDATE teams SET status = 'closed' WHERE id = " . $team['id']);
+                        }
+
+                        $response['reply'] = "Success! You have joined team **" . $team['team_name'] . "**.";
+                        $_SESSION['chat_state'] = 'IDLE';
+                    }
+                }
+                break;
+
+            // ==========================================
+            // INVITE FLOW
+            // ==========================================
+            case 'TEAM_INVITE_ASK_USER':
+                $target = trim($message);
+                $leaderId = $_SESSION['user_id'];
+
+                // Find user
+                $stmt = mysqli_prepare($conn, "SELECT id FROM users WHERE username = ? OR email = ?");
+                mysqli_stmt_bind_param($stmt, "ss", $target, $target);
+                mysqli_stmt_execute($stmt);
+                $uRes = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+
+                if (!$uRes) {
+                    $response['reply'] = "User not found. Check the username or email.";
+                } else {
+                    $targetId = $uRes['id'];
+
+                    if ($targetId == $leaderId) {
+                        $response['reply'] = "You cannot invite yourself.";
+                    } else {
+                        // Get leader team
+                        $teamStmt = mysqli_prepare($conn, "SELECT id, max_members FROM teams WHERE leader_id = ?");
+                        mysqli_stmt_bind_param($teamStmt, "i", $leaderId);
+                        mysqli_stmt_execute($teamStmt);
+                        $teamRow = mysqli_fetch_assoc(mysqli_stmt_get_result($teamStmt));
+                        $teamId = $teamRow['id'];
+
+                        // Check if user already in a team
+                        $checkTeam = mysqli_prepare($conn, "SELECT team_id FROM team_members WHERE user_id = ?");
+                        mysqli_stmt_bind_param($checkTeam, "i", $targetId);
+                        mysqli_stmt_execute($checkTeam);
+                        if (mysqli_num_rows(mysqli_stmt_get_result($checkTeam)) > 0) {
+                            $response['reply'] = "This user is already part of a team.";
+                        } else {
+                            // Check for pending invite
+                            $checkInvite = mysqli_prepare($conn, "SELECT id FROM team_invitations WHERE team_id = ? AND invited_user_id = ? AND status = 'pending'");
+                            mysqli_stmt_bind_param($checkInvite, "ii", $teamId, $targetId);
+                            mysqli_stmt_execute($checkInvite);
+                            if (mysqli_num_rows(mysqli_stmt_get_result($checkInvite)) > 0) {
+                                $response['reply'] = "An invitation is already pending for this user.";
+                            } else {
+                                // Send Invite
+                                $ins = mysqli_prepare($conn, "INSERT INTO team_invitations (team_id, invited_by, invited_user_id) VALUES (?, ?, ?)");
+                                mysqli_stmt_bind_param($ins, "iii", $teamId, $leaderId, $targetId);
+                                if (mysqli_stmt_execute($ins)) {
+                                    $response['reply'] = "Invitation sent to $target! They will see it in their dashboard.";
+                                    $_SESSION['chat_state'] = 'IDLE';
+                                } else {
+                                    $response['reply'] = "Failed to send invitation. Please try again.";
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+        }
+
+        echo json_encode($response);
+        exit();
+        break;
+
+    // ==========================================
     // PROJECT: Submit new project
     // ==========================================
     case 'submit_project':
