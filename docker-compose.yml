@@ -45,9 +45,11 @@ services:
       start_period: 30s
 
   # ── MySQL 8.0 Database ────────────────────────────────────
-  # Schema auto-loads from assets/schema/spark.sql on first run
+  # Schema (spark.sql) is baked into the image and auto-loads on first run
   spark-db:
-    image: mysql:8.0
+    build:
+      context: .
+      dockerfile: Dockerfile.mysql
     container_name: spark-db
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
@@ -57,7 +59,6 @@ services:
       TZ: ${TZ:-Asia/Kolkata}
     volumes:
       - spark-db-data:/var/lib/mysql
-      - ./assets/schema:/docker-entrypoint-initdb.d:ro
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     networks:
       - spark-network
