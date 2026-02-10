@@ -271,18 +271,35 @@ switch ($action) {
                 }
                 // --- General Queries (Fallback) ---
                 else {
-                    // Include previous general Q&A logic here
-                    if (preg_match('/(hi|hello|hey|greetings)/', $lowerMsg)) {
-                        $user = $_SESSION['name'] ?? 'Friend';
-                        $response['reply'] = "Hello $user! I'm Syraa. I can help you register, login, create teams, or check notifications.";
-                    } elseif (strpos($lowerMsg, 'schedule') !== false || strpos($lowerMsg, 'date') !== false) {
-                        $response['reply'] = "SPARK'26 is on Feb 15, 2026. Check the schedule section below.";
+                    if (preg_match('/(hi|hello|hey|greetings|howdy|sup|yo)/', $lowerMsg)) {
+                        $user = $_SESSION['name'] ?? 'there';
+                        $greetings = [
+                            "Hey $user! 👋 How can I help you today?",
+                            "Hello $user! What can I do for you?",
+                            "Hi $user! Need help with SPARK'26?"
+                        ];
+                        $response['reply'] = $greetings[array_rand($greetings)];
+                    } elseif (preg_match('/(thank|thanks|thx)/', $lowerMsg)) {
+                        $response['reply'] = "You're welcome! Let me know if you need anything else. 😊";
+                    } elseif (preg_match('/(help|what can you do|options|menu)/', $lowerMsg)) {
+                        $response['reply'] = "Here's what I can do:\n• **Register** — Create a new account\n• **Login** — Sign in to your account\n• **Create Team** — Start a new team\n• **Join Team** — Join with invite code\n• **Invite** — Invite a member\n• **Schedule** — View event timeline\n• **Tracks** — Browse project tracks";
+                    } elseif (strpos($lowerMsg, 'schedule') !== false || strpos($lowerMsg, 'date') !== false || strpos($lowerMsg, 'when') !== false) {
+                        $response['reply'] = "📅 SPARK'26 is scheduled for **Feb 15, 2026**. Let me scroll you to the timeline!";
                         $response['action'] = 'scroll_schedule';
-                    } elseif (strpos($lowerMsg, 'track') !== false || strpos($lowerMsg, 'topic') !== false) {
-                        $response['reply'] = "Tracks include AI, Software, Health, Green Energy, and Open Innovation.";
+                    } elseif (strpos($lowerMsg, 'track') !== false || strpos($lowerMsg, 'topic') !== false || strpos($lowerMsg, 'domain') !== false) {
+                        $response['reply'] = "We have 5 tracks: **AI/ML**, **Software Dev**, **HealthTech**, **Green Energy**, and **Open Innovation**. Let me show you!";
                         $response['action'] = 'scroll_tracks';
+                    } elseif (preg_match('/(team|squad|group)/', $lowerMsg)) {
+                        $response['reply'] = "I can help with teams! Try:\n• **Create Team** — Start a new one\n• **Join Team** — Use an invite code\n• **Invite** — Add members to your team";
+                    } elseif (preg_match('/(bye|goodbye|see you|later)/', $lowerMsg)) {
+                        $response['reply'] = "Goodbye! Good luck with SPARK'26! 🚀";
                     } else {
-                        $response['reply'] = "I can help with Registration, Login, and Teams. Try saying 'Register', 'Login', or 'Check Notifications'.";
+                        $fallbacks = [
+                            "I'm not sure I understand that. Try saying **help** to see what I can do!",
+                            "Hmm, I didn't catch that. You can ask me about **registration**, **login**, **teams**, or the **schedule**.",
+                            "I'm still learning! Try commands like **Register**, **Login**, **Create Team**, or **Schedule**."
+                        ];
+                        $response['reply'] = $fallbacks[array_rand($fallbacks)];
                     }
                 }
                 break;
@@ -334,36 +351,106 @@ switch ($action) {
                 } else {
                     $_SESSION['chat_data']['username'] = $message;
                     $_SESSION['chat_state'] = 'REG_ASK_DEPT';
-                    $response['reply'] = "Got it. What is your **Department**? (e.g., CSE, ECE, AIDS)";
+                    $response['reply'] = "Got it! What is your **Department**?";
+                    $response['options'] = ['AIDS','AIML','CSE','CSBS','CYBER','ECE','EEE','MECH','CIVIL','IT','VLSI','MBA','MCA'];
                 }
                 break;
 
             case 'REG_ASK_DEPT':
-                $_SESSION['chat_data']['department'] = strtoupper($message);
-                $_SESSION['chat_state'] = 'REG_ASK_YEAR';
-                $response['reply'] = "And which **Year** are you in? (I, II, III, IV)";
+                $deptInput = strtoupper(trim($message));
+                $validDepts = ['AIDS','AIML','CSE','CSBS','CYBER','ECE','EEE','MECH','CIVIL','IT','VLSI','MBA','MCA'];
+                if (!in_array($deptInput, $validDepts)) {
+                    $response['reply'] = "That's not a valid department. Please pick one:";
+                    $response['options'] = ['AIDS','AIML','CSE','CSBS','CYBER','ECE','EEE','MECH','CIVIL','IT','VLSI','MBA','MCA'];
+                } else {
+                    $_SESSION['chat_data']['department'] = $deptInput;
+                    $_SESSION['chat_state'] = 'REG_ASK_YEAR';
+                    if ($deptInput === 'CYBER') {
+                        $response['reply'] = "Cyber Security is available for **I Year** only. Selecting I Year automatically.";
+                        // Auto-set year and skip to reg no
+                        $_SESSION['chat_data']['year'] = 'I year';
+                        $_SESSION['chat_state'] = 'REG_ASK_REGNO';
+                        $prefix = '927625' . 'BSC';
+                        $_SESSION['chat_data']['reg_prefix'] = $prefix;
+                        $remaining = 12 - strlen($prefix);
+                        $response['reply'] .= "\nYour register number starts with **$prefix**. Enter the remaining **$remaining digits** to complete it.";
+                    } else {
+                        $response['reply'] = "Which **Year** are you in?";
+                        $response['options'] = ['I Year','II Year','III Year','IV Year'];
+                    }
+                }
                 break;
 
             case 'REG_ASK_YEAR':
-                $_SESSION['chat_data']['year'] = strtoupper($message);
-                $_SESSION['chat_state'] = 'REG_ASK_REGNO';
-                $response['reply'] = "Please enter your **12-digit Register Number**.";
+                // Normalize year input
+                $yearInput = strtolower(trim($message));
+                $yearMap = [
+                    'i' => 'I year', '1' => 'I year', 'i year' => 'I year', '1st' => 'I year', 'first' => 'I year',
+                    'ii' => 'II year', '2' => 'II year', 'ii year' => 'II year', '2nd' => 'II year', 'second' => 'II year',
+                    'iii' => 'III year', '3' => 'III year', 'iii year' => 'III year', '3rd' => 'III year', 'third' => 'III year',
+                    'iv' => 'IV year', '4' => 'IV year', 'iv year' => 'IV year', '4th' => 'IV year', 'fourth' => 'IV year'
+                ];
+                $normalizedYear = $yearMap[$yearInput] ?? null;
+                if (!$normalizedYear) {
+                    $response['reply'] = "Please select a valid year:";
+                    $response['options'] = ['I Year','II Year','III Year','IV Year'];
+                } else {
+                    $_SESSION['chat_data']['year'] = $normalizedYear;
+                    $_SESSION['chat_state'] = 'REG_ASK_REGNO';
+
+                    // Compute register number prefix (same logic as register page)
+                    $deptCodes = [
+                        'AIDS'=>'BAD','AIML'=>'BAM','CSE'=>'BCS','CSBS'=>'BCB','CYBER'=>'BSC',
+                        'ECE'=>'BEC','EEE'=>'BEE','MECH'=>'BME','CIVIL'=>'BCE','IT'=>'BIT',
+                        'VLSI'=>'BEV','MBA'=>'MBA','MCA'=>'MCA'
+                    ];
+                    $yearCodes = ['I year'=>'927625','II year'=>'927624','III year'=>'927623','IV year'=>'927622'];
+
+                    $dept = $_SESSION['chat_data']['department'];
+                    $dCode = $deptCodes[$dept] ?? '';
+
+                    // Special case: AIML IV Year uses BAL instead of BAM
+                    if ($dept === 'AIML' && $normalizedYear === 'IV year') {
+                        $dCode = 'BAL';
+                    }
+
+                    $yCode = $yearCodes[$normalizedYear] ?? '';
+                    $prefix = $yCode . $dCode;
+                    $_SESSION['chat_data']['reg_prefix'] = $prefix;
+
+                    $remaining = 12 - strlen($prefix);
+                    $response['reply'] = "Your register number starts with **$prefix**.\nEnter the remaining **$remaining digits** to complete it.";
+                }
                 break;
 
             case 'REG_ASK_REGNO':
-                if (strlen($message) !== 12) {
-                    $response['reply'] = "Register number must be exactly 12 characters. Please try again.";
+                $prefix = $_SESSION['chat_data']['reg_prefix'] ?? '';
+                $input = strtoupper(trim($message));
+
+                // If user entered only the remaining digits, prepend prefix
+                if ($prefix && !str_starts_with($input, $prefix)) {
+                    $expectedRemaining = 12 - strlen($prefix);
+                    if (strlen($input) === $expectedRemaining && ctype_alnum($input)) {
+                        $input = $prefix . $input;
+                    }
+                }
+
+                if (strlen($input) !== 12) {
+                    $remaining = $prefix ? (12 - strlen($prefix)) : 12;
+                    $response['reply'] = "Register number must be exactly **12 characters** (prefix **$prefix** + **$remaining digits**). Please try again.";
+                } elseif ($prefix && !str_starts_with($input, $prefix)) {
+                    $response['reply'] = "Register number must start with **$prefix** based on your department and year. Please re-enter.";
                 } else {
-                    // Check req no uniqueness
+                    // Check uniqueness
                     $stmt = mysqli_prepare($conn, "SELECT id FROM users WHERE reg_no = ?");
-                    mysqli_stmt_bind_param($stmt, "s", $message);
+                    mysqli_stmt_bind_param($stmt, "s", $input);
                     mysqli_stmt_execute($stmt);
                     if (mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))) {
-                        $response['reply'] = "That Register Number is already registered.";
+                        $response['reply'] = "That Register Number is already registered. Please try another.";
                     } else {
-                        $_SESSION['chat_data']['reg_no'] = $message;
+                        $_SESSION['chat_data']['reg_no'] = $input;
                         $_SESSION['chat_state'] = 'REG_ASK_EMAIL';
-                        $response['reply'] = "Almost there! What is your **Email Address**?";
+                        $response['reply'] = "Registered as **$input** ✓\nAlmost there! What is your **Email Address**?";
                     }
                 }
                 break;

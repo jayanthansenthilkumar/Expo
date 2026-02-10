@@ -455,8 +455,9 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
 
     <!-- Syraa AI Chat Widget -->
     <div class="chat-widget-container">
-        <button class="chat-toggle-btn">
-            <i class="ri-chat-smile-3-line"></i>
+        <button class="chat-toggle-btn" aria-label="Open chat">
+            <i class="ri-chat-smile-3-line chat-icon-open"></i>
+            <i class="ri-close-line chat-icon-close"></i>
         </button>
         <div class="chat-window">
             <div class="chat-header">
@@ -465,33 +466,33 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
                 </div>
                 <div class="chat-info">
                     <h3>Syraa AI</h3>
-                    <p>SPARK'26 Assistant</p>
+                    <span class="chat-status"><span class="status-dot"></span> Online</span>
                 </div>
                 <div class="chat-controls">
                     <button class="chat-notification-btn" title="Notifications">
                         <i class="ri-notification-3-line"></i>
                         <span class="notification-dot"></span>
                     </button>
-                    <button class="close-chat"
-                        style="background:none; border:none; color: #64748b; cursor:pointer; font-size:1.2rem;"
-                        onclick="$('.chat-toggle-btn').click()">
+                    <button class="close-chat" aria-label="Close chat">
                         <i class="ri-close-line"></i>
                     </button>
                 </div>
             </div>
             <div class="chat-messages">
-                <div class="chat-message bot">
-                    Hello! I'm Syraa, your personal assistant for SPARK'26. How can I help you today?
-                </div>
-                <div class="typing-dots">
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
+                <!-- Messages injected by JS -->
+                <div class="typing-indicator" style="display:none;">
+                    <div class="chat-message bot typing-bubble">
+                        <div class="typing-dots">
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="chat-input-area">
-                <input type="text" class="chat-input" placeholder="Ask me about schedule, registration...">
-                <button class="chat-send-btn">
+                <input type="text" class="chat-input" placeholder="Type a message..." autocomplete="off">
+                <button class="chat-send-btn" aria-label="Send message">
                     <i class="ri-send-plane-fill"></i>
                 </button>
             </div>
