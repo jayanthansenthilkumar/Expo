@@ -18,7 +18,7 @@ $dv = $deptFilter['values'];
 
 // Pagination
 $perPage = 10;
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
 $offset = ($page - 1) * $perPage;
 
 $isMbaOrMca = in_array(strtoupper($department), ['MBA', 'MCA']);
@@ -39,7 +39,7 @@ if ($isFE) {
     mysqli_stmt_bind_param($countStmt, $allTypes, ...$allValues);
 }
 mysqli_stmt_execute($countStmt);
-$totalStudents = (int)mysqli_fetch_assoc(mysqli_stmt_get_result($countStmt))['cnt'];
+$totalStudents = (int) mysqli_fetch_assoc(mysqli_stmt_get_result($countStmt))['cnt'];
 mysqli_stmt_close($countStmt);
 $totalPages = max(1, ceil($totalStudents / $perPage));
 
@@ -84,7 +84,9 @@ mysqli_stmt_bind_param($stmt, $fetchTypes, ...$fetchParams);
 mysqli_stmt_execute($stmt);
 $stuResult = mysqli_stmt_get_result($stmt);
 $students = [];
-while ($row = mysqli_fetch_assoc($stuResult)) { $students[] = $row; }
+while ($row = mysqli_fetch_assoc($stuResult)) {
+    $students[] = $row;
+}
 mysqli_stmt_close($stmt);
 
 // Flash messages
@@ -109,27 +111,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Student List</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-search">
-                        <i class="ri-search-line"></i>
-                        <input type="text" placeholder="Search students...">
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Student List';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
 
@@ -162,15 +147,17 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         <td><?php echo htmlspecialchars($student['name']); ?></td>
                                         <td><?php echo htmlspecialchars($student['email']); ?></td>
                                         <td><?php echo htmlspecialchars($student['year'] ?? '—'); ?></td>
-                                        <td><?php echo (int)$student['project_count']; ?></td>
+                                        <td><?php echo (int) $student['project_count']; ?></td>
                                         <td>
-                                            <span class="badge badge-<?php echo ($student['status'] === 'active') ? 'success' : 'danger'; ?>">
+                                            <span
+                                                class="badge badge-<?php echo ($student['status'] === 'active') ? 'success' : 'danger'; ?>">
                                                 <?php echo ucfirst(htmlspecialchars($student['status'] ?? 'inactive')); ?>
                                             </span>
                                         </td>
                                         <td><?php echo date('M d, Y', strtotime($student['created_at'])); ?></td>
                                         <td>
-                                            <a href="profile.php?id=<?php echo (int)$student['id']; ?>" class="btn-icon" title="View Profile">
+                                            <a href="profile.php?id=<?php echo (int) $student['id']; ?>" class="btn-icon"
+                                                title="View Profile">
                                                 <i class="ri-eye-line"></i>
                                             </a>
                                         </td>
@@ -207,12 +194,12 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    <?php if ($successMsg): ?>
-    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($errorMsg): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
+        <?php if ($successMsg): ?>
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($errorMsg): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
     </script>
 </body>
 

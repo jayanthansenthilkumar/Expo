@@ -90,7 +90,7 @@ $menus = [
         'System' => [
             ['link' => 'profile.php', 'icon' => 'ri-user-line', 'text' => 'Profile'],
             ['link' => 'settings.php', 'icon' => 'ri-settings-3-line', 'text' => 'Settings'],
-            ['link' => 'database.php', 'icon' => 'ri-database-line', 'text' => 'Database']
+            // ['link' => 'database.php', 'icon' => 'ri-database-line', 'text' => 'Database']
         ]
     ],
     'departmentcoordinator' => [
@@ -155,10 +155,6 @@ if (session_status() === PHP_SESSION_NONE) {
         <?php endif; ?>
     </nav>
 
-    <div class="sidebar-footer">
-        <a href="logout.php" class="menu-item" style="color: #ef4444;">
-            <i class="ri-logout-box-line"></i>
-            Logout
-        </a>
-    </div>
+    <!-- <div class="sidebar-footer">
+    </div> -->
 </aside>

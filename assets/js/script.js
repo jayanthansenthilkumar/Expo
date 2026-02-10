@@ -7,16 +7,43 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Close sidebar when clicking outside on mobile
+  // Close sidebar and user dropdown when clicking outside
   document.addEventListener('click', function(e) {
     const sidebar = document.getElementById('sidebar');
     const mobileToggle = document.querySelector('.mobile-toggle');
+    const userDropdown = document.getElementById('userDropdown');
+    const userProfile = document.querySelector('.user-profile');
+
+    // Sidebar Close Logic
     if (sidebar && sidebar.classList.contains('open')) {
       if (!sidebar.contains(e.target) && !mobileToggle.contains(e.target)) {
         sidebar.classList.remove('open');
       }
     }
+
+    // User Dropdown Close Logic
+    if (userDropdown && userDropdown.classList.contains('show')) {
+      if (!userProfile.contains(e.target)) {
+        userDropdown.classList.remove('show');
+      }
+    }
   });
+
+  // --- User Dropdown Toggle ---
+  window.toggleUserDropdown = function(event) {
+    // Only stop propagation for the toggle logic to prevent immediate document click
+    event.stopPropagation();
+    
+    const dropdown = document.getElementById('userDropdown');
+    if (!dropdown) return;
+
+    // If clicking inside the dropdown content (links, header etc), do not toggle
+    if (dropdown.contains(event.target)) {
+        return;
+    }
+    
+    dropdown.classList.toggle('show');
+  };
 
   // --- Smooth Scrolling ---
   document.querySelectorAll('a[href^="#"]').forEach((anchor) => {

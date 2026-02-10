@@ -32,8 +32,12 @@ if (strtolower($role) === 'departmentcoordinator') {
     $teamRes = mysqli_query($conn, $sql);
 }
 $teams = [];
-while ($row = mysqli_fetch_assoc($teamRes)) { $teams[] = $row; }
-if (isset($stmt)) { mysqli_stmt_close($stmt); }
+while ($row = mysqli_fetch_assoc($teamRes)) {
+    $teams[] = $row;
+}
+if (isset($stmt)) {
+    mysqli_stmt_close($stmt);
+}
 
 // Flash messages
 $successMsg = $_SESSION['success'] ?? '';
@@ -57,27 +61,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Teams</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-search">
-                        <i class="ri-search-line"></i>
-                        <input type="text" placeholder="Search teams...">
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Teams';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
 
@@ -86,39 +73,40 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
 
                 <?php if (empty($teams)): ?>
-                <div class="teams-grid">
-                    <div class="empty-state">
-                        <i class="ri-team-line"></i>
-                        <h3>No Teams Yet</h3>
-                        <p>Teams will appear here once students submit projects with team members.</p>
+                    <div class="teams-grid">
+                        <div class="empty-state">
+                            <i class="ri-team-line"></i>
+                            <h3>No Teams Yet</h3>
+                            <p>Teams will appear here once students submit projects with team members.</p>
+                        </div>
                     </div>
-                </div>
                 <?php else: ?>
-                <div class="teams-grid">
-                    <?php foreach ($teams as $team):
-                        $leaderInitials = strtoupper(substr($team['leader_name'] ?? 'NA', 0, 2));
-                    ?>
-                    <div class="team-card">
-                        <div class="team-header">
-                            <h3><?php echo htmlspecialchars($team['team_name']); ?></h3>
-                            <span class="team-badge"><?php echo (int)$team['member_count']; ?> Members</span>
-                        </div>
-                        <div class="team-project">
-                            <i class="ri-folder-line"></i>
-                            <span><?php echo htmlspecialchars($team['project_title'] ?? 'No project assigned'); ?></span>
-                        </div>
-                        <div class="team-members">
-                            <div class="member">
-                                <div class="member-avatar"><?php echo $leaderInitials; ?></div>
-                                <div class="member-info">
-                                    <span class="member-name"><?php echo htmlspecialchars($team['leader_name'] ?? 'Unassigned'); ?></span>
-                                    <span class="member-role">Team Lead</span>
+                    <div class="teams-grid">
+                        <?php foreach ($teams as $team):
+                            $leaderInitials = strtoupper(substr($team['leader_name'] ?? 'NA', 0, 2));
+                            ?>
+                            <div class="team-card">
+                                <div class="team-header">
+                                    <h3><?php echo htmlspecialchars($team['team_name']); ?></h3>
+                                    <span class="team-badge"><?php echo (int) $team['member_count']; ?> Members</span>
+                                </div>
+                                <div class="team-project">
+                                    <i class="ri-folder-line"></i>
+                                    <span><?php echo htmlspecialchars($team['project_title'] ?? 'No project assigned'); ?></span>
+                                </div>
+                                <div class="team-members">
+                                    <div class="member">
+                                        <div class="member-avatar"><?php echo $leaderInitials; ?></div>
+                                        <div class="member-info">
+                                            <span
+                                                class="member-name"><?php echo htmlspecialchars($team['leader_name'] ?? 'Unassigned'); ?></span>
+                                            <span class="member-role">Team Lead</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
-                </div>
                 <?php endif; ?>
             </div>
         </main>
@@ -126,12 +114,12 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    <?php if ($successMsg): ?>
-    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($errorMsg): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
+        <?php if ($successMsg): ?>
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($errorMsg): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
     </script>
 </body>
 

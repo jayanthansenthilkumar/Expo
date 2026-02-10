@@ -12,7 +12,10 @@ $userRole = ucfirst($_SESSION['role'] ?? $_SESSION['user_role'] ?? 'Admin');
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'view_department') {
     header('Content-Type: application/json');
     $dept = $_GET['dept'] ?? '';
-    if (empty($dept)) { echo json_encode(['error' => 'Missing department']); exit; }
+    if (empty($dept)) {
+        echo json_encode(['error' => 'Missing department']);
+        exit;
+    }
 
     // Students in department
     $stmtS = mysqli_prepare($conn, "SELECT id, name, username, email, year, reg_no FROM users WHERE role='student' AND department = ? ORDER BY name");
@@ -44,7 +47,8 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'get_coordinators') {
     header('Content-Type: application/json');
     $result = mysqli_query($conn, "SELECT id, name, department FROM users WHERE role='departmentcoordinator' ORDER BY name");
     $coordinators = [];
-    while ($row = mysqli_fetch_assoc($result)) $coordinators[] = $row;
+    while ($row = mysqli_fetch_assoc($result))
+        $coordinators[] = $row;
     echo json_encode($coordinators);
     exit;
 }
@@ -54,7 +58,10 @@ if (isset($_POST['ajax_action']) && $_POST['ajax_action'] === 'update_coordinato
     header('Content-Type: application/json');
     $dept = trim($_POST['department'] ?? '');
     $coordId = intval($_POST['coordinator_id'] ?? 0);
-    if (empty($dept)) { echo json_encode(['success' => false, 'message' => 'Missing department']); exit; }
+    if (empty($dept)) {
+        echo json_encode(['success' => false, 'message' => 'Missing department']);
+        exit;
+    }
 
     // Remove current coordinator from this department (set their dept to empty or keep but unassign)
     $stmtOld = mysqli_prepare($conn, "UPDATE users SET department = '' WHERE role='departmentcoordinator' AND department = ?");
@@ -77,7 +84,10 @@ if (isset($_POST['ajax_action']) && $_POST['ajax_action'] === 'update_coordinato
 if (isset($_POST['ajax_action']) && $_POST['ajax_action'] === 'add_department') {
     header('Content-Type: application/json');
     $deptName = strtoupper(trim($_POST['department_name'] ?? ''));
-    if (empty($deptName)) { echo json_encode(['success' => false, 'message' => 'Department name is required']); exit; }
+    if (empty($deptName)) {
+        echo json_encode(['success' => false, 'message' => 'Department name is required']);
+        exit;
+    }
 
     // Check if department already exists
     $check = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department = ?");
@@ -116,7 +126,10 @@ if (isset($_POST['ajax_action']) && $_POST['ajax_action'] === 'rename_department
     header('Content-Type: application/json');
     $oldName = trim($_POST['old_name'] ?? '');
     $newName = strtoupper(trim($_POST['new_name'] ?? ''));
-    if (empty($oldName) || empty($newName)) { echo json_encode(['success' => false, 'message' => 'Both old and new names required']); exit; }
+    if (empty($oldName) || empty($newName)) {
+        echo json_encode(['success' => false, 'message' => 'Both old and new names required']);
+        exit;
+    }
 
     // Update department name in users and projects tables
     $conn->begin_transaction();
@@ -196,23 +209,10 @@ foreach ($deptNames as $deptName) {
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Departments</h1>
-                </div>
-                <div class="header-right">
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Departments';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
                 <div class="content-header">
@@ -233,24 +233,31 @@ foreach ($deptNames as $deptName) {
                         $deptIcons = ['ri-computer-line', 'ri-cpu-line', 'ri-settings-line', 'ri-building-line', 'ri-flask-line'];
                         foreach ($departments as $index => $dept):
                             $icon = $deptIcons[$index % count($deptIcons)];
-                        ?>
-                        <div class="department-card">
-                            <div class="dept-icon">
-                                <i class="<?php echo $icon; ?>"></i>
+                            ?>
+                            <div class="department-card">
+                                <div class="dept-icon">
+                                    <i class="<?php echo $icon; ?>"></i>
+                                </div>
+                                <h3><?php echo htmlspecialchars($dept['name']); ?></h3>
+                                <div class="dept-stats">
+                                    <span><i class="ri-user-line"></i> <?php echo (int) $dept['student_count']; ?>
+                                        Students</span>
+                                    <span><i class="ri-folder-line"></i> <?php echo (int) $dept['project_count']; ?>
+                                        Projects</span>
+                                </div>
+                                <div class="dept-coordinator">
+                                    <span>Coordinator:
+                                        <?php echo $dept['coordinator_name'] ? htmlspecialchars($dept['coordinator_name']) : 'Not Assigned'; ?></span>
+                                </div>
+                                <div class="dept-actions">
+                                    <button class="btn-icon" title="Edit"
+                                        onclick="editDepartment('<?php echo htmlspecialchars($dept['name']); ?>', '<?php echo htmlspecialchars($dept['coordinator_name'] ?? ''); ?>')"><i
+                                            class="ri-edit-line"></i></button>
+                                    <button class="btn-icon" title="View"
+                                        onclick="viewDepartment('<?php echo htmlspecialchars($dept['name']); ?>')"><i
+                                            class="ri-eye-line"></i></button>
+                                </div>
                             </div>
-                            <h3><?php echo htmlspecialchars($dept['name']); ?></h3>
-                            <div class="dept-stats">
-                                <span><i class="ri-user-line"></i> <?php echo (int)$dept['student_count']; ?> Students</span>
-                                <span><i class="ri-folder-line"></i> <?php echo (int)$dept['project_count']; ?> Projects</span>
-                            </div>
-                            <div class="dept-coordinator">
-                                <span>Coordinator: <?php echo $dept['coordinator_name'] ? htmlspecialchars($dept['coordinator_name']) : 'Not Assigned'; ?></span>
-                            </div>
-                            <div class="dept-actions">
-                                <button class="btn-icon" title="Edit" onclick="editDepartment('<?php echo htmlspecialchars($dept['name']); ?>', '<?php echo htmlspecialchars($dept['coordinator_name'] ?? ''); ?>')"><i class="ri-edit-line"></i></button>
-                                <button class="btn-icon" title="View" onclick="viewDepartment('<?php echo htmlspecialchars($dept['name']); ?>')"><i class="ri-eye-line"></i></button>
-                            </div>
-                        </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
@@ -260,167 +267,167 @@ foreach ($deptNames as $deptName) {
 
     <script src="assets/js/script.js"></script>
     <script>
-    // ── View Department ──
-    function viewDepartment(deptName) {
-        Swal.fire({ title: 'Loading...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        fetch('departments.php?ajax=view_department&dept=' + encodeURIComponent(deptName))
-            .then(r => r.json())
-            .then(data => {
-                if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
-                let html = '';
-
-                // Coordinator
-                html += '<div style="text-align:left;margin-bottom:1rem;padding:10px;background:#f0f4ff;border-radius:8px;">';
-                html += '<strong><i class="ri-user-star-line"></i> Coordinator:</strong> ';
-                html += data.coordinator ? (data.coordinator.name + ' (' + data.coordinator.email + ')') : '<em>Not Assigned</em>';
-                html += '</div>';
-
-                // Students
-                html += '<div style="text-align:left;margin-bottom:0.5rem;"><strong><i class="ri-group-line"></i> Students (' + data.students.length + ')</strong></div>';
-                if (data.students.length > 0) {
-                    html += '<div style="max-height:200px;overflow:auto;margin-bottom:1rem;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr>';
-                    html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Name</th>';
-                    html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Reg No</th>';
-                    html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Year</th>';
-                    html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Email</th>';
-                    html += '</tr></thead><tbody>';
-                    data.students.forEach(s => {
-                        html += '<tr><td style="padding:5px 8px;border:1px solid #eee;">' + s.name + '</td>';
-                        html += '<td style="padding:5px 8px;border:1px solid #eee;">' + (s.reg_no || '-') + '</td>';
-                        html += '<td style="padding:5px 8px;border:1px solid #eee;">' + (s.year || '-') + '</td>';
-                        html += '<td style="padding:5px 8px;border:1px solid #eee;">' + s.email + '</td></tr>';
-                    });
-                    html += '</tbody></table></div>';
-                } else {
-                    html += '<p style="color:#888;margin-bottom:1rem;">No students in this department.</p>';
-                }
-
-                // Projects
-                html += '<div style="text-align:left;margin-bottom:0.5rem;"><strong><i class="ri-folder-line"></i> Projects (' + data.projects.length + ')</strong></div>';
-                if (data.projects.length > 0) {
-                    html += '<div style="max-height:200px;overflow:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr>';
-                    html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Title</th>';
-                    html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Category</th>';
-                    html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Status</th>';
-                    html += '</tr></thead><tbody>';
-                    data.projects.forEach(p => {
-                        const statusColor = p.status === 'approved' ? '#28a745' : (p.status === 'rejected' ? '#dc3545' : '#ffc107');
-                        html += '<tr><td style="padding:5px 8px;border:1px solid #eee;">' + p.title + '</td>';
-                        html += '<td style="padding:5px 8px;border:1px solid #eee;">' + (p.category || '-') + '</td>';
-                        html += '<td style="padding:5px 8px;border:1px solid #eee;"><span style="color:' + statusColor + ';font-weight:600;">' + (p.status || 'pending') + '</span></td></tr>';
-                    });
-                    html += '</tbody></table></div>';
-                } else {
-                    html += '<p style="color:#888;">No projects in this department.</p>';
-                }
-
-                Swal.fire({ title: deptName + ' Department', html: html, width: '700px', confirmButtonColor: '#4361ee' });
-            })
-            .catch(() => Swal.fire('Error', 'Failed to load department data', 'error'));
-    }
-
-    // ── Edit Department ──
-    function editDepartment(deptName, currentCoordinator) {
-        // Fetch all coordinators for the dropdown
-        fetch('departments.php?ajax=get_coordinators')
-            .then(r => r.json())
-            .then(coordinators => {
-                let coordOptions = '<option value="0">-- No Coordinator --</option>';
-                coordinators.forEach(c => {
-                    const selected = (c.department === deptName) ? 'selected' : '';
-                    const label = c.name + (c.department && c.department !== deptName ? ' (' + c.department + ')' : '');
-                    coordOptions += '<option value="' + c.id + '" ' + selected + '>' + label + '</option>';
-                });
-
-                Swal.fire({
-                    title: 'Edit ' + deptName,
-                    html:
-                        '<div style="text-align:left;">' +
-                        '<label style="font-weight:600;display:block;margin-bottom:4px;">Department Name</label>' +
-                        '<input id="editDeptName" class="swal2-input" value="' + deptName + '" style="margin:0 0 1rem 0;width:100%;box-sizing:border-box;">' +
-                        '<label style="font-weight:600;display:block;margin-bottom:4px;">Assign Coordinator</label>' +
-                        '<select id="editCoordinator" class="swal2-select" style="margin:0;width:100%;box-sizing:border-box;">' + coordOptions + '</select>' +
-                        '</div>',
-                    showCancelButton: true,
-                    confirmButtonText: 'Save Changes',
-                    confirmButtonColor: '#4361ee',
-                    preConfirm: () => {
-                        const newName = document.getElementById('editDeptName').value.trim();
-                        const coordId = document.getElementById('editCoordinator').value;
-                        if (!newName) { Swal.showValidationMessage('Department name is required'); return false; }
-                        return { newName: newName.toUpperCase(), coordId: coordId };
-                    }
-                }).then((result) => {
-                    if (!result.isConfirmed) return;
-                    const { newName, coordId } = result.value;
-
-                    // Chain: rename if changed, then update coordinator
-                    let promises = [];
-
-                    // Rename department if name changed
-                    if (newName !== deptName) {
-                        const renameData = new FormData();
-                        renameData.append('ajax_action', 'rename_department');
-                        renameData.append('old_name', deptName);
-                        renameData.append('new_name', newName);
-                        promises.push(fetch('departments.php', { method: 'POST', body: renameData }).then(r => r.json()));
-                    }
-
-                    // Update coordinator
-                    const coordData = new FormData();
-                    coordData.append('ajax_action', 'update_coordinator');
-                    coordData.append('department', newName);
-                    coordData.append('coordinator_id', coordId);
-                    promises.push(fetch('departments.php', { method: 'POST', body: coordData }).then(r => r.json()));
-
-                    Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                    Promise.all(promises).then(results => {
-                        const failed = results.find(r => !r.success);
-                        if (failed) {
-                            Swal.fire('Error', failed.message, 'error');
-                        } else {
-                            Swal.fire({ icon: 'success', title: 'Updated!', text: 'Department updated successfully', confirmButtonColor: '#4361ee' })
-                                .then(() => location.reload());
-                        }
-                    }).catch(() => Swal.fire('Error', 'Failed to save changes', 'error'));
-                });
-            })
-            .catch(() => Swal.fire('Error', 'Failed to load coordinators', 'error'));
-    }
-
-    // ── Add Department ──
-    function addDepartment() {
-        Swal.fire({
-            title: 'Add New Department',
-            html:
-                '<div style="text-align:left;">' +
-                '<label style="font-weight:600;display:block;margin-bottom:4px;">Department Name (abbreviation)</label>' +
-                '<input id="newDeptName" class="swal2-input" placeholder="e.g. ECE, MECH, IT" style="margin:0 0 0.5rem 0;width:100%;box-sizing:border-box;">' +
-                '<p style="font-size:12px;color:#888;">A default coordinator account will be created for this department.</p>' +
-                '</div>',
-            showCancelButton: true,
-            confirmButtonText: 'Create Department',
-            confirmButtonColor: '#4361ee',
-            preConfirm: () => {
-                const name = document.getElementById('newDeptName').value.trim();
-                if (!name) { Swal.showValidationMessage('Department name is required'); return false; }
-                return name;
-            }
-        }).then((result) => {
-            if (!result.isConfirmed) return;
-            const formData = new FormData();
-            formData.append('ajax_action', 'add_department');
-            formData.append('department_name', result.value);
-            Swal.fire({ title: 'Creating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            fetch('departments.php', { method: 'POST', body: formData })
+        // ── View Department ──
+        function viewDepartment(deptName) {
+            Swal.fire({ title: 'Loading...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            fetch('departments.php?ajax=view_department&dept=' + encodeURIComponent(deptName))
                 .then(r => r.json())
                 .then(data => {
-                    Swal.fire({ icon: data.success ? 'success' : 'error', title: data.success ? 'Created!' : 'Error', text: data.message, confirmButtonColor: '#4361ee' })
-                        .then(() => { if (data.success) location.reload(); });
+                    if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
+                    let html = '';
+
+                    // Coordinator
+                    html += '<div style="text-align:left;margin-bottom:1rem;padding:10px;background:#f0f4ff;border-radius:8px;">';
+                    html += '<strong><i class="ri-user-star-line"></i> Coordinator:</strong> ';
+                    html += data.coordinator ? (data.coordinator.name + ' (' + data.coordinator.email + ')') : '<em>Not Assigned</em>';
+                    html += '</div>';
+
+                    // Students
+                    html += '<div style="text-align:left;margin-bottom:0.5rem;"><strong><i class="ri-group-line"></i> Students (' + data.students.length + ')</strong></div>';
+                    if (data.students.length > 0) {
+                        html += '<div style="max-height:200px;overflow:auto;margin-bottom:1rem;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr>';
+                        html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Name</th>';
+                        html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Reg No</th>';
+                        html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Year</th>';
+                        html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Email</th>';
+                        html += '</tr></thead><tbody>';
+                        data.students.forEach(s => {
+                            html += '<tr><td style="padding:5px 8px;border:1px solid #eee;">' + s.name + '</td>';
+                            html += '<td style="padding:5px 8px;border:1px solid #eee;">' + (s.reg_no || '-') + '</td>';
+                            html += '<td style="padding:5px 8px;border:1px solid #eee;">' + (s.year || '-') + '</td>';
+                            html += '<td style="padding:5px 8px;border:1px solid #eee;">' + s.email + '</td></tr>';
+                        });
+                        html += '</tbody></table></div>';
+                    } else {
+                        html += '<p style="color:#888;margin-bottom:1rem;">No students in this department.</p>';
+                    }
+
+                    // Projects
+                    html += '<div style="text-align:left;margin-bottom:0.5rem;"><strong><i class="ri-folder-line"></i> Projects (' + data.projects.length + ')</strong></div>';
+                    if (data.projects.length > 0) {
+                        html += '<div style="max-height:200px;overflow:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr>';
+                        html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Title</th>';
+                        html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Category</th>';
+                        html += '<th style="padding:6px 8px;border:1px solid #ddd;background:#f5f7fa;">Status</th>';
+                        html += '</tr></thead><tbody>';
+                        data.projects.forEach(p => {
+                            const statusColor = p.status === 'approved' ? '#28a745' : (p.status === 'rejected' ? '#dc3545' : '#ffc107');
+                            html += '<tr><td style="padding:5px 8px;border:1px solid #eee;">' + p.title + '</td>';
+                            html += '<td style="padding:5px 8px;border:1px solid #eee;">' + (p.category || '-') + '</td>';
+                            html += '<td style="padding:5px 8px;border:1px solid #eee;"><span style="color:' + statusColor + ';font-weight:600;">' + (p.status || 'pending') + '</span></td></tr>';
+                        });
+                        html += '</tbody></table></div>';
+                    } else {
+                        html += '<p style="color:#888;">No projects in this department.</p>';
+                    }
+
+                    Swal.fire({ title: deptName + ' Department', html: html, width: '700px', confirmButtonColor: '#4361ee' });
                 })
-                .catch(() => Swal.fire('Error', 'Failed to create department', 'error'));
-        });
-    }
+                .catch(() => Swal.fire('Error', 'Failed to load department data', 'error'));
+        }
+
+        // ── Edit Department ──
+        function editDepartment(deptName, currentCoordinator) {
+            // Fetch all coordinators for the dropdown
+            fetch('departments.php?ajax=get_coordinators')
+                .then(r => r.json())
+                .then(coordinators => {
+                    let coordOptions = '<option value="0">-- No Coordinator --</option>';
+                    coordinators.forEach(c => {
+                        const selected = (c.department === deptName) ? 'selected' : '';
+                        const label = c.name + (c.department && c.department !== deptName ? ' (' + c.department + ')' : '');
+                        coordOptions += '<option value="' + c.id + '" ' + selected + '>' + label + '</option>';
+                    });
+
+                    Swal.fire({
+                        title: 'Edit ' + deptName,
+                        html:
+                            '<div style="text-align:left;">' +
+                            '<label style="font-weight:600;display:block;margin-bottom:4px;">Department Name</label>' +
+                            '<input id="editDeptName" class="swal2-input" value="' + deptName + '" style="margin:0 0 1rem 0;width:100%;box-sizing:border-box;">' +
+                            '<label style="font-weight:600;display:block;margin-bottom:4px;">Assign Coordinator</label>' +
+                            '<select id="editCoordinator" class="swal2-select" style="margin:0;width:100%;box-sizing:border-box;">' + coordOptions + '</select>' +
+                            '</div>',
+                        showCancelButton: true,
+                        confirmButtonText: 'Save Changes',
+                        confirmButtonColor: '#4361ee',
+                        preConfirm: () => {
+                            const newName = document.getElementById('editDeptName').value.trim();
+                            const coordId = document.getElementById('editCoordinator').value;
+                            if (!newName) { Swal.showValidationMessage('Department name is required'); return false; }
+                            return { newName: newName.toUpperCase(), coordId: coordId };
+                        }
+                    }).then((result) => {
+                        if (!result.isConfirmed) return;
+                        const { newName, coordId } = result.value;
+
+                        // Chain: rename if changed, then update coordinator
+                        let promises = [];
+
+                        // Rename department if name changed
+                        if (newName !== deptName) {
+                            const renameData = new FormData();
+                            renameData.append('ajax_action', 'rename_department');
+                            renameData.append('old_name', deptName);
+                            renameData.append('new_name', newName);
+                            promises.push(fetch('departments.php', { method: 'POST', body: renameData }).then(r => r.json()));
+                        }
+
+                        // Update coordinator
+                        const coordData = new FormData();
+                        coordData.append('ajax_action', 'update_coordinator');
+                        coordData.append('department', newName);
+                        coordData.append('coordinator_id', coordId);
+                        promises.push(fetch('departments.php', { method: 'POST', body: coordData }).then(r => r.json()));
+
+                        Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                        Promise.all(promises).then(results => {
+                            const failed = results.find(r => !r.success);
+                            if (failed) {
+                                Swal.fire('Error', failed.message, 'error');
+                            } else {
+                                Swal.fire({ icon: 'success', title: 'Updated!', text: 'Department updated successfully', confirmButtonColor: '#4361ee' })
+                                    .then(() => location.reload());
+                            }
+                        }).catch(() => Swal.fire('Error', 'Failed to save changes', 'error'));
+                    });
+                })
+                .catch(() => Swal.fire('Error', 'Failed to load coordinators', 'error'));
+        }
+
+        // ── Add Department ──
+        function addDepartment() {
+            Swal.fire({
+                title: 'Add New Department',
+                html:
+                    '<div style="text-align:left;">' +
+                    '<label style="font-weight:600;display:block;margin-bottom:4px;">Department Name (abbreviation)</label>' +
+                    '<input id="newDeptName" class="swal2-input" placeholder="e.g. ECE, MECH, IT" style="margin:0 0 0.5rem 0;width:100%;box-sizing:border-box;">' +
+                    '<p style="font-size:12px;color:#888;">A default coordinator account will be created for this department.</p>' +
+                    '</div>',
+                showCancelButton: true,
+                confirmButtonText: 'Create Department',
+                confirmButtonColor: '#4361ee',
+                preConfirm: () => {
+                    const name = document.getElementById('newDeptName').value.trim();
+                    if (!name) { Swal.showValidationMessage('Department name is required'); return false; }
+                    return name;
+                }
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+                const formData = new FormData();
+                formData.append('ajax_action', 'add_department');
+                formData.append('department_name', result.value);
+                Swal.fire({ title: 'Creating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                fetch('departments.php', { method: 'POST', body: formData })
+                    .then(r => r.json())
+                    .then(data => {
+                        Swal.fire({ icon: data.success ? 'success' : 'error', title: data.success ? 'Created!' : 'Error', text: data.message, confirmButtonColor: '#4361ee' })
+                            .then(() => { if (data.success) location.reload(); });
+                    })
+                    .catch(() => Swal.fire('Error', 'Failed to create department', 'error'));
+            });
+        }
     </script>
 </body>
 

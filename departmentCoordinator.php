@@ -94,31 +94,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         <!-- Main Content -->
         <main class="main-content">
             <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1><?php echo htmlspecialchars($deptLabel); ?> - Coordinator</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-search">
-                        <i class="ri-search-line"></i>
-                        <input type="text" placeholder="Search projects, students...">
-                    </div>
-                    <div class="header-icon">
-                        <i class="ri-notification-3-line"></i>
-                        <span class="badge"></span>
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role">Dept. Coordinator</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = $deptLabel . ' - Coordinator';
+            include 'includes/header.php';
+            ?>
 
             <!-- Dashboard Content -->
             <div class="dashboard-content">
@@ -225,17 +204,22 @@ unset($_SESSION['success'], $_SESSION['error']);
                     <div class="dash-card">
                         <div class="dash-card-header">
                             <h3>Recent Submissions</h3>
-                            <a href="departmentProjects.php" style="color: var(--primary); font-size: 0.9rem;">View All</a>
+                            <a href="departmentProjects.php" style="color: var(--primary); font-size: 0.9rem;">View
+                                All</a>
                         </div>
                         <div class="dash-card-body">
                             <?php if (mysqli_num_rows($recentSubmissions) > 0): ?>
                                 <?php while ($proj = mysqli_fetch_assoc($recentSubmissions)): ?>
-                                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+                                    <div
+                                        style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border);">
                                         <div>
-                                            <strong style="font-size:0.9rem;"><?php echo htmlspecialchars($proj['title']); ?></strong>
-                                            <p style="color:var(--text-muted);font-size:0.8rem;margin:0;">by <?php echo htmlspecialchars($proj['student_name'] ?? 'Unknown'); ?></p>
+                                            <strong
+                                                style="font-size:0.9rem;"><?php echo htmlspecialchars($proj['title']); ?></strong>
+                                            <p style="color:var(--text-muted);font-size:0.8rem;margin:0;">by
+                                                <?php echo htmlspecialchars($proj['student_name'] ?? 'Unknown'); ?></p>
                                         </div>
-                                        <span class="status-badge <?php echo $proj['status']; ?>"><?php echo ucfirst($proj['status']); ?></span>
+                                        <span
+                                            class="status-badge <?php echo $proj['status']; ?>"><?php echo ucfirst($proj['status']); ?></span>
                                     </div>
                                 <?php endwhile; ?>
                             <?php else: ?>
@@ -246,14 +230,17 @@ unset($_SESSION['success'], $_SESSION['error']);
                     <div class="dash-card">
                         <div class="dash-card-header">
                             <h3>Project Categories</h3>
-                            <a href="departmentProjects.php" style="color: var(--primary); font-size: 0.9rem;">View Details</a>
+                            <a href="departmentProjects.php" style="color: var(--primary); font-size: 0.9rem;">View
+                                Details</a>
                         </div>
                         <div class="dash-card-body">
                             <?php if (mysqli_num_rows($categoryBreakdown) > 0): ?>
                                 <?php while ($cat = mysqli_fetch_assoc($categoryBreakdown)): ?>
-                                    <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);">
+                                    <div
+                                        style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);">
                                         <span><?php echo htmlspecialchars($cat['category']); ?></span>
-                                        <span class="badge"><?php echo $cat['cnt']; ?> project<?php echo $cat['cnt'] != 1 ? 's' : ''; ?></span>
+                                        <span class="badge"><?php echo $cat['cnt']; ?>
+                                            project<?php echo $cat['cnt'] != 1 ? 's' : ''; ?></span>
                                     </div>
                                 <?php endwhile; ?>
                             <?php else: ?>

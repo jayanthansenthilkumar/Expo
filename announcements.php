@@ -49,37 +49,20 @@ unset($_SESSION['success'], $_SESSION['error']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Announcements</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-icon">
-                        <i class="ri-notification-3-line"></i>
-                        <span class="badge"></span>
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Announcements';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
 
                 <?php if ($canCreate): ?>
-                <div class="content-header" style="margin-bottom:1.5rem;">
-                    <h2>Announcements</h2>
-                    <button class="btn-primary" onclick="showCreateAnnouncement()">
-                        <i class="ri-add-line"></i> New Announcement
-                    </button>
-                </div>
+                    <div class="content-header" style="margin-bottom:1.5rem;">
+                        <h2>Announcements</h2>
+                        <button class="btn-primary" onclick="showCreateAnnouncement()">
+                            <i class="ri-add-line"></i> New Announcement
+                        </button>
+                    </div>
                 <?php endif; ?>
 
                 <div class="announcements-container">
@@ -91,33 +74,38 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </div>
                     <?php else: ?>
                         <?php foreach ($announcements as $ann): ?>
-                        <div class="announcement-card <?php echo $ann['is_featured'] ? 'featured' : ''; ?>">
-                            <div class="announcement-header">
-                                <?php if ($ann['is_featured']): ?>
-                                    <span class="announcement-badge new">Featured</span>
-                                <?php endif; ?>
-                                <span class="announcement-date"><?php echo date('F j, Y', strtotime($ann['created_at'])); ?></span>
+                            <div class="announcement-card <?php echo $ann['is_featured'] ? 'featured' : ''; ?>">
+                                <div class="announcement-header">
+                                    <?php if ($ann['is_featured']): ?>
+                                        <span class="announcement-badge new">Featured</span>
+                                    <?php endif; ?>
+                                    <span
+                                        class="announcement-date"><?php echo date('F j, Y', strtotime($ann['created_at'])); ?></span>
+                                </div>
+                                <h3><?php echo htmlspecialchars($ann['title']); ?></h3>
+                                <p><?php echo nl2br(htmlspecialchars($ann['message'])); ?></p>
+                                <div class="announcement-footer">
+                                    <span><i class="ri-user-line"></i>
+                                        <?php echo htmlspecialchars($ann['author_name']); ?></span>
+                                    <span style="color:var(--text-muted);font-size:0.8rem;">For:
+                                        <?php echo ucfirst($ann['target_role']); ?></span>
+                                    <?php if ($canCreate): ?>
+                                        <form action="sparkBackend.php" method="POST" style="display:inline;"
+                                            class="confirm-delete-form">
+                                            <input type="hidden" name="action" value="delete_announcement">
+                                            <input type="hidden" name="announcement_id" value="<?php echo $ann['id']; ?>">
+                                            <button type="submit" class="btn-icon" style="color:#ef4444;font-size:0.85rem;"><i
+                                                    class="ri-delete-bin-line"></i></button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                            <h3><?php echo htmlspecialchars($ann['title']); ?></h3>
-                            <p><?php echo nl2br(htmlspecialchars($ann['message'])); ?></p>
-                            <div class="announcement-footer">
-                                <span><i class="ri-user-line"></i> <?php echo htmlspecialchars($ann['author_name']); ?></span>
-                                <span style="color:var(--text-muted);font-size:0.8rem;">For: <?php echo ucfirst($ann['target_role']); ?></span>
-                                <?php if ($canCreate): ?>
-                                <form action="sparkBackend.php" method="POST" style="display:inline;" class="confirm-delete-form">
-                                    <input type="hidden" name="action" value="delete_announcement">
-                                    <input type="hidden" name="announcement_id" value="<?php echo $ann['id']; ?>">
-                                    <button type="submit" class="btn-icon" style="color:#ef4444;font-size:0.85rem;"><i class="ri-delete-bin-line"></i></button>
-                                </form>
-                                <?php endif; ?>
-                            </div>
-                        </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
 
                 <?php if ($canCreate): ?>
-                <!-- Announcements handled via SweetAlert -->
+                    <!-- Announcements handled via SweetAlert -->
                 <?php endif; ?>
             </div>
         </main>
@@ -125,17 +113,17 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    <?php if ($successMsg): ?>
-    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($errorMsg): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
+        <?php if ($successMsg): ?>
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($errorMsg): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
 
-    function showCreateAnnouncement() {
-        Swal.fire({
-            title: 'New Announcement',
-            html: `
+        function showCreateAnnouncement() {
+            Swal.fire({
+                title: 'New Announcement',
+                html: `
                 <div style="text-align:left;">
                     <label style="font-weight:600;font-size:0.9rem;display:block;margin-bottom:0.3rem;">Title *</label>
                     <input id="swal-annTitle" class="swal2-input" placeholder="Announcement title" style="margin:0 0 1rem 0;width:100%;box-sizing:border-box;">
@@ -153,66 +141,66 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </label>
                 </div>
             `,
-            confirmButtonText: '<i class="ri-megaphone-line"></i> Post Announcement',
-            confirmButtonColor: '#2563eb',
-            showCancelButton: true,
-            cancelButtonColor: '#6b7280',
-            focusConfirm: false,
-            preConfirm: () => {
-                const title = document.getElementById('swal-annTitle').value.trim();
-                const message = document.getElementById('swal-annMessage').value.trim();
-                if (!title || !message) {
-                    Swal.showValidationMessage('Title and message are required');
-                    return false;
+                confirmButtonText: '<i class="ri-megaphone-line"></i> Post Announcement',
+                confirmButtonColor: '#2563eb',
+                showCancelButton: true,
+                cancelButtonColor: '#6b7280',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const title = document.getElementById('swal-annTitle').value.trim();
+                    const message = document.getElementById('swal-annMessage').value.trim();
+                    if (!title || !message) {
+                        Swal.showValidationMessage('Title and message are required');
+                        return false;
+                    }
+                    return {
+                        title: title,
+                        message: message,
+                        target: document.getElementById('swal-annTarget').value,
+                        featured: document.getElementById('swal-annFeatured').checked
+                    };
                 }
-                return {
-                    title: title,
-                    message: message,
-                    target: document.getElementById('swal-annTarget').value,
-                    featured: document.getElementById('swal-annFeatured').checked
-                };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'sparkBackend.php';
-                form.innerHTML = `
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'sparkBackend.php';
+                    form.innerHTML = `
                     <input type="hidden" name="action" value="create_announcement">
                     <input type="hidden" name="announcementTitle" value="${escapeHtml(result.value.title)}">
                     <input type="hidden" name="announcementMessage" value="${escapeHtml(result.value.message)}">
                     <input type="hidden" name="targetRole" value="${result.value.target}">
                     ${result.value.featured ? '<input type="hidden" name="isFeatured" value="1">' : ''}
                 `;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    }
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-    document.querySelectorAll('.confirm-delete-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formEl = this;
-            Swal.fire({
-                title: 'Delete Announcement?',
-                text: 'This action cannot be undone.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) formEl.submit();
+        document.querySelectorAll('.confirm-delete-form').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formEl = this;
+                Swal.fire({
+                    title: 'Delete Announcement?',
+                    text: 'This action cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) formEl.submit();
+                });
             });
         });
-    });
     </script>
 </body>
 

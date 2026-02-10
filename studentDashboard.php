@@ -20,7 +20,7 @@ mysqli_stmt_close($teamCheck);
 
 $teamMemberCount = 0;
 if ($myTeam) {
-    $isLeader = ((int)$myTeam['leader_id'] === (int)$userId);
+    $isLeader = ((int) $myTeam['leader_id'] === (int) $userId);
     $countStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM team_members WHERE team_id = ?");
     mysqli_stmt_bind_param($countStmt, "i", $myTeam['id']);
     mysqli_stmt_execute($countStmt);
@@ -44,14 +44,16 @@ mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 while ($row = mysqli_fetch_assoc($result)) {
     $totalProjects += $row['cnt'];
-    if ($row['status'] === 'approved') $approvedProjects = $row['cnt'];
-    if ($row['status'] === 'pending') $pendingProjects = $row['cnt'];
+    if ($row['status'] === 'approved')
+        $approvedProjects = $row['cnt'];
+    if ($row['status'] === 'pending')
+        $pendingProjects = $row['cnt'];
 }
 mysqli_stmt_close($stmt);
 
 // Days to event
 $eventDate = '2026-02-15';
-$daysToEvent = max(0, (int)((strtotime($eventDate) - time()) / 86400));
+$daysToEvent = max(0, (int) ((strtotime($eventDate) - time()) / 86400));
 
 // Fetch recent announcements
 $announcements = [];
@@ -75,7 +77,7 @@ if (!$myTeam) {
     $invStmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM team_invitations WHERE invited_user_id = ? AND status = 'pending'");
     mysqli_stmt_bind_param($invStmt, "i", $userId);
     mysqli_stmt_execute($invStmt);
-    $pendingInviteCount = (int)mysqli_fetch_assoc(mysqli_stmt_get_result($invStmt))['cnt'];
+    $pendingInviteCount = (int) mysqli_fetch_assoc(mysqli_stmt_get_result($invStmt))['cnt'];
     mysqli_stmt_close($invStmt);
 }
 
@@ -105,59 +107,45 @@ unset($_SESSION['success'], $_SESSION['error']);
         <!-- Main Content -->
         <main class="main-content">
             <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Dashboard</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-search">
-                        <i class="ri-search-line"></i>
-                        <input type="text" placeholder="Search...">
-                    </div>
-                    <div class="header-icon">
-                        <i class="ri-notification-3-line"></i>
-                        <span class="badge"></span>
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role">Student</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Dashboard';
+            include 'includes/header.php';
+            ?>
 
             <!-- Dashboard Content -->
             <div class="dashboard-content">
                 <?php if (!$myTeam): ?>
-                <!-- Team Registration Banner -->
-                <div style="background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);color:#92400e;padding:1.25rem 1.5rem;border-radius:12px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
-                    <div style="display:flex;align-items:center;gap:0.75rem;">
-                        <i class="ri-error-warning-line" style="font-size:1.5rem;"></i>
-                        <div>
-                            <strong>You haven't joined a team yet!</strong>
-                            <p style="font-size:0.85rem;opacity:0.9;">Register for SPARK'26 by creating or joining a team.<?php if ($pendingInviteCount > 0): ?> You have <strong><?php echo $pendingInviteCount; ?> pending invitation<?php echo $pendingInviteCount > 1 ? 's' : ''; ?></strong>!<?php endif; ?></p>
+                    <!-- Team Registration Banner -->
+                    <div
+                        style="background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);color:#92400e;padding:1.25rem 1.5rem;border-radius:12px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+                        <div style="display:flex;align-items:center;gap:0.75rem;">
+                            <i class="ri-error-warning-line" style="font-size:1.5rem;"></i>
+                            <div>
+                                <strong>You haven't joined a team yet!</strong>
+                                <p style="font-size:0.85rem;opacity:0.9;">Register for SPARK'26 by creating or joining a
+                                    team.<?php if ($pendingInviteCount > 0): ?> You have
+                                        <strong><?php echo $pendingInviteCount; ?> pending
+                                            invitation<?php echo $pendingInviteCount > 1 ? 's' : ''; ?></strong>!<?php endif; ?>
+                                </p>
+                            </div>
                         </div>
+                        <a href="myTeam.php"
+                            style="background:#92400e;color:#fff;padding:0.5rem 1.25rem;border-radius:8px;font-weight:600;text-decoration:none;font-size:0.9rem;"><?php echo $pendingInviteCount > 0 ? 'View Invitations' : 'Register Now'; ?></a>
                     </div>
-                    <a href="myTeam.php" style="background:#92400e;color:#fff;padding:0.5rem 1.25rem;border-radius:8px;font-weight:600;text-decoration:none;font-size:0.9rem;"><?php echo $pendingInviteCount > 0 ? 'View Invitations' : 'Register Now'; ?></a>
-                </div>
                 <?php endif; ?>
 
                 <!-- Welcome Card -->
                 <div class="welcome-card">
                     <h2>Welcome back, <?php echo htmlspecialchars(explode(' ', $userName)[0]); ?>! 👋</h2>
-                    <p>Ready to showcase your innovation? <?php echo ($myTeam && $isLeader) ? 'Submit your project and compete with the best minds on campus.' : 'Join a team to get started with SPARK\'26.'; ?>
+                    <p>Ready to showcase your innovation?
+                        <?php echo ($myTeam && $isLeader) ? 'Submit your project and compete with the best minds on campus.' : 'Join a team to get started with SPARK\'26.'; ?>
                     </p>
                     <?php if ($myTeam && $isLeader): ?>
-                    <a href="submitProject.php" class="btn-light">Submit Project</a>
+                        <a href="submitProject.php" class="btn-light">Submit Project</a>
                     <?php elseif ($myTeam): ?>
-                    <a href="myProjects.php" class="btn-light">View Projects</a>
+                        <a href="myProjects.php" class="btn-light">View Projects</a>
                     <?php else: ?>
-                    <a href="myTeam.php" class="btn-light">Join a Team</a>
+                        <a href="myTeam.php" class="btn-light">Join a Team</a>
                     <?php endif; ?>
                     <div class="welcome-decoration">
                         <i class="ri-rocket-2-line"></i>
@@ -208,34 +196,38 @@ unset($_SESSION['success'], $_SESSION['error']);
                 <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Quick Actions</h3>
                 <div class="quick-actions">
                     <a href="myTeam.php" class="action-card" style="text-decoration:none;color:inherit;">
-                        <div class="action-icon" style="<?php echo $myTeam ? 'background:#dcfce7;' : 'background:#fef3c7;'; ?>">
-                            <i class="ri-team-line" style="<?php echo $myTeam ? 'color:#166534;' : 'color:#92400e;'; ?>"></i>
+                        <div class="action-icon"
+                            style="<?php echo $myTeam ? 'background:#dcfce7;' : 'background:#fef3c7;'; ?>">
+                            <i class="ri-team-line"
+                                style="<?php echo $myTeam ? 'color:#166534;' : 'color:#92400e;'; ?>"></i>
                         </div>
                         <div>
                             <h4><?php echo $myTeam ? $myTeam['team_name'] : 'Join/Create Team'; ?></h4>
-                            <p><?php echo $myTeam ? $teamMemberCount . ' members &bull; ' . ucfirst($myTeam['my_role']) : 'Register for SPARK\'26'; ?></p>
+                            <p><?php echo $myTeam ? $teamMemberCount . ' members &bull; ' . ucfirst($myTeam['my_role']) : 'Register for SPARK\'26'; ?>
+                            </p>
                         </div>
                     </a>
                     <?php if ($myTeam && $isLeader): ?>
-                    <a href="submitProject.php" class="action-card" style="text-decoration:none;color:inherit;">
-                        <div class="action-icon">
-                            <i class="ri-add-line"></i>
-                        </div>
-                        <div>
-                            <h4>New Project</h4>
-                            <p>Submit a new project</p>
-                        </div>
-                    </a>
+                        <a href="submitProject.php" class="action-card" style="text-decoration:none;color:inherit;">
+                            <div class="action-icon">
+                                <i class="ri-add-line"></i>
+                            </div>
+                            <div>
+                                <h4>New Project</h4>
+                                <p>Submit a new project</p>
+                            </div>
+                        </a>
                     <?php elseif (!$myTeam && $pendingInviteCount > 0): ?>
-                    <a href="myTeam.php" class="action-card" style="text-decoration:none;color:inherit;">
-                        <div class="action-icon" style="background:#dbeafe;">
-                            <i class="ri-mail-line" style="color:#1d4ed8;"></i>
-                        </div>
-                        <div>
-                            <h4>Invitations</h4>
-                            <p><?php echo $pendingInviteCount; ?> pending invitation<?php echo $pendingInviteCount > 1 ? 's' : ''; ?></p>
-                        </div>
-                    </a>
+                        <a href="myTeam.php" class="action-card" style="text-decoration:none;color:inherit;">
+                            <div class="action-icon" style="background:#dbeafe;">
+                                <i class="ri-mail-line" style="color:#1d4ed8;"></i>
+                            </div>
+                            <div>
+                                <h4>Invitations</h4>
+                                <p><?php echo $pendingInviteCount; ?> pending
+                                    invitation<?php echo $pendingInviteCount > 1 ? 's' : ''; ?></p>
+                            </div>
+                        </a>
                     <?php endif; ?>
                     <a href="myProjects.php" class="action-card" style="text-decoration:none;color:inherit;">
                         <div class="action-icon">
@@ -269,11 +261,16 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <p style="color: var(--text-muted);">No announcements yet.</p>
                             <?php else: ?>
                                 <?php foreach ($announcements as $ann): ?>
-                                <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border);">
-                                    <h4 style="font-size: 0.95rem; margin-bottom: 0.25rem;"><?php echo htmlspecialchars($ann['title']); ?></h4>
-                                    <p style="font-size: 0.8rem; color: var(--text-muted);"><?php echo htmlspecialchars(substr($ann['message'], 0, 80)); ?>...</p>
-                                    <span style="font-size: 0.75rem; color: var(--text-muted);"><?php echo date('M d, Y', strtotime($ann['created_at'])); ?></span>
-                                </div>
+                                    <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border);">
+                                        <h4 style="font-size: 0.95rem; margin-bottom: 0.25rem;">
+                                            <?php echo htmlspecialchars($ann['title']); ?>
+                                        </h4>
+                                        <p style="font-size: 0.8rem; color: var(--text-muted);">
+                                            <?php echo htmlspecialchars(substr($ann['message'], 0, 80)); ?>...
+                                        </p>
+                                        <span
+                                            style="font-size: 0.75rem; color: var(--text-muted);"><?php echo date('M d, Y', strtotime($ann['created_at'])); ?></span>
+                                    </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
@@ -288,16 +285,23 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <p style="color: var(--text-muted);">No upcoming events.</p>
                             <?php else: ?>
                                 <?php foreach ($scheduleItems as $event): ?>
-                                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border);">
-                                    <div style="width: 50px; height: 50px; background: var(--bg-surface); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                                        <span style="font-size: 1.25rem; font-weight: 800; line-height: 1;"><?php echo date('d', strtotime($event['event_date'])); ?></span>
-                                        <span style="font-size: 0.7rem; color: var(--text-muted);"><?php echo strtoupper(date('M', strtotime($event['event_date']))); ?></span>
+                                    <div
+                                        style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border);">
+                                        <div
+                                            style="width: 50px; height: 50px; background: var(--bg-surface); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                            <span
+                                                style="font-size: 1.25rem; font-weight: 800; line-height: 1;"><?php echo date('d', strtotime($event['event_date'])); ?></span>
+                                            <span
+                                                style="font-size: 0.7rem; color: var(--text-muted);"><?php echo strtoupper(date('M', strtotime($event['event_date']))); ?></span>
+                                        </div>
+                                        <div>
+                                            <h4 style="font-size: 0.95rem;"><?php echo htmlspecialchars($event['title']); ?>
+                                            </h4>
+                                            <p style="font-size: 0.8rem; color: var(--text-muted);">
+                                                <?php echo htmlspecialchars($event['event_type']); ?>
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 style="font-size: 0.95rem;"><?php echo htmlspecialchars($event['title']); ?></h4>
-                                        <p style="font-size: 0.8rem; color: var(--text-muted);"><?php echo htmlspecialchars($event['event_type']); ?></p>
-                                    </div>
-                                </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
@@ -309,12 +313,12 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    <?php if ($successMsg): ?>
-    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($errorMsg): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
+        <?php if ($successMsg): ?>
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($errorMsg): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
     </script>
 </body>
 

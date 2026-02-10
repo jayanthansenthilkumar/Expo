@@ -18,7 +18,7 @@ $dv = $deptFilter['values'];
 // Filter parameters
 $categoryFilter = $_GET['category'] ?? '';
 $statusFilter = $_GET['status'] ?? '';
-$page = max(1, (int)($_GET['page'] ?? 1));
+$page = max(1, (int) ($_GET['page'] ?? 1));
 $perPage = 10;
 $offset = ($page - 1) * $perPage;
 
@@ -86,27 +86,10 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Department Projects</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-search">
-                        <i class="ri-search-line"></i>
-                        <input type="text" placeholder="Search projects...">
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Department Projects';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
 
@@ -115,18 +98,26 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                     <form method="GET" class="filter-controls">
                         <select name="category" class="filter-select" onchange="this.form.submit()">
                             <option value="">All Categories</option>
-                            <option value="web" <?php echo $categoryFilter === 'web' ? 'selected' : ''; ?>>Web Development</option>
-                            <option value="mobile" <?php echo $categoryFilter === 'mobile' ? 'selected' : ''; ?>>Mobile Application</option>
-                            <option value="ai" <?php echo $categoryFilter === 'ai' ? 'selected' : ''; ?>>AI/Machine Learning</option>
+                            <option value="web" <?php echo $categoryFilter === 'web' ? 'selected' : ''; ?>>Web Development
+                            </option>
+                            <option value="mobile" <?php echo $categoryFilter === 'mobile' ? 'selected' : ''; ?>>Mobile
+                                Application</option>
+                            <option value="ai" <?php echo $categoryFilter === 'ai' ? 'selected' : ''; ?>>AI/Machine
+                                Learning</option>
                             <option value="iot" <?php echo $categoryFilter === 'iot' ? 'selected' : ''; ?>>IoT</option>
-                            <option value="blockchain" <?php echo $categoryFilter === 'blockchain' ? 'selected' : ''; ?>>Blockchain</option>
-                            <option value="other" <?php echo $categoryFilter === 'other' ? 'selected' : ''; ?>>Other</option>
+                            <option value="blockchain" <?php echo $categoryFilter === 'blockchain' ? 'selected' : ''; ?>>
+                                Blockchain</option>
+                            <option value="other" <?php echo $categoryFilter === 'other' ? 'selected' : ''; ?>>Other
+                            </option>
                         </select>
                         <select name="status" class="filter-select" onchange="this.form.submit()">
                             <option value="">All Status</option>
-                            <option value="pending" <?php echo $statusFilter === 'pending' ? 'selected' : ''; ?>>Pending</option>
-                            <option value="approved" <?php echo $statusFilter === 'approved' ? 'selected' : ''; ?>>Approved</option>
-                            <option value="rejected" <?php echo $statusFilter === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
+                            <option value="pending" <?php echo $statusFilter === 'pending' ? 'selected' : ''; ?>>Pending
+                            </option>
+                            <option value="approved" <?php echo $statusFilter === 'approved' ? 'selected' : ''; ?>>
+                                Approved</option>
+                            <option value="rejected" <?php echo $statusFilter === 'rejected' ? 'selected' : ''; ?>>
+                                Rejected</option>
                         </select>
                     </form>
                 </div>
@@ -145,32 +136,36 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                         </thead>
                         <tbody>
                             <?php if (empty($projects)): ?>
-                            <tr>
-                                <td colspan="6" class="empty-table">
-                                    <i class="ri-folder-open-line"></i>
-                                    <p>No projects in your department yet</p>
-                                </td>
-                            </tr>
-                            <?php else: ?>
-                                <?php foreach ($projects as $project): ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($project['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($project['student_name'] ?? 'N/A'); ?></td>
-                                    <td><?php echo htmlspecialchars($project['category']); ?></td>
-                                    <td><span class="status-badge status-<?php echo htmlspecialchars($project['status']); ?>"><?php echo ucfirst(htmlspecialchars($project['status'])); ?></span></td>
-                                    <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
-                                    <td>
-                                        <?php if ($project['status'] === 'pending'): ?>
-                                            <a href="reviewApprove.php" class="btn-primary btn-sm" style="text-decoration:none;">
-                                                <i class="ri-eye-line"></i> Review
-                                            </a>
-                                        <?php else: ?>
-                                            <button class="btn-view btn-sm" onclick="openViewModal(<?php echo $project['id']; ?>, <?php echo htmlspecialchars(json_encode($project['title'])); ?>, <?php echo htmlspecialchars(json_encode($project['description'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['student_name'] ?? 'Unknown')); ?>, <?php echo htmlspecialchars(json_encode($project['category'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['department'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['github_link'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['team_members'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['review_comments'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['status'])); ?>)">
-                                                <i class="ri-eye-line"></i> View
-                                            </button>
-                                        <?php endif; ?>
+                                    <td colspan="6" class="empty-table">
+                                        <i class="ri-folder-open-line"></i>
+                                        <p>No projects in your department yet</p>
                                     </td>
                                 </tr>
+                            <?php else: ?>
+                                <?php foreach ($projects as $project): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($project['title']); ?></td>
+                                        <td><?php echo htmlspecialchars($project['student_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($project['category']); ?></td>
+                                        <td><span
+                                                class="status-badge status-<?php echo htmlspecialchars($project['status']); ?>"><?php echo ucfirst(htmlspecialchars($project['status'])); ?></span>
+                                        </td>
+                                        <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
+                                        <td>
+                                            <?php if ($project['status'] === 'pending'): ?>
+                                                <a href="reviewApprove.php" class="btn-primary btn-sm"
+                                                    style="text-decoration:none;">
+                                                    <i class="ri-eye-line"></i> Review
+                                                </a>
+                                            <?php else: ?>
+                                                <button class="btn-view btn-sm"
+                                                    onclick="openViewModal(<?php echo $project['id']; ?>, <?php echo htmlspecialchars(json_encode($project['title'])); ?>, <?php echo htmlspecialchars(json_encode($project['description'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['student_name'] ?? 'Unknown')); ?>, <?php echo htmlspecialchars(json_encode($project['category'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['department'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['github_link'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['team_members'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['review_comments'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['status'])); ?>)">
+                                                    <i class="ri-eye-line"></i> View
+                                                </button>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </tbody>
@@ -179,13 +174,15 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
 
                 <div class="pagination">
                     <?php if ($page > 1): ?>
-                        <a href="?category=<?php echo urlencode($categoryFilter); ?>&status=<?php echo urlencode($statusFilter); ?>&page=<?php echo $page - 1; ?>" class="btn-pagination">&laquo; Previous</a>
+                        <a href="?category=<?php echo urlencode($categoryFilter); ?>&status=<?php echo urlencode($statusFilter); ?>&page=<?php echo $page - 1; ?>"
+                            class="btn-pagination">&laquo; Previous</a>
                     <?php else: ?>
                         <button class="btn-pagination" disabled>&laquo; Previous</button>
                     <?php endif; ?>
                     <span class="page-info">Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
                     <?php if ($page < $totalPages): ?>
-                        <a href="?category=<?php echo urlencode($categoryFilter); ?>&status=<?php echo urlencode($statusFilter); ?>&page=<?php echo $page + 1; ?>" class="btn-pagination">Next &raquo;</a>
+                        <a href="?category=<?php echo urlencode($categoryFilter); ?>&status=<?php echo urlencode($statusFilter); ?>&page=<?php echo $page + 1; ?>"
+                            class="btn-pagination">Next &raquo;</a>
                     <?php else: ?>
                         <button class="btn-pagination" disabled>Next &raquo;</button>
                     <?php endif; ?>
@@ -196,22 +193,22 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    <?php if ($flashMessage): ?>
-    Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
-    <?php endif; ?>
+        <?php if ($flashMessage): ?>
+            Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
+        <?php endif; ?>
 
-    function openViewModal(projectId, title, description, student, category, department, github, team, comments, currentStatus) {
-        const githubHtml = github
-            ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#2563eb;">${escapeHtml(github)}</a></p>`
-            : '';
+        function openViewModal(projectId, title, description, student, category, department, github, team, comments, currentStatus) {
+            const githubHtml = github
+                ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#2563eb;">${escapeHtml(github)}</a></p>`
+                : '';
 
-        const statusColor = currentStatus === 'approved' ? '#22c55e' : '#ef4444';
-        const statusLabel = currentStatus === 'approved' ? 'Approved' : 'Rejected';
-        const statusIcon = currentStatus === 'approved' ? 'ri-checkbox-circle-line' : 'ri-close-circle-line';
+            const statusColor = currentStatus === 'approved' ? '#22c55e' : '#ef4444';
+            const statusLabel = currentStatus === 'approved' ? 'Approved' : 'Rejected';
+            const statusIcon = currentStatus === 'approved' ? 'ri-checkbox-circle-line' : 'ri-close-circle-line';
 
-        Swal.fire({
-            title: 'Project Details',
-            html: `
+            Swal.fire({
+                title: 'Project Details',
+                html: `
                 <div style="text-align:left;">
                     <div style="background:#f8fafc;border-radius:8px;padding:1rem;margin-bottom:1rem;border:1px solid #e2e8f0;">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
@@ -251,48 +248,48 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                     </div>
                 </div>
             `,
-            confirmButtonText: '<i class="ri-refresh-line"></i> Update Decision',
-            confirmButtonColor: '#2563eb',
-            showDenyButton: true,
-            denyButtonText: 'Close',
-            denyButtonColor: '#6b7280',
-            showCancelButton: false,
-            width: '600px',
-            focusConfirm: false,
-            preConfirm: () => {
-                const decision = document.querySelector('input[name="swal-view-decision"]:checked');
-                if (!decision) {
-                    Swal.showValidationMessage('Please select a new decision');
-                    return false;
+                confirmButtonText: '<i class="ri-refresh-line"></i> Update Decision',
+                confirmButtonColor: '#2563eb',
+                showDenyButton: true,
+                denyButtonText: 'Close',
+                denyButtonColor: '#6b7280',
+                showCancelButton: false,
+                width: '600px',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const decision = document.querySelector('input[name="swal-view-decision"]:checked');
+                    if (!decision) {
+                        Swal.showValidationMessage('Please select a new decision');
+                        return false;
+                    }
+                    return {
+                        decision: decision.value,
+                        comments: document.getElementById('swal-view-comments').value.trim()
+                    };
                 }
-                return {
-                    decision: decision.value,
-                    comments: document.getElementById('swal-view-comments').value.trim()
-                };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const d = result.value;
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'sparkBackend.php';
-                form.innerHTML = `
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const d = result.value;
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'sparkBackend.php';
+                    form.innerHTML = `
                     <input type="hidden" name="action" value="review_project">
                     <input type="hidden" name="project_id" value="${projectId}">
                     <input type="hidden" name="decision" value="${escapeHtml(d.decision)}">
                     <input type="hidden" name="comments" value="${escapeHtml(d.comments)}">
                 `;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    }
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
     </script>
 </body>
 

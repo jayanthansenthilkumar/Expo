@@ -18,7 +18,7 @@ mysqli_stmt_execute($teamCheck);
 $teamRow = mysqli_fetch_assoc(mysqli_stmt_get_result($teamCheck));
 if ($teamRow) {
     $myTeamId = $teamRow['id'];
-    $isLeader = ((int)$teamRow['leader_id'] === (int)$userId);
+    $isLeader = ((int) $teamRow['leader_id'] === (int) $userId);
 }
 mysqli_stmt_close($teamCheck);
 
@@ -60,103 +60,97 @@ unset($_SESSION['success'], $_SESSION['error']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>My Projects</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-search">
-                        <i class="ri-search-line"></i>
-                        <input type="text" placeholder="Search projects...">
-                    </div>
-                    <div class="header-icon">
-                        <i class="ri-notification-3-line"></i>
-                        <span class="badge"></span>
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'My Projects';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
 
                 <div class="content-header">
                     <h2>Your Submitted Projects</h2>
                     <?php if ($isLeader): ?>
-                    <a href="submitProject.php" class="btn-primary">
-                        <i class="ri-add-line"></i> New Project
-                    </a>
+                        <a href="submitProject.php" class="btn-primary">
+                            <i class="ri-add-line"></i> New Project
+                        </a>
                     <?php else: ?>
-                    <span style="font-size:0.85rem;color:var(--text-muted);background:var(--bg-surface);padding:0.4rem 0.8rem;border-radius:8px;"><i class="ri-eye-line"></i> View Only (Leader submits projects)</span>
+                        <span
+                            style="font-size:0.85rem;color:var(--text-muted);background:var(--bg-surface);padding:0.4rem 0.8rem;border-radius:8px;"><i
+                                class="ri-eye-line"></i> View Only (Leader submits projects)</span>
                     <?php endif; ?>
                 </div>
 
                 <div class="projects-grid">
                     <?php if (empty($projects)): ?>
-                    <div class="empty-state">
-                        <i class="ri-folder-open-line"></i>
-                        <h3>No Projects Yet</h3>
-                        <?php if ($isLeader): ?>
-                        <p>You haven't submitted any projects. Start by creating your first project!</p>
-                        <a href="submitProject.php" class="btn-primary">Submit Your First Project</a>
-                        <?php elseif ($myTeamId): ?>
-                        <p>Your team hasn't submitted any projects yet. Only the team leader can submit projects.</p>
-                        <?php else: ?>
-                        <p>Join or create a team first, then submit your project.</p>
-                        <a href="myTeam.php" class="btn-primary">Go to My Team</a>
-                        <?php endif; ?>
-                    </div>
+                        <div class="empty-state">
+                            <i class="ri-folder-open-line"></i>
+                            <h3>No Projects Yet</h3>
+                            <?php if ($isLeader): ?>
+                                <p>You haven't submitted any projects. Start by creating your first project!</p>
+                                <a href="submitProject.php" class="btn-primary">Submit Your First Project</a>
+                            <?php elseif ($myTeamId): ?>
+                                <p>Your team hasn't submitted any projects yet. Only the team leader can submit projects.</p>
+                            <?php else: ?>
+                                <p>Join or create a team first, then submit your project.</p>
+                                <a href="myTeam.php" class="btn-primary">Go to My Team</a>
+                            <?php endif; ?>
+                        </div>
                     <?php else: ?>
                         <?php foreach ($projects as $project): ?>
-                        <div class="dash-card" style="margin-bottom: 1rem;">
-                            <div class="dash-card-header">
-                                <h3><?php echo htmlspecialchars($project['title']); ?></h3>
-                                <span class="status-badge status-<?php echo $project['status']; ?>" style="padding:0.25rem 0.75rem;border-radius:20px;font-size:0.8rem;font-weight:600;
-                                    <?php if($project['status']==='approved') echo 'background:#dcfce7;color:#166534;';
-                                    elseif($project['status']==='rejected') echo 'background:#fef2f2;color:#991b1b;';
-                                    else echo 'background:#fef3c7;color:#92400e;'; ?>">
-                                    <?php echo ucfirst($project['status']); ?>
-                                </span>
-                            </div>
-                            <div class="dash-card-body">
-                                <p style="color: var(--text-muted); margin-bottom: 0.75rem;"><?php echo htmlspecialchars(substr($project['description'], 0, 150)); ?>...</p>
-                                <div style="display:flex;gap:1.5rem;flex-wrap:wrap;font-size:0.85rem;color:var(--text-muted);">
-                                    <span><i class="ri-price-tag-3-line"></i> <?php echo htmlspecialchars(ucfirst($project['category'])); ?></span>
-                                    <span><i class="ri-calendar-line"></i> <?php echo date('M d, Y', strtotime($project['created_at'])); ?></span>
-                                    <?php if ($project['github_link']): ?>
-                                    <a href="<?php echo htmlspecialchars($project['github_link']); ?>" target="_blank" style="color:var(--primary);"><i class="ri-github-line"></i> GitHub</a>
+                            <div class="dash-card" style="margin-bottom: 1rem;">
+                                <div class="dash-card-header">
+                                    <h3><?php echo htmlspecialchars($project['title']); ?></h3>
+                                    <span class="status-badge status-<?php echo $project['status']; ?>" style="padding:0.25rem 0.75rem;border-radius:20px;font-size:0.8rem;font-weight:600;
+                                    <?php if ($project['status'] === 'approved')
+                                        echo 'background:#dcfce7;color:#166534;';
+                                    elseif ($project['status'] === 'rejected')
+                                        echo 'background:#fef2f2;color:#991b1b;';
+                                    else
+                                        echo 'background:#fef3c7;color:#92400e;'; ?>">
+                                        <?php echo ucfirst($project['status']); ?>
+                                    </span>
+                                </div>
+                                <div class="dash-card-body">
+                                    <p style="color: var(--text-muted); margin-bottom: 0.75rem;">
+                                        <?php echo htmlspecialchars(substr($project['description'], 0, 150)); ?>...</p>
+                                    <div
+                                        style="display:flex;gap:1.5rem;flex-wrap:wrap;font-size:0.85rem;color:var(--text-muted);">
+                                        <span><i class="ri-price-tag-3-line"></i>
+                                            <?php echo htmlspecialchars(ucfirst($project['category'])); ?></span>
+                                        <span><i class="ri-calendar-line"></i>
+                                            <?php echo date('M d, Y', strtotime($project['created_at'])); ?></span>
+                                        <?php if ($project['github_link']): ?>
+                                            <a href="<?php echo htmlspecialchars($project['github_link']); ?>" target="_blank"
+                                                style="color:var(--primary);"><i class="ri-github-line"></i> GitHub</a>
+                                        <?php endif; ?>
+                                        <?php if ($project['team_members']): ?>
+                                            <span><i class="ri-team-line"></i>
+                                                <?php echo htmlspecialchars($project['team_members']); ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php if ($project['review_comments']): ?>
+                                        <div
+                                            style="margin-top:0.75rem;padding:0.75rem;background:var(--bg-surface);border-radius:8px;font-size:0.85rem;">
+                                            <strong>Review: </strong><?php echo htmlspecialchars($project['review_comments']); ?>
+                                            <?php if ($project['reviewer_name']): ?>
+                                                <span style="color:var(--text-muted);"> —
+                                                    <?php echo htmlspecialchars($project['reviewer_name']); ?></span>
+                                            <?php endif; ?>
+                                        </div>
                                     <?php endif; ?>
-                                    <?php if ($project['team_members']): ?>
-                                    <span><i class="ri-team-line"></i> <?php echo htmlspecialchars($project['team_members']); ?></span>
+                                    <?php if ($isLeader && $project['status'] === 'pending'): ?>
+                                        <form action="sparkBackend.php" method="POST" style="margin-top:0.75rem;"
+                                            class="confirm-delete-form">
+                                            <input type="hidden" name="action" value="delete_project">
+                                            <input type="hidden" name="project_id" value="<?php echo $project['id']; ?>">
+                                            <button type="submit" class="btn-secondary"
+                                                style="color:#ef4444;border-color:#ef4444;font-size:0.85rem;">
+                                                <i class="ri-delete-bin-line"></i> Delete
+                                            </button>
+                                        </form>
                                     <?php endif; ?>
                                 </div>
-                                <?php if ($project['review_comments']): ?>
-                                <div style="margin-top:0.75rem;padding:0.75rem;background:var(--bg-surface);border-radius:8px;font-size:0.85rem;">
-                                    <strong>Review: </strong><?php echo htmlspecialchars($project['review_comments']); ?>
-                                    <?php if ($project['reviewer_name']): ?>
-                                    <span style="color:var(--text-muted);"> — <?php echo htmlspecialchars($project['reviewer_name']); ?></span>
-                                    <?php endif; ?>
-                                </div>
-                                <?php endif; ?>
-                                <?php if ($isLeader && $project['status'] === 'pending'): ?>
-                                <form action="sparkBackend.php" method="POST" style="margin-top:0.75rem;" class="confirm-delete-form">
-                                    <input type="hidden" name="action" value="delete_project">
-                                    <input type="hidden" name="project_id" value="<?php echo $project['id']; ?>">
-                                    <button type="submit" class="btn-secondary" style="color:#ef4444;border-color:#ef4444;font-size:0.85rem;">
-                                        <i class="ri-delete-bin-line"></i> Delete
-                                    </button>
-                                </form>
-                                <?php endif; ?>
                             </div>
-                        </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
@@ -166,29 +160,29 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    <?php if ($successMsg): ?>
-    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($errorMsg): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
-    document.querySelectorAll('.confirm-delete-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formEl = this;
-            Swal.fire({
-                title: 'Are you sure?',
-                text: 'This action cannot be undone.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) formEl.submit();
+        <?php if ($successMsg): ?>
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($errorMsg): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
+        document.querySelectorAll('.confirm-delete-form').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formEl = this;
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'This action cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) formEl.submit();
+                });
             });
         });
-    });
     </script>
 </body>
 

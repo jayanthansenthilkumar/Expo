@@ -55,27 +55,22 @@ while ($row = mysqli_fetch_assoc($monthlyResult)) {
 </head>
 
 <body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
     <div class="dashboard-container">
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Analytics</h1>
-                </div>
-                <div class="header-right">
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Analytics';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
                 <div class="stats-grid">
@@ -84,7 +79,7 @@ while ($row = mysqli_fetch_assoc($monthlyResult)) {
                             <i class="ri-folder-line"></i>
                         </div>
                         <div class="stat-info">
-                            <h3><?php echo (int)$totalProjects; ?></h3>
+                            <h3><?php echo (int) $totalProjects; ?></h3>
                             <p>Total Projects</p>
                         </div>
                     </div>
@@ -93,7 +88,7 @@ while ($row = mysqli_fetch_assoc($monthlyResult)) {
                             <i class="ri-user-line"></i>
                         </div>
                         <div class="stat-info">
-                            <h3><?php echo (int)$totalUsers; ?></h3>
+                            <h3><?php echo (int) $totalUsers; ?></h3>
                             <p>Registered Users</p>
                         </div>
                     </div>
@@ -102,7 +97,7 @@ while ($row = mysqli_fetch_assoc($monthlyResult)) {
                             <i class="ri-building-line"></i>
                         </div>
                         <div class="stat-info">
-                            <h3><?php echo (int)$totalDepartments; ?></h3>
+                            <h3><?php echo (int) $totalDepartments; ?></h3>
                             <p>Departments</p>
                         </div>
                     </div>
@@ -111,7 +106,7 @@ while ($row = mysqli_fetch_assoc($monthlyResult)) {
                             <i class="ri-checkbox-circle-line"></i>
                         </div>
                         <div class="stat-info">
-                            <h3><?php echo (int)$approvedProjects; ?></h3>
+                            <h3><?php echo (int) $approvedProjects; ?></h3>
                             <p>Approved</p>
                         </div>
                     </div>
@@ -120,91 +115,29 @@ while ($row = mysqli_fetch_assoc($monthlyResult)) {
                 <div class="analytics-charts">
                     <div class="chart-card">
                         <h3>Projects by Category</h3>
-                        <div class="chart-content">
-                            <?php if (empty($categories)): ?>
-                                <p style="color:var(--text-secondary);text-align:center;padding:1rem;">No data yet</p>
-                            <?php else: ?>
-                                <?php
-                                $maxCat = max(array_column($categories, 'cnt'));
-                                foreach ($categories as $cat):
-                                    $pct = $maxCat > 0 ? round(($cat['cnt'] / $maxCat) * 100) : 0;
-                                    $pctOfTotal = $totalProjects > 0 ? round(($cat['cnt'] / $totalProjects) * 100) : 0;
-                                ?>
-                                <div style="margin-bottom:0.75rem;">
-                                    <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem;font-size:0.9rem;">
-                                        <span><?php echo htmlspecialchars($cat['category'] ?: 'Uncategorized'); ?></span>
-                                        <span><?php echo (int)$cat['cnt']; ?> (<?php echo $pctOfTotal; ?>%)</span>
-                                    </div>
-                                    <div style="background:var(--bg-secondary, #eee);border-radius:4px;height:8px;overflow:hidden;">
-                                        <div style="background:var(--primary, #4f46e5);height:100%;width:<?php echo $pct; ?>%;border-radius:4px;"></div>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                        <div class="chart-content chart-container">
+                            <canvas id="categoryChart"></canvas>
                         </div>
                     </div>
 
                     <div class="chart-card">
                         <h3>Submissions Over Time</h3>
-                        <div class="chart-content">
-                            <?php if (empty($monthlySubmissions)): ?>
-                                <p style="color:var(--text-secondary);text-align:center;padding:1rem;">No data yet</p>
-                            <?php else: ?>
-                                <?php foreach (array_reverse($monthlySubmissions) as $m): ?>
-                                <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border-color, #eee);font-size:0.9rem;">
-                                    <span><?php echo htmlspecialchars($m['month']); ?></span>
-                                    <span style="font-weight:600;"><?php echo (int)$m['cnt']; ?> project<?php echo $m['cnt'] != 1 ? 's' : ''; ?></span>
-                                </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                        <div class="chart-content chart-container">
+                            <canvas id="trendChart"></canvas>
                         </div>
                     </div>
 
                     <div class="chart-card">
                         <h3>Projects by Department</h3>
-                        <div class="chart-content">
-                            <?php if (empty($deptBreakdown)): ?>
-                                <p style="color:var(--text-secondary);text-align:center;padding:1rem;">No data yet</p>
-                            <?php else: ?>
-                                <?php
-                                $maxDept = max(array_column($deptBreakdown, 'cnt'));
-                                foreach ($deptBreakdown as $dept):
-                                    $pct = $maxDept > 0 ? round(($dept['cnt'] / $maxDept) * 100) : 0;
-                                ?>
-                                <div style="margin-bottom:0.75rem;">
-                                    <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem;font-size:0.9rem;">
-                                        <span><?php echo htmlspecialchars($dept['department']); ?></span>
-                                        <span><?php echo (int)$dept['cnt']; ?></span>
-                                    </div>
-                                    <div style="background:var(--bg-secondary, #eee);border-radius:4px;height:8px;overflow:hidden;">
-                                        <div style="background:var(--primary, #4f46e5);height:100%;width:<?php echo $pct; ?>%;border-radius:4px;"></div>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                        <div class="chart-content chart-container">
+                            <canvas id="deptChart"></canvas>
                         </div>
                     </div>
 
                     <div class="chart-card">
                         <h3>Approval Status</h3>
-                        <div class="chart-content">
-                            <?php if (empty($statusBreakdown)): ?>
-                                <p style="color:var(--text-secondary);text-align:center;padding:1rem;">No data yet</p>
-                            <?php else: ?>
-                                <?php foreach ($statusBreakdown as $st):
-                                    $pctOfTotal = $totalProjects > 0 ? round(($st['cnt'] / $totalProjects) * 100) : 0;
-                                    $statusColors = ['approved' => '#22c55e', 'pending' => '#f59e0b', 'rejected' => '#ef4444', 'under_review' => '#3b82f6'];
-                                    $color = $statusColors[strtolower($st['status'])] ?? '#6b7280';
-                                ?>
-                                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid var(--border-color, #eee);font-size:0.9rem;">
-                                    <span style="display:flex;align-items:center;gap:0.5rem;">
-                                        <span style="width:10px;height:10px;border-radius:50%;background:<?php echo $color; ?>;display:inline-block;"></span>
-                                        <?php echo htmlspecialchars(ucfirst($st['status'] ?? 'Unknown')); ?>
-                                    </span>
-                                    <span style="font-weight:600;"><?php echo (int)$st['cnt']; ?> (<?php echo $pctOfTotal; ?>%)</span>
-                                </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                        <div class="chart-content chart-container">
+                            <canvas id="statusChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -213,6 +146,105 @@ while ($row = mysqli_fetch_assoc($monthlyResult)) {
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script>
+        // Prepare Data
+        const categoryData = <?php echo json_encode(array_column($categories, 'cnt')); ?>;
+        const categoryLabels = <?php echo json_encode(array_column($categories, 'category')); ?>;
+
+        const trendData = <?php echo json_encode(array_column(array_reverse($monthlySubmissions), 'cnt')); ?>;
+        const trendLabels = <?php echo json_encode(array_column(array_reverse($monthlySubmissions), 'month')); ?>;
+
+        const deptData = <?php echo json_encode(array_column($deptBreakdown, 'cnt')); ?>;
+        const deptLabels = <?php echo json_encode(array_column($deptBreakdown, 'department')); ?>;
+
+        const statusData = <?php echo json_encode(array_column($statusBreakdown, 'cnt')); ?>;
+        const statusLabels = <?php echo json_encode(array_column($statusBreakdown, 'status')); ?>;
+
+        // Chart Configs
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        };
+
+        // Category Chart
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: categoryLabels.map(l => l ? l.toUpperCase() : 'OTHER'),
+                datasets: [{
+                    data: categoryData,
+                    backgroundColor: ['#4f46e5', '#ec4899', '#f59e0b', '#10b981', '#6366f1', '#8b5cf6'],
+                    borderWidth: 0
+                }]
+            },
+            options: commonOptions
+        });
+
+        // Trend Chart
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [{
+                    label: 'Submissions',
+                    data: trendData,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+
+        // Department Chart
+        new Chart(document.getElementById('deptChart'), {
+            type: 'bar',
+            data: {
+                labels: deptLabels,
+                datasets: [{
+                    label: 'Projects',
+                    data: deptData,
+                    backgroundColor: '#8b5cf6',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } },
+                    x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 0 } }
+                }
+            }
+        });
+
+        // Status Chart
+        new Chart(document.getElementById('statusChart'), {
+            type: 'pie',
+            data: {
+                labels: statusLabels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+                datasets: [{
+                    data: statusData,
+                    backgroundColor: statusLabels.map(s => {
+                        if (s === 'approved') return '#22c55e';
+                        if (s === 'rejected') return '#ef4444';
+                        if (s === 'pending') return '#f59e0b';
+                        return '#3b82f6';
+                    }),
+                    borderWidth: 0
+                }]
+            },
+            options: commonOptions
+        });
+    </script>
 </body>
 
 </html>

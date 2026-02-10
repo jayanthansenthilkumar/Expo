@@ -77,34 +77,18 @@ unset($_SESSION['success'], $_SESSION['error']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Messages</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-icon">
-                        <i class="ri-notification-3-line"></i>
-                        <span class="badge"></span>
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Messages';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
 
                 <div class="messages-container">
                     <div class="messages-sidebar">
                         <div class="messages-header">
-                            <h3>Inbox <?php if ($unreadCount > 0): ?><span class="badge badge-primary"><?php echo $unreadCount; ?></span><?php endif; ?></h3>
+                            <h3>Inbox <?php if ($unreadCount > 0): ?><span
+                                        class="badge badge-primary"><?php echo $unreadCount; ?></span><?php endif; ?></h3>
                             <button class="btn-icon" title="Compose" onclick="openModal()">
                                 <i class="ri-edit-line"></i>
                             </button>
@@ -116,16 +100,23 @@ unset($_SESSION['success'], $_SESSION['error']);
                         <div class="messages-list">
                             <?php if (count($inboxMessages) > 0): ?>
                                 <?php foreach ($inboxMessages as $msg): ?>
-                                    <a href="?msg=<?php echo $msg['id']; ?>" class="message-item <?php echo (!$msg['is_read']) ? 'unread' : ''; ?> <?php echo ($selectedMsgId == $msg['id']) ? 'active' : ''; ?>" style="display:block;padding:0.75rem 1rem;border-bottom:1px solid #e5e7eb;text-decoration:none;color:inherit;<?php echo (!$msg['is_read']) ? 'background:#eff6ff;font-weight:600;' : ''; ?><?php echo ($selectedMsgId == $msg['id']) ? 'background:#dbeafe;' : ''; ?>">
-                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
-                                            <span style="font-size:0.9rem;"><?php echo htmlspecialchars($msg['sender_name'] ?? 'Unknown'); ?></span>
-                                            <span style="font-size:0.75rem;color:#6b7280;"><?php echo date('M d', strtotime($msg['created_at'])); ?></span>
+                                    <a href="?msg=<?php echo $msg['id']; ?>"
+                                        class="message-item <?php echo (!$msg['is_read']) ? 'unread' : ''; ?> <?php echo ($selectedMsgId == $msg['id']) ? 'active' : ''; ?>"
+                                        style="display:block;padding:0.75rem 1rem;border-bottom:1px solid #e5e7eb;text-decoration:none;color:inherit;<?php echo (!$msg['is_read']) ? 'background:#eff6ff;font-weight:600;' : ''; ?><?php echo ($selectedMsgId == $msg['id']) ? 'background:#dbeafe;' : ''; ?>">
+                                        <div
+                                            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+                                            <span
+                                                style="font-size:0.9rem;"><?php echo htmlspecialchars($msg['sender_name'] ?? 'Unknown'); ?></span>
+                                            <span
+                                                style="font-size:0.75rem;color:#6b7280;"><?php echo date('M d', strtotime($msg['created_at'])); ?></span>
                                         </div>
-                                        <div style="font-size:0.85rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                        <div
+                                            style="font-size:0.85rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                                             <?php echo htmlspecialchars(mb_strimwidth($msg['subject'] ?? '(No subject)', 0, 40, '...')); ?>
                                         </div>
                                         <?php if (!$msg['is_read']): ?>
-                                            <span style="display:inline-block;width:8px;height:8px;background:#3b82f6;border-radius:50%;position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);"></span>
+                                            <span
+                                                style="display:inline-block;width:8px;height:8px;background:#3b82f6;border-radius:50%;position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);"></span>
                                         <?php endif; ?>
                                     </a>
                                 <?php endforeach; ?>
@@ -142,16 +133,19 @@ unset($_SESSION['success'], $_SESSION['error']);
                         <?php if ($selectedMessage): ?>
                             <div class="message-view" style="padding:1.5rem;">
                                 <div style="margin-bottom:1.5rem;border-bottom:1px solid #e5e7eb;padding-bottom:1rem;">
-                                    <h3 style="margin:0 0 0.75rem 0;"><?php echo htmlspecialchars($selectedMessage['subject'] ?? '(No subject)'); ?></h3>
+                                    <h3 style="margin:0 0 0.75rem 0;">
+                                        <?php echo htmlspecialchars($selectedMessage['subject'] ?? '(No subject)'); ?></h3>
                                     <div style="display:flex;justify-content:space-between;align-items:center;">
                                         <div>
                                             <span style="font-weight:600;">From:</span>
                                             <span><?php echo htmlspecialchars($selectedMessage['sender_name'] ?? 'Unknown'); ?></span>
                                         </div>
-                                        <span style="font-size:0.85rem;color:#6b7280;"><?php echo date('M d, Y \a\t h:i A', strtotime($selectedMessage['created_at'])); ?></span>
+                                        <span
+                                            style="font-size:0.85rem;color:#6b7280;"><?php echo date('M d, Y \a\t h:i A', strtotime($selectedMessage['created_at'])); ?></span>
                                     </div>
                                 </div>
-                                <div class="message-body" style="line-height:1.7;color:#374151;white-space:pre-wrap;"><?php echo htmlspecialchars($selectedMessage['message']); ?></div>
+                                <div class="message-body" style="line-height:1.7;color:#374151;white-space:pre-wrap;">
+                                    <?php echo htmlspecialchars($selectedMessage['message']); ?></div>
                             </div>
                         <?php else: ?>
                             <div class="empty-state">
@@ -170,17 +164,17 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    const allUsers = <?php echo json_encode($allUsers); ?>;
+        const allUsers = <?php echo json_encode($allUsers); ?>;
 
-    function openModal() {
-        let userOptions = '<option value="">Select a recipient...</option>';
-        allUsers.forEach(u => {
-            userOptions += `<option value="${escapeHtml(u.email)}">${escapeHtml(u.name)} (${escapeHtml(u.email)})</option>`;
-        });
+        function openModal() {
+            let userOptions = '<option value="">Select a recipient...</option>';
+            allUsers.forEach(u => {
+                userOptions += `<option value="${escapeHtml(u.email)}">${escapeHtml(u.name)} (${escapeHtml(u.email)})</option>`;
+            });
 
-        Swal.fire({
-            title: 'New Message',
-            html: `
+            Swal.fire({
+                title: 'New Message',
+                html: `
                 <div style="text-align:left;">
                     <div style="margin-bottom:0.75rem;">
                         <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:0.3rem;">To *</label>
@@ -196,55 +190,55 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </div>
                 </div>
             `,
-            confirmButtonText: '<i class="ri-send-plane-line"></i> Send Message',
-            confirmButtonColor: '#2563eb',
-            showCancelButton: true,
-            cancelButtonColor: '#6b7280',
-            width: '550px',
-            focusConfirm: false,
-            preConfirm: () => {
-                const recipient = document.getElementById('swal-recipient').value;
-                const message = document.getElementById('swal-message').value.trim();
-                if (!recipient || !message) {
-                    Swal.showValidationMessage('Recipient and message are required');
-                    return false;
+                confirmButtonText: '<i class="ri-send-plane-line"></i> Send Message',
+                confirmButtonColor: '#2563eb',
+                showCancelButton: true,
+                cancelButtonColor: '#6b7280',
+                width: '550px',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const recipient = document.getElementById('swal-recipient').value;
+                    const message = document.getElementById('swal-message').value.trim();
+                    if (!recipient || !message) {
+                        Swal.showValidationMessage('Recipient and message are required');
+                        return false;
+                    }
+                    return {
+                        recipient: recipient,
+                        subject: document.getElementById('swal-subject').value.trim(),
+                        message: message
+                    };
                 }
-                return {
-                    recipient: recipient,
-                    subject: document.getElementById('swal-subject').value.trim(),
-                    message: message
-                };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const d = result.value;
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'sparkBackend.php';
-                form.innerHTML = `
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const d = result.value;
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'sparkBackend.php';
+                    form.innerHTML = `
                     <input type="hidden" name="action" value="send_message">
                     <input type="hidden" name="recipient" value="${escapeHtml(d.recipient)}">
                     <input type="hidden" name="subject" value="${escapeHtml(d.subject)}">
                     <input type="hidden" name="message" value="${escapeHtml(d.message)}">
                 `;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    }
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-    <?php if ($successMsg): ?>
-    Swal.fire({ icon: 'success', title: 'Sent!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($errorMsg): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
+        <?php if ($successMsg): ?>
+            Swal.fire({ icon: 'success', title: 'Sent!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($errorMsg): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
     </script>
 </body>
 

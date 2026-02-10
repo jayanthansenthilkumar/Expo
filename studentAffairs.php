@@ -50,31 +50,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         <!-- Main Content -->
         <main class="main-content">
             <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Student Affairs Dashboard</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-search">
-                        <i class="ri-search-line"></i>
-                        <input type="text" placeholder="Search students, projects...">
-                    </div>
-                    <div class="header-icon">
-                        <i class="ri-notification-3-line"></i>
-                        <span class="badge"></span>
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role">Student Affairs</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Student Affairs Dashboard';
+            include 'includes/header.php';
+            ?>
 
             <!-- Dashboard Content -->
             <div class="dashboard-content">
@@ -186,12 +165,17 @@ unset($_SESSION['success'], $_SESSION['error']);
                         <div class="dash-card-body">
                             <?php if (mysqli_num_rows($recentResult) > 0): ?>
                                 <?php while ($proj = mysqli_fetch_assoc($recentResult)): ?>
-                                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+                                    <div
+                                        style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border);">
                                         <div>
-                                            <strong style="font-size:0.9rem;"><?php echo htmlspecialchars($proj['title']); ?></strong>
-                                            <p style="color:var(--text-muted);font-size:0.8rem;margin:0;">by <?php echo htmlspecialchars($proj['student_name'] ?? 'Unknown'); ?> &bull; <?php echo htmlspecialchars($proj['department']); ?></p>
+                                            <strong
+                                                style="font-size:0.9rem;"><?php echo htmlspecialchars($proj['title']); ?></strong>
+                                            <p style="color:var(--text-muted);font-size:0.8rem;margin:0;">by
+                                                <?php echo htmlspecialchars($proj['student_name'] ?? 'Unknown'); ?> &bull;
+                                                <?php echo htmlspecialchars($proj['department']); ?></p>
                                         </div>
-                                        <span class="status-badge <?php echo $proj['status']; ?>"><?php echo ucfirst($proj['status']); ?></span>
+                                        <span
+                                            class="status-badge <?php echo $proj['status']; ?>"><?php echo ucfirst($proj['status']); ?></span>
                                     </div>
                                 <?php endwhile; ?>
                             <?php else: ?>
@@ -207,9 +191,11 @@ unset($_SESSION['success'], $_SESSION['error']);
                         <div class="dash-card-body">
                             <?php if (mysqli_num_rows($deptOverview) > 0): ?>
                                 <?php while ($dept = mysqli_fetch_assoc($deptOverview)): ?>
-                                    <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);">
+                                    <div
+                                        style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);">
                                         <span><?php echo htmlspecialchars($dept['department']); ?></span>
-                                        <span class="badge"><?php echo $dept['cnt']; ?> project<?php echo $dept['cnt'] != 1 ? 's' : ''; ?></span>
+                                        <span class="badge"><?php echo $dept['cnt']; ?>
+                                            project<?php echo $dept['cnt'] != 1 ? 's' : ''; ?></span>
                                     </div>
                                 <?php endwhile; ?>
                             <?php else: ?>

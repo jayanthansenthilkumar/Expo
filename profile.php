@@ -41,8 +41,10 @@ $stmt->execute();
 $result = $stmt->get_result();
 while ($row = $result->fetch_assoc()) {
     $totalProjects += $row['cnt'];
-    if ($row['status'] === 'approved') $approvedProjects = $row['cnt'];
-    if ($row['status'] === 'pending') $pendingProjects = $row['cnt'];
+    if ($row['status'] === 'approved')
+        $approvedProjects = $row['cnt'];
+    if ($row['status'] === 'pending')
+        $pendingProjects = $row['cnt'];
 }
 $stmt->close();
 
@@ -79,23 +81,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Profile</h1>
-                </div>
-                <div class="header-right">
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Profile';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
                 <div class="profile-container">
@@ -171,12 +160,12 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    <?php if ($success): ?>
-    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($success); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($error): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($error); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
+        <?php if ($success): ?>
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($success); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($error): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($error); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
     </script>
 </body>
 

@@ -66,42 +66,28 @@ unset($_SESSION['success'], $_SESSION['error']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Students</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-search">
-                        <i class="ri-search-line"></i>
-                        <input type="text" placeholder="Search students...">
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Students';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
                 <?php if ($successMsg): ?>
-                    <div class="alert alert-success" style="background:#dcfce7;color:#166534;padding:1rem;border-radius:8px;margin-bottom:1rem;">
+                    <div class="alert alert-success"
+                        style="background:#dcfce7;color:#166534;padding:1rem;border-radius:8px;margin-bottom:1rem;">
                         <i class="ri-checkbox-circle-line"></i> <?php echo htmlspecialchars($successMsg); ?>
                     </div>
                 <?php endif; ?>
                 <?php if ($errorMsg): ?>
-                    <div class="alert alert-error" style="background:#fef2f2;color:#991b1b;padding:1rem;border-radius:8px;margin-bottom:1rem;">
+                    <div class="alert alert-error"
+                        style="background:#fef2f2;color:#991b1b;padding:1rem;border-radius:8px;margin-bottom:1rem;">
                         <i class="ri-error-warning-line"></i> <?php echo htmlspecialchars($errorMsg); ?>
                     </div>
                 <?php endif; ?>
 
                 <div class="content-header">
-                    <h2>Registered Students <span style="font-size:0.9rem;color:#6b7280;">(<?php echo $totalStudents; ?>)</span></h2>
+                    <h2>Registered Students <span
+                            style="font-size:0.9rem;color:#6b7280;">(<?php echo $totalStudents; ?>)</span></h2>
                     <div class="header-actions">
                         <form method="GET" style="display:inline;">
                             <select name="department" class="filter-select" onchange="this.form.submit()">
@@ -139,7 +125,8 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         <td><?php echo intval($student['project_count']); ?></td>
                                         <td>
                                             <?php $status = $student['status'] ?? 'active'; ?>
-                                            <span class="badge badge-<?php echo $status === 'active' ? 'success' : 'danger'; ?>">
+                                            <span
+                                                class="badge badge-<?php echo $status === 'active' ? 'success' : 'danger'; ?>">
                                                 <?php echo ucfirst($status); ?>
                                             </span>
                                         </td>
@@ -150,8 +137,11 @@ unset($_SESSION['success'], $_SESSION['error']);
                                                     <input type="hidden" name="action" value="toggle_user_status">
                                                     <input type="hidden" name="user_id" value="<?php echo $student['id']; ?>">
                                                     <input type="hidden" name="redirect" value="students.php">
-                                                    <button type="submit" class="btn-sm <?php echo $status === 'active' ? 'btn-danger' : 'btn-success'; ?>" title="<?php echo $status === 'active' ? 'Deactivate' : 'Activate'; ?>">
-                                                        <i class="ri-<?php echo $status === 'active' ? 'forbid-line' : 'check-line'; ?>"></i>
+                                                    <button type="submit"
+                                                        class="btn-sm <?php echo $status === 'active' ? 'btn-danger' : 'btn-success'; ?>"
+                                                        title="<?php echo $status === 'active' ? 'Deactivate' : 'Activate'; ?>">
+                                                        <i
+                                                            class="ri-<?php echo $status === 'active' ? 'forbid-line' : 'check-line'; ?>"></i>
                                                         <?php echo $status === 'active' ? 'Deactivate' : 'Activate'; ?>
                                                     </button>
                                                 </form>
@@ -174,19 +164,21 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
 
                 <?php if ($totalPages > 1): ?>
-                <div class="pagination">
-                    <?php if ($page > 1): ?>
-                        <a href="?department=<?php echo urlencode($departmentFilter); ?>&page=<?php echo $page - 1; ?>" class="btn-pagination">&laquo; Previous</a>
-                    <?php else: ?>
-                        <button class="btn-pagination" disabled>&laquo; Previous</button>
-                    <?php endif; ?>
-                    <span class="page-info">Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
-                    <?php if ($page < $totalPages): ?>
-                        <a href="?department=<?php echo urlencode($departmentFilter); ?>&page=<?php echo $page + 1; ?>" class="btn-pagination">Next &raquo;</a>
-                    <?php else: ?>
-                        <button class="btn-pagination" disabled>Next &raquo;</button>
-                    <?php endif; ?>
-                </div>
+                    <div class="pagination">
+                        <?php if ($page > 1): ?>
+                            <a href="?department=<?php echo urlencode($departmentFilter); ?>&page=<?php echo $page - 1; ?>"
+                                class="btn-pagination">&laquo; Previous</a>
+                        <?php else: ?>
+                            <button class="btn-pagination" disabled>&laquo; Previous</button>
+                        <?php endif; ?>
+                        <span class="page-info">Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
+                        <?php if ($page < $totalPages): ?>
+                            <a href="?department=<?php echo urlencode($departmentFilter); ?>&page=<?php echo $page + 1; ?>"
+                                class="btn-pagination">Next &raquo;</a>
+                        <?php else: ?>
+                            <button class="btn-pagination" disabled>Next &raquo;</button>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
             </div>
         </main>

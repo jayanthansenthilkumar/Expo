@@ -62,7 +62,9 @@ mysqli_stmt_bind_param($stmt, $dt, ...$dv);
 mysqli_stmt_execute($stmt);
 $catResult = mysqli_stmt_get_result($stmt);
 $categoryBreakdown = [];
-while ($row = mysqli_fetch_assoc($catResult)) { $categoryBreakdown[] = $row; }
+while ($row = mysqli_fetch_assoc($catResult)) {
+    $categoryBreakdown[] = $row;
+}
 mysqli_stmt_close($stmt);
 
 // Status breakdown
@@ -71,7 +73,9 @@ mysqli_stmt_bind_param($stmt, $dt, ...$dv);
 mysqli_stmt_execute($stmt);
 $statResult = mysqli_stmt_get_result($stmt);
 $statusBreakdown = [];
-while ($row = mysqli_fetch_assoc($statResult)) { $statusBreakdown[] = $row; }
+while ($row = mysqli_fetch_assoc($statResult)) {
+    $statusBreakdown[] = $row;
+}
 mysqli_stmt_close($stmt);
 
 // Build status counts
@@ -79,9 +83,12 @@ $approvedCount = 0;
 $pendingCount = 0;
 $rejectedCount = 0;
 foreach ($statusBreakdown as $row) {
-    if ($row['status'] === 'approved') $approvedCount = $row['cnt'];
-    elseif ($row['status'] === 'pending') $pendingCount = $row['cnt'];
-    elseif ($row['status'] === 'rejected') $rejectedCount = $row['cnt'];
+    if ($row['status'] === 'approved')
+        $approvedCount = $row['cnt'];
+    elseif ($row['status'] === 'pending')
+        $pendingCount = $row['cnt'];
+    elseif ($row['status'] === 'rejected')
+        $rejectedCount = $row['cnt'];
 }
 ?>
 <!DOCTYPE html>
@@ -101,23 +108,10 @@ foreach ($statusBreakdown as $row) {
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Department Statistics</h1>
-                </div>
-                <div class="header-right">
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Department Statistics';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
                 <div class="stats-grid">
@@ -171,18 +165,21 @@ foreach ($statusBreakdown as $row) {
                             <?php else: ?>
                                 <?php
                                 $maxCat = max(array_column($categoryBreakdown, 'cnt'));
-                                foreach ($categoryBreakdown as $cat): 
+                                foreach ($categoryBreakdown as $cat):
                                     $pct = $maxCat > 0 ? round(($cat['cnt'] / $maxCat) * 100) : 0;
-                                ?>
-                                <div style="margin-bottom:8px;">
-                                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                                        <span style="font-size:0.9rem;"><?php echo htmlspecialchars($cat['category'] ?: 'Uncategorized'); ?></span>
-                                        <span style="font-weight:600;"><?php echo $cat['cnt']; ?></span>
+                                    ?>
+                                    <div style="margin-bottom:8px;">
+                                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                                            <span
+                                                style="font-size:0.9rem;"><?php echo htmlspecialchars($cat['category'] ?: 'Uncategorized'); ?></span>
+                                            <span style="font-weight:600;"><?php echo $cat['cnt']; ?></span>
+                                        </div>
+                                        <div style="background:#e9ecef;border-radius:4px;height:8px;">
+                                            <div
+                                                style="background:var(--primary-color, #4361ee);height:100%;border-radius:4px;width:<?php echo $pct; ?>%;">
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div style="background:#e9ecef;border-radius:4px;height:8px;">
-                                        <div style="background:var(--primary-color, #4361ee);height:100%;border-radius:4px;width:<?php echo $pct; ?>%;"></div>
-                                    </div>
-                                </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
@@ -190,8 +187,10 @@ foreach ($statusBreakdown as $row) {
 
                     <div class="chart-card">
                         <h3>Submissions This Month</h3>
-                        <div class="chart-data" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
-                            <i class="ri-line-chart-line" style="font-size:2rem;color:var(--primary-color, #4361ee);margin-bottom:8px;"></i>
+                        <div class="chart-data"
+                            style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+                            <i class="ri-line-chart-line"
+                                style="font-size:2rem;color:var(--primary-color, #4361ee);margin-bottom:8px;"></i>
                             <p style="font-size:2rem;font-weight:700;margin:0;"><?php echo $totalProjects; ?></p>
                             <p style="color:#6c757d;margin:4px 0 0;">Total submissions in department</p>
                         </div>
@@ -200,16 +199,24 @@ foreach ($statusBreakdown as $row) {
                     <div class="chart-card">
                         <h3>Approval Rate</h3>
                         <div class="chart-data" style="padding:15px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #e9ecef;">
-                                <span style="display:flex;align-items:center;gap:8px;"><span style="width:12px;height:12px;border-radius:50%;background:#2ecc71;display:inline-block;"></span> Approved</span>
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #e9ecef;">
+                                <span style="display:flex;align-items:center;gap:8px;"><span
+                                        style="width:12px;height:12px;border-radius:50%;background:#2ecc71;display:inline-block;"></span>
+                                    Approved</span>
                                 <strong><?php echo $approvedCount; ?></strong>
                             </div>
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #e9ecef;">
-                                <span style="display:flex;align-items:center;gap:8px;"><span style="width:12px;height:12px;border-radius:50%;background:#f39c12;display:inline-block;"></span> Pending</span>
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #e9ecef;">
+                                <span style="display:flex;align-items:center;gap:8px;"><span
+                                        style="width:12px;height:12px;border-radius:50%;background:#f39c12;display:inline-block;"></span>
+                                    Pending</span>
                                 <strong><?php echo $pendingCount; ?></strong>
                             </div>
                             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
-                                <span style="display:flex;align-items:center;gap:8px;"><span style="width:12px;height:12px;border-radius:50%;background:#e74c3c;display:inline-block;"></span> Rejected</span>
+                                <span style="display:flex;align-items:center;gap:8px;"><span
+                                        style="width:12px;height:12px;border-radius:50%;background:#e74c3c;display:inline-block;"></span>
+                                    Rejected</span>
                                 <strong><?php echo $rejectedCount; ?></strong>
                             </div>
                         </div>
@@ -217,10 +224,12 @@ foreach ($statusBreakdown as $row) {
 
                     <div class="chart-card">
                         <h3>Student Participation</h3>
-                        <div class="chart-data" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+                        <div class="chart-data"
+                            style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
                             <i class="ri-bar-chart-line" style="font-size:2rem;color:#8e44ad;margin-bottom:8px;"></i>
                             <p style="font-size:2rem;font-weight:700;margin:0;"><?php echo $totalStudents; ?></p>
-                            <p style="color:#6c757d;margin:4px 0 0;">Students across <?php echo $totalTeams; ?> teams</p>
+                            <p style="color:#6c757d;margin:4px 0 0;">Students across <?php echo $totalTeams; ?> teams
+                            </p>
                         </div>
                     </div>
                 </div>

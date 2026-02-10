@@ -38,23 +38,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Event Schedule</h1>
-                </div>
-                <div class="header-right">
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Event Schedule';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
 
@@ -65,9 +52,9 @@ unset($_SESSION['success'], $_SESSION['error']);
                             <p>Important dates and deadlines for the event</p>
                         </div>
                         <?php if ($canManage): ?>
-                        <button class="btn-primary" onclick="showAddEvent()">
-                            <i class="ri-add-line"></i> Add Event
-                        </button>
+                            <button class="btn-primary" onclick="showAddEvent()">
+                                <i class="ri-add-line"></i> Add Event
+                            </button>
                         <?php endif; ?>
                     </div>
 
@@ -79,33 +66,38 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <p>No events have been added to the schedule yet.</p>
                             </div>
                         <?php else: ?>
-                            <?php foreach ($events as $event): 
+                            <?php foreach ($events as $event):
                                 $isPast = strtotime($event['event_date']) < time();
                                 $isUpcoming = !$isPast && strtotime($event['event_date']) < time() + (7 * 86400);
-                            ?>
-                            <div class="timeline-item">
-                                <div class="timeline-marker <?php echo $isUpcoming ? 'upcoming' : ($isPast ? '' : ''); ?>"></div>
-                                <div class="timeline-content">
-                                    <span class="timeline-date"><?php echo date('F j, Y - g:i A', strtotime($event['event_date'])); ?></span>
-                                    <h3><?php echo htmlspecialchars($event['title']); ?></h3>
-                                    <p><?php echo htmlspecialchars($event['description']); ?></p>
-                                    <span style="font-size:0.75rem;padding:0.15rem 0.5rem;border-radius:10px;background:var(--bg-surface);color:var(--text-muted);"><?php echo ucfirst($event['event_type']); ?></span>
-                                    <?php if ($canManage): ?>
-                                    <form action="sparkBackend.php" method="POST" style="display:inline;margin-left:0.5rem;" class="confirm-delete-form">
-                                        <input type="hidden" name="action" value="delete_schedule">
-                                        <input type="hidden" name="schedule_id" value="<?php echo $event['id']; ?>">
-                                        <button type="submit" class="btn-icon" style="color:#ef4444;font-size:0.8rem;"><i class="ri-delete-bin-line"></i></button>
-                                    </form>
-                                    <?php endif; ?>
+                                ?>
+                                <div class="timeline-item">
+                                    <div class="timeline-marker <?php echo $isUpcoming ? 'upcoming' : ($isPast ? '' : ''); ?>">
+                                    </div>
+                                    <div class="timeline-content">
+                                        <span
+                                            class="timeline-date"><?php echo date('F j, Y - g:i A', strtotime($event['event_date'])); ?></span>
+                                        <h3><?php echo htmlspecialchars($event['title']); ?></h3>
+                                        <p><?php echo htmlspecialchars($event['description']); ?></p>
+                                        <span
+                                            style="font-size:0.75rem;padding:0.15rem 0.5rem;border-radius:10px;background:var(--bg-surface);color:var(--text-muted);"><?php echo ucfirst($event['event_type']); ?></span>
+                                        <?php if ($canManage): ?>
+                                            <form action="sparkBackend.php" method="POST" style="display:inline;margin-left:0.5rem;"
+                                                class="confirm-delete-form">
+                                                <input type="hidden" name="action" value="delete_schedule">
+                                                <input type="hidden" name="schedule_id" value="<?php echo $event['id']; ?>">
+                                                <button type="submit" class="btn-icon" style="color:#ef4444;font-size:0.8rem;"><i
+                                                        class="ri-delete-bin-line"></i></button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                            </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
                 </div>
 
                 <?php if ($canManage): ?>
-                <!-- Schedule modal handled via SweetAlert -->
+                    <!-- Schedule modal handled via SweetAlert -->
                 <?php endif; ?>
             </div>
         </main>
@@ -113,10 +105,10 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    function showAddEvent() {
-        Swal.fire({
-            title: 'Add Schedule Event',
-            html: `
+        function showAddEvent() {
+            Swal.fire({
+                title: 'Add Schedule Event',
+                html: `
                 <div style="text-align:left;">
                     <div class="form-group" style="margin-bottom:0.75rem;">
                         <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:0.3rem;">Event Title *</label>
@@ -141,75 +133,75 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </div>
                 </div>
             `,
-            confirmButtonText: '<i class="ri-calendar-event-line"></i> Add Event',
-            confirmButtonColor: '#2563eb',
-            showCancelButton: true,
-            cancelButtonColor: '#6b7280',
-            width: '500px',
-            focusConfirm: false,
-            preConfirm: () => {
-                const title = document.getElementById('swal-eTitle').value.trim();
-                const date = document.getElementById('swal-eDate').value;
-                if (!title || !date) {
-                    Swal.showValidationMessage('Title and Date are required');
-                    return false;
+                confirmButtonText: '<i class="ri-calendar-event-line"></i> Add Event',
+                confirmButtonColor: '#2563eb',
+                showCancelButton: true,
+                cancelButtonColor: '#6b7280',
+                width: '500px',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const title = document.getElementById('swal-eTitle').value.trim();
+                    const date = document.getElementById('swal-eDate').value;
+                    if (!title || !date) {
+                        Swal.showValidationMessage('Title and Date are required');
+                        return false;
+                    }
+                    return {
+                        title: title,
+                        description: document.getElementById('swal-eDesc').value.trim(),
+                        date: date,
+                        type: document.getElementById('swal-eType').value
+                    };
                 }
-                return {
-                    title: title,
-                    description: document.getElementById('swal-eDesc').value.trim(),
-                    date: date,
-                    type: document.getElementById('swal-eType').value
-                };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const d = result.value;
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'sparkBackend.php';
-                form.innerHTML = `
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const d = result.value;
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'sparkBackend.php';
+                    form.innerHTML = `
                     <input type="hidden" name="action" value="add_schedule">
                     <input type="hidden" name="eventTitle" value="${escapeHtml(d.title)}">
                     <input type="hidden" name="eventDescription" value="${escapeHtml(d.description)}">
                     <input type="hidden" name="eventDate" value="${escapeHtml(d.date)}">
                     <input type="hidden" name="eventType" value="${escapeHtml(d.type)}">
                 `;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    }
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-    <?php if ($successMsg): ?>
-    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($errorMsg): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
+        <?php if ($successMsg): ?>
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($errorMsg): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
 
-    document.querySelectorAll('.confirm-delete-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formEl = this;
-            Swal.fire({
-                title: 'Delete Event?',
-                text: 'This scheduled event will be permanently removed.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) formEl.submit();
+        document.querySelectorAll('.confirm-delete-form').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formEl = this;
+                Swal.fire({
+                    title: 'Delete Event?',
+                    text: 'This scheduled event will be permanently removed.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) formEl.submit();
+                });
             });
         });
-    });
     </script>
 </body>
 

@@ -31,23 +31,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Settings</h1>
-                </div>
-                <div class="header-right">
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Settings';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
 
@@ -56,15 +43,17 @@ unset($_SESSION['success'], $_SESSION['error']);
                         <h3><i class="ri-user-line"></i> Profile Settings</h3>
                         <form action="sparkBackend.php" method="POST">
                             <input type="hidden" name="action" value="update_profile">
-                            
+
                             <div class="form-group">
                                 <label for="fullName">Full Name</label>
-                                <input type="text" id="fullName" name="fullName" value="<?php echo htmlspecialchars($userName); ?>">
+                                <input type="text" id="fullName" name="fullName"
+                                    value="<?php echo htmlspecialchars($userName); ?>">
                             </div>
 
                             <div class="form-group">
                                 <label for="email">Email Address</label>
-                                <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($userEmail); ?>">
+                                <input type="email" id="email" name="email"
+                                    value="<?php echo htmlspecialchars($userEmail); ?>">
                             </div>
 
                             <button type="submit" class="btn-primary">Save Changes</button>
@@ -75,7 +64,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                         <h3><i class="ri-lock-line"></i> Change Password</h3>
                         <form action="sparkBackend.php" method="POST">
                             <input type="hidden" name="action" value="change_password">
-                            
+
                             <div class="form-group">
                                 <label for="currentPassword">Current Password</label>
                                 <input type="password" id="currentPassword" name="currentPassword" required>
@@ -137,12 +126,12 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    <?php if ($success): ?>
-    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($success); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($error): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($error); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
+        <?php if ($success): ?>
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($success); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($error): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($error); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
     </script>
 </body>
 

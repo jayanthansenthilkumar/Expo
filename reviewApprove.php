@@ -64,8 +64,12 @@ if ($filterByDept) {
     $res = mysqli_query($conn, "SELECT p.*, u.name AS student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'pending' ORDER BY p.created_at DESC");
 }
 $pendingProjects = [];
-while ($row = mysqli_fetch_assoc($res)) { $pendingProjects[] = $row; }
-if (isset($stmt)) { mysqli_stmt_close($stmt); }
+while ($row = mysqli_fetch_assoc($res)) {
+    $pendingProjects[] = $row;
+}
+if (isset($stmt)) {
+    mysqli_stmt_close($stmt);
+}
 
 // Fetch rejected projects (for reconsider)
 if ($filterByDept) {
@@ -77,8 +81,12 @@ if ($filterByDept) {
     $res2 = mysqli_query($conn, "SELECT p.*, u.name AS student_name, r.name AS reviewer_name FROM projects p LEFT JOIN users u ON p.student_id = u.id LEFT JOIN users r ON p.reviewed_by = r.id WHERE p.status = 'rejected' ORDER BY p.reviewed_at DESC");
 }
 $rejectedProjects = [];
-while ($row = mysqli_fetch_assoc($res2)) { $rejectedProjects[] = $row; }
-if (isset($stmt)) { mysqli_stmt_close($stmt); }
+while ($row = mysqli_fetch_assoc($res2)) {
+    $rejectedProjects[] = $row;
+}
+if (isset($stmt)) {
+    mysqli_stmt_close($stmt);
+}
 
 // Fetch approved projects (for reconsider)
 if ($filterByDept) {
@@ -90,8 +98,12 @@ if ($filterByDept) {
     $res3 = mysqli_query($conn, "SELECT p.*, u.name AS student_name, r.name AS reviewer_name FROM projects p LEFT JOIN users u ON p.student_id = u.id LEFT JOIN users r ON p.reviewed_by = r.id WHERE p.status = 'approved' ORDER BY p.reviewed_at DESC");
 }
 $approvedProjects = [];
-while ($row = mysqli_fetch_assoc($res3)) { $approvedProjects[] = $row; }
-if (isset($stmt)) { mysqli_stmt_close($stmt); }
+while ($row = mysqli_fetch_assoc($res3)) {
+    $approvedProjects[] = $row;
+}
+if (isset($stmt)) {
+    mysqli_stmt_close($stmt);
+}
 
 // Flash messages
 $flashSuccess = $_SESSION['success'] ?? '';
@@ -115,23 +127,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Review & Approve</h1>
-                </div>
-                <div class="header-right">
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Review & Approve';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
 
@@ -180,42 +179,43 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                 <div class="review-queue">
                     <?php if (empty($pendingProjects)): ?>
-                    <div class="empty-state">
-                        <i class="ri-checkbox-circle-line"></i>
-                        <h3>No Projects to Review</h3>
-                        <p>All projects in your department have been reviewed. Check back later for new submissions.</p>
-                    </div>
+                        <div class="empty-state">
+                            <i class="ri-checkbox-circle-line"></i>
+                            <h3>No Projects to Review</h3>
+                            <p>All projects in your department have been reviewed. Check back later for new submissions.</p>
+                        </div>
                     <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Student</th>
-                                    <th>Category</th>
-                                    <th>Department</th>
-                                    <th>Submitted</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($pendingProjects as $project): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($project['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($project['student_name'] ?? 'Unknown'); ?></td>
-                                    <td><?php echo htmlspecialchars($project['category'] ?? '-'); ?></td>
-                                    <td><?php echo htmlspecialchars($project['department'] ?? '-'); ?></td>
-                                    <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
-                                    <td>
-                                        <button class="btn-primary btn-sm" onclick="openReviewModal(<?php echo $project['id']; ?>, <?php echo htmlspecialchars(json_encode($project['title'])); ?>, <?php echo htmlspecialchars(json_encode($project['description'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['student_name'] ?? 'Unknown')); ?>, <?php echo htmlspecialchars(json_encode($project['category'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['department'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['github_link'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['team_members'] ?? '')); ?>)">
-                                            <i class="ri-eye-line"></i> Review
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Student</th>
+                                        <th>Category</th>
+                                        <th>Department</th>
+                                        <th>Submitted</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($pendingProjects as $project): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($project['title']); ?></td>
+                                            <td><?php echo htmlspecialchars($project['student_name'] ?? 'Unknown'); ?></td>
+                                            <td><?php echo htmlspecialchars($project['category'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars($project['department'] ?? '-'); ?></td>
+                                            <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
+                                            <td>
+                                                <button class="btn-primary btn-sm"
+                                                    onclick="openReviewModal(<?php echo $project['id']; ?>, <?php echo htmlspecialchars(json_encode($project['title'])); ?>, <?php echo htmlspecialchars(json_encode($project['description'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['student_name'] ?? 'Unknown')); ?>, <?php echo htmlspecialchars(json_encode($project['category'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['department'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['github_link'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['team_members'] ?? '')); ?>)">
+                                                    <i class="ri-eye-line"></i> Review
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     <?php endif; ?>
                 </div>
 
@@ -227,42 +227,44 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
                 <div class="review-queue">
                     <?php if (empty($approvedProjects)): ?>
-                    <div class="empty-state">
-                        <i class="ri-checkbox-circle-line"></i>
-                        <h3>No Approved Projects</h3>
-                        <p>No projects have been approved yet.</p>
-                    </div>
+                        <div class="empty-state">
+                            <i class="ri-checkbox-circle-line"></i>
+                            <h3>No Approved Projects</h3>
+                            <p>No projects have been approved yet.</p>
+                        </div>
                     <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Student</th>
-                                    <th>Category</th>
-                                    <th>Department</th>
-                                    <th>Reviewed</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($approvedProjects as $project): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($project['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($project['student_name'] ?? 'Unknown'); ?></td>
-                                    <td><?php echo htmlspecialchars($project['category'] ?? '-'); ?></td>
-                                    <td><?php echo htmlspecialchars($project['department'] ?? '-'); ?></td>
-                                    <td><?php echo $project['reviewed_at'] ? date('M d, Y', strtotime($project['reviewed_at'])) : '-'; ?></td>
-                                    <td>
-                                        <button class="btn-view btn-sm" onclick="openViewModal(<?php echo $project['id']; ?>, <?php echo htmlspecialchars(json_encode($project['title'])); ?>, <?php echo htmlspecialchars(json_encode($project['description'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['student_name'] ?? 'Unknown')); ?>, <?php echo htmlspecialchars(json_encode($project['category'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['department'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['github_link'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['team_members'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['review_comments'] ?? '')); ?>, 'approved')">
-                                            <i class="ri-eye-line"></i> View
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Student</th>
+                                        <th>Category</th>
+                                        <th>Department</th>
+                                        <th>Reviewed</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($approvedProjects as $project): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($project['title']); ?></td>
+                                            <td><?php echo htmlspecialchars($project['student_name'] ?? 'Unknown'); ?></td>
+                                            <td><?php echo htmlspecialchars($project['category'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars($project['department'] ?? '-'); ?></td>
+                                            <td><?php echo $project['reviewed_at'] ? date('M d, Y', strtotime($project['reviewed_at'])) : '-'; ?>
+                                            </td>
+                                            <td>
+                                                <button class="btn-view btn-sm"
+                                                    onclick="openViewModal(<?php echo $project['id']; ?>, <?php echo htmlspecialchars(json_encode($project['title'])); ?>, <?php echo htmlspecialchars(json_encode($project['description'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['student_name'] ?? 'Unknown')); ?>, <?php echo htmlspecialchars(json_encode($project['category'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['department'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['github_link'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['team_members'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['review_comments'] ?? '')); ?>, 'approved')">
+                                                    <i class="ri-eye-line"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     <?php endif; ?>
                 </div>
 
@@ -272,42 +274,44 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
                 <div class="review-queue">
                     <?php if (empty($rejectedProjects)): ?>
-                    <div class="empty-state">
-                        <i class="ri-close-circle-line"></i>
-                        <h3>No Rejected Projects</h3>
-                        <p>No projects have been rejected.</p>
-                    </div>
+                        <div class="empty-state">
+                            <i class="ri-close-circle-line"></i>
+                            <h3>No Rejected Projects</h3>
+                            <p>No projects have been rejected.</p>
+                        </div>
                     <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Student</th>
-                                    <th>Category</th>
-                                    <th>Department</th>
-                                    <th>Rejected On</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($rejectedProjects as $project): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($project['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($project['student_name'] ?? 'Unknown'); ?></td>
-                                    <td><?php echo htmlspecialchars($project['category'] ?? '-'); ?></td>
-                                    <td><?php echo htmlspecialchars($project['department'] ?? '-'); ?></td>
-                                    <td><?php echo $project['reviewed_at'] ? date('M d, Y', strtotime($project['reviewed_at'])) : '-'; ?></td>
-                                    <td>
-                                        <button class="btn-view btn-sm" onclick="openViewModal(<?php echo $project['id']; ?>, <?php echo htmlspecialchars(json_encode($project['title'])); ?>, <?php echo htmlspecialchars(json_encode($project['description'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['student_name'] ?? 'Unknown')); ?>, <?php echo htmlspecialchars(json_encode($project['category'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['department'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['github_link'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['team_members'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['review_comments'] ?? '')); ?>, 'rejected')">
-                                            <i class="ri-eye-line"></i> View
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Student</th>
+                                        <th>Category</th>
+                                        <th>Department</th>
+                                        <th>Rejected On</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($rejectedProjects as $project): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($project['title']); ?></td>
+                                            <td><?php echo htmlspecialchars($project['student_name'] ?? 'Unknown'); ?></td>
+                                            <td><?php echo htmlspecialchars($project['category'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars($project['department'] ?? '-'); ?></td>
+                                            <td><?php echo $project['reviewed_at'] ? date('M d, Y', strtotime($project['reviewed_at'])) : '-'; ?>
+                                            </td>
+                                            <td>
+                                                <button class="btn-view btn-sm"
+                                                    onclick="openViewModal(<?php echo $project['id']; ?>, <?php echo htmlspecialchars(json_encode($project['title'])); ?>, <?php echo htmlspecialchars(json_encode($project['description'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['student_name'] ?? 'Unknown')); ?>, <?php echo htmlspecialchars(json_encode($project['category'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['department'] ?? '-')); ?>, <?php echo htmlspecialchars(json_encode($project['github_link'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['team_members'] ?? '')); ?>, <?php echo htmlspecialchars(json_encode($project['review_comments'] ?? '')); ?>, 'rejected')">
+                                                    <i class="ri-eye-line"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -316,14 +320,14 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    function openReviewModal(projectId, title, description, student, category, department, github, team) {
-        const githubHtml = github
-            ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#2563eb;">${escapeHtml(github)}</a></p>`
-            : '';
+        function openReviewModal(projectId, title, description, student, category, department, github, team) {
+            const githubHtml = github
+                ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#2563eb;">${escapeHtml(github)}</a></p>`
+                : '';
 
-        Swal.fire({
-            title: 'Review Project',
-            html: `
+            Swal.fire({
+                title: 'Review Project',
+                html: `
                 <div style="text-align:left;">
                     <div style="background:#f8fafc;border-radius:8px;padding:1rem;margin-bottom:1rem;border:1px solid #e2e8f0;">
                         <h4 style="margin:0 0 0.5rem 0;color:#1e293b;">${escapeHtml(title)}</h4>
@@ -355,53 +359,53 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </div>
                 </div>
             `,
-            confirmButtonText: '<i class="ri-check-double-line"></i> Submit Review',
-            confirmButtonColor: '#2563eb',
-            showCancelButton: true,
-            cancelButtonColor: '#6b7280',
-            width: '600px',
-            focusConfirm: false,
-            preConfirm: () => {
-                const decision = document.querySelector('input[name="swal-decision"]:checked');
-                if (!decision) {
-                    Swal.showValidationMessage('Please select Approve or Reject');
-                    return false;
+                confirmButtonText: '<i class="ri-check-double-line"></i> Submit Review',
+                confirmButtonColor: '#2563eb',
+                showCancelButton: true,
+                cancelButtonColor: '#6b7280',
+                width: '600px',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const decision = document.querySelector('input[name="swal-decision"]:checked');
+                    if (!decision) {
+                        Swal.showValidationMessage('Please select Approve or Reject');
+                        return false;
+                    }
+                    return {
+                        decision: decision.value,
+                        comments: document.getElementById('swal-comments').value.trim()
+                    };
                 }
-                return {
-                    decision: decision.value,
-                    comments: document.getElementById('swal-comments').value.trim()
-                };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const d = result.value;
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'sparkBackend.php';
-                form.innerHTML = `
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const d = result.value;
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'sparkBackend.php';
+                    form.innerHTML = `
                     <input type="hidden" name="action" value="review_project">
                     <input type="hidden" name="project_id" value="${projectId}">
                     <input type="hidden" name="decision" value="${escapeHtml(d.decision)}">
                     <input type="hidden" name="comments" value="${escapeHtml(d.comments)}">
                 `;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    }
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
 
-    function openViewModal(projectId, title, description, student, category, department, github, team, comments, currentStatus) {
-        const githubHtml = github
-            ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#2563eb;">${escapeHtml(github)}</a></p>`
-            : '';
+        function openViewModal(projectId, title, description, student, category, department, github, team, comments, currentStatus) {
+            const githubHtml = github
+                ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#2563eb;">${escapeHtml(github)}</a></p>`
+                : '';
 
-        const statusColor = currentStatus === 'approved' ? '#22c55e' : '#ef4444';
-        const statusLabel = currentStatus === 'approved' ? 'Approved' : 'Rejected';
-        const statusIcon = currentStatus === 'approved' ? 'ri-checkbox-circle-line' : 'ri-close-circle-line';
+            const statusColor = currentStatus === 'approved' ? '#22c55e' : '#ef4444';
+            const statusLabel = currentStatus === 'approved' ? 'Approved' : 'Rejected';
+            const statusIcon = currentStatus === 'approved' ? 'ri-checkbox-circle-line' : 'ri-close-circle-line';
 
-        Swal.fire({
-            title: 'Project Details',
-            html: `
+            Swal.fire({
+                title: 'Project Details',
+                html: `
                 <div style="text-align:left;">
                     <div style="background:#f8fafc;border-radius:8px;padding:1rem;margin-bottom:1rem;border:1px solid #e2e8f0;">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
@@ -441,57 +445,57 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </div>
                 </div>
             `,
-            confirmButtonText: '<i class="ri-refresh-line"></i> Update Decision',
-            confirmButtonColor: '#2563eb',
-            showCancelButton: true,
-            showDenyButton: true,
-            denyButtonText: 'Close',
-            denyButtonColor: '#6b7280',
-            cancelButtonText: '',
-            showCancelButton: false,
-            width: '600px',
-            focusConfirm: false,
-            preConfirm: () => {
-                const decision = document.querySelector('input[name="swal-view-decision"]:checked');
-                if (!decision) {
-                    Swal.showValidationMessage('Please select a new decision');
-                    return false;
+                confirmButtonText: '<i class="ri-refresh-line"></i> Update Decision',
+                confirmButtonColor: '#2563eb',
+                showCancelButton: true,
+                showDenyButton: true,
+                denyButtonText: 'Close',
+                denyButtonColor: '#6b7280',
+                cancelButtonText: '',
+                showCancelButton: false,
+                width: '600px',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const decision = document.querySelector('input[name="swal-view-decision"]:checked');
+                    if (!decision) {
+                        Swal.showValidationMessage('Please select a new decision');
+                        return false;
+                    }
+                    return {
+                        decision: decision.value,
+                        comments: document.getElementById('swal-view-comments').value.trim()
+                    };
                 }
-                return {
-                    decision: decision.value,
-                    comments: document.getElementById('swal-view-comments').value.trim()
-                };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const d = result.value;
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'sparkBackend.php';
-                form.innerHTML = `
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const d = result.value;
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'sparkBackend.php';
+                    form.innerHTML = `
                     <input type="hidden" name="action" value="review_project">
                     <input type="hidden" name="project_id" value="${projectId}">
                     <input type="hidden" name="decision" value="${escapeHtml(d.decision)}">
                     <input type="hidden" name="comments" value="${escapeHtml(d.comments)}">
                 `;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    }
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-    <?php if ($flashSuccess): ?>
-    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo htmlspecialchars($flashSuccess, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($flashError): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo htmlspecialchars($flashError, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
+        <?php if ($flashSuccess): ?>
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo htmlspecialchars($flashSuccess, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($flashError): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo htmlspecialchars($flashError, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
     </script>
 </body>
 

@@ -16,7 +16,7 @@ $pendingProjects = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cn
 // Days to event (read from settings table)
 $eventDateRow = mysqli_fetch_assoc(mysqli_query($conn, "SELECT setting_value FROM settings WHERE setting_key = 'event_date'"));
 $eventDate = $eventDateRow ? $eventDateRow['setting_value'] : '2026-02-15';
-$daysToEvent = max(0, (int)((strtotime($eventDate) - time()) / 86400));
+$daysToEvent = max(0, (int) ((strtotime($eventDate) - time()) / 86400));
 
 // Recent activity (last 5 projects)
 $recentProjects = [];
@@ -50,41 +50,22 @@ unset($_SESSION['success'], $_SESSION['error']);
         <!-- Main Content -->
         <main class="main-content">
             <!-- Header -->
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Admin Dashboard</h1>
-                </div>
-                <div class="header-right">
-                    <div class="header-search">
-                        <i class="ri-search-line"></i>
-                        <input type="text" placeholder="Search anything...">
-                    </div>
-                    <div class="header-icon">
-                        <i class="ri-notification-3-line"></i>
-                        <span class="badge"></span>
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar" style="background: #ef4444;"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role">Administrator</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Admin Dashboard';
+            include 'includes/header.php';
+            ?>
 
             <!-- Dashboard Content -->
             <div class="dashboard-content">
                 <?php if ($success): ?>
-                    <div class="alert alert-success" style="background:#dcfce7;color:#166534;padding:1rem;border-radius:8px;margin-bottom:1rem;">
+                    <div class="alert alert-success"
+                        style="background:#dcfce7;color:#166534;padding:1rem;border-radius:8px;margin-bottom:1rem;">
                         <i class="ri-checkbox-circle-line"></i> <?php echo htmlspecialchars($success); ?>
                     </div>
                 <?php endif; ?>
                 <?php if ($error): ?>
-                    <div class="alert alert-danger" style="background:#fef2f2;color:#991b1b;padding:1rem;border-radius:8px;margin-bottom:1rem;">
+                    <div class="alert alert-danger"
+                        style="background:#fef2f2;color:#991b1b;padding:1rem;border-radius:8px;margin-bottom:1rem;">
                         <i class="ri-error-warning-line"></i> <?php echo htmlspecialchars($error); ?>
                     </div>
                 <?php endif; ?>
@@ -192,18 +173,24 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <p style="color: var(--text-muted);">No recent activity.</p>
                             <?php else: ?>
                                 <?php foreach ($recentProjects as $rp): ?>
-                                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border);">
-                                    <div>
-                                        <span style="font-size:0.9rem;font-weight:500;"><?php echo htmlspecialchars($rp['title']); ?></span>
-                                        <p style="font-size:0.8rem;color:var(--text-muted);">by <?php echo htmlspecialchars($rp['student_name']); ?></p>
+                                    <div
+                                        style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border);">
+                                        <div>
+                                            <span
+                                                style="font-size:0.9rem;font-weight:500;"><?php echo htmlspecialchars($rp['title']); ?></span>
+                                            <p style="font-size:0.8rem;color:var(--text-muted);">by
+                                                <?php echo htmlspecialchars($rp['student_name']); ?></p>
+                                        </div>
+                                        <span style="padding:0.2rem 0.6rem;border-radius:12px;font-size:0.75rem;font-weight:600;
+                                        <?php if ($rp['status'] === 'approved')
+                                            echo 'background:#dcfce7;color:#166534;';
+                                        elseif ($rp['status'] === 'rejected')
+                                            echo 'background:#fef2f2;color:#991b1b;';
+                                        else
+                                            echo 'background:#fef3c7;color:#92400e;'; ?>">
+                                            <?php echo ucfirst($rp['status']); ?>
+                                        </span>
                                     </div>
-                                    <span style="padding:0.2rem 0.6rem;border-radius:12px;font-size:0.75rem;font-weight:600;
-                                        <?php if($rp['status']==='approved') echo 'background:#dcfce7;color:#166534;';
-                                        elseif($rp['status']==='rejected') echo 'background:#fef2f2;color:#991b1b;';
-                                        else echo 'background:#fef3c7;color:#92400e;'; ?>">
-                                        <?php echo ucfirst($rp['status']); ?>
-                                    </span>
-                                </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
@@ -239,12 +226,12 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    <?php if ($success): ?>
-    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($success); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($error): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($error); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
+        <?php if ($success): ?>
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($success); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($error): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($error); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
     </script>
 </body>
 

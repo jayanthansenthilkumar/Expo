@@ -21,8 +21,10 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'view_table') {
     $result = $conn->query("SELECT * FROM `" . $conn->real_escape_string($tableName) . "` LIMIT 100");
     if ($result && $result->num_rows > 0) {
         $fields = $result->fetch_fields();
-        foreach ($fields as $f) $columns[] = $f->name;
-        while ($row = $result->fetch_assoc()) $rows[] = $row;
+        foreach ($fields as $f)
+            $columns[] = $f->name;
+        while ($row = $result->fetch_assoc())
+            $rows[] = $row;
     }
     echo json_encode(['columns' => $columns, 'rows' => $rows]);
     exit;
@@ -46,7 +48,8 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'backup') {
         if ($dataRes && $dataRes->num_rows > 0) {
             while ($dRow = $dataRes->fetch_assoc()) {
                 $vals = [];
-                foreach ($dRow as $v) $vals[] = ($v === null) ? "NULL" : "'" . $conn->real_escape_string($v) . "'";
+                foreach ($dRow as $v)
+                    $vals[] = ($v === null) ? "NULL" : "'" . $conn->real_escape_string($v) . "'";
                 $output .= "INSERT INTO `$t` VALUES (" . implode(',', $vals) . ");\n";
             }
             $output .= "\n";
@@ -72,9 +75,11 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'export_csv') {
     if ($result && $result->num_rows > 0) {
         $fields = $result->fetch_fields();
         $headers = [];
-        foreach ($fields as $f) $headers[] = $f->name;
+        foreach ($fields as $f)
+            $headers[] = $f->name;
         fputcsv($fp, $headers);
-        while ($row = $result->fetch_assoc()) fputcsv($fp, $row);
+        while ($row = $result->fetch_assoc())
+            fputcsv($fp, $row);
     }
     fclose($fp);
     exit;
@@ -92,7 +97,8 @@ if (isset($_POST['ajax_action']) && $_POST['ajax_action'] === 'reset_database') 
     $errors = [];
     while ($tRow = $tablesRes->fetch_row()) {
         $t = $tRow[0];
-        if ($t === 'settings') continue; // preserve settings
+        if ($t === 'settings')
+            continue; // preserve settings
         if (!$conn->query("TRUNCATE TABLE `$t`")) {
             $errors[] = $t;
         }
@@ -126,7 +132,8 @@ if (isset($_POST['ajax_action']) && $_POST['ajax_action'] === 'restore_database'
     $conn->multi_query($sql);
     // Flush all results
     do {
-        if ($res = $conn->store_result()) $res->free();
+        if ($res = $conn->store_result())
+            $res->free();
     } while ($conn->more_results() && $conn->next_result());
     if ($conn->error) {
         echo json_encode(['success' => false, 'message' => 'SQL error: ' . $conn->error]);
@@ -168,23 +175,10 @@ if ($tablesResult) {
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Database Management</h1>
-                </div>
-                <div class="header-right">
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Database Management';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
                 <div class="database-container">
@@ -252,13 +246,15 @@ if ($tablesResult) {
                                 </thead>
                                 <tbody>
                                     <?php foreach ($tables as $table): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($table['name']); ?></td>
-                                        <td><?php echo $table['row_count']; ?></td>
-                                        <td>
-                                            <button class="btn-icon" title="View" onclick="viewTable('<?php echo htmlspecialchars($table['name']); ?>')"><i class="ri-eye-line"></i></button>
-                                        </td>
-                                    </tr>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($table['name']); ?></td>
+                                            <td><?php echo $table['row_count']; ?></td>
+                                            <td>
+                                                <button class="btn-icon" title="View"
+                                                    onclick="viewTable('<?php echo htmlspecialchars($table['name']); ?>')"><i
+                                                        class="ri-eye-line"></i></button>
+                                            </td>
+                                        </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
@@ -271,140 +267,140 @@ if ($tablesResult) {
 
     <script src="assets/js/script.js"></script>
     <script>
-    // Available tables for export picker
-    const tableNames = <?php echo json_encode(array_column($tables, 'name')); ?>;
+        // Available tables for export picker
+        const tableNames = <?php echo json_encode(array_column($tables, 'name')); ?>;
 
-    // ── Backup Database ──
-    function backupDatabase() {
-        Swal.fire({
-            title: 'Backup Database?',
-            text: 'This will download a full SQL backup of all tables.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Download Backup',
-            confirmButtonColor: '#4361ee'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = 'database.php?ajax=backup';
-            }
-        });
-    }
-
-    // ── Restore Database ──
-    function restoreDatabase() {
-        Swal.fire({
-            title: 'Restore Database',
-            html: '<p style="margin-bottom:1rem;color:#666;">Upload a <strong>.sql</strong> backup file to restore.</p>' +
-                  '<input type="file" id="sqlFile" accept=".sql" class="swal2-file" style="display:block;margin:0 auto;">',
-            icon: 'upload',
-            showCancelButton: true,
-            confirmButtonText: 'Restore',
-            confirmButtonColor: '#4361ee',
-            preConfirm: () => {
-                const file = document.getElementById('sqlFile').files[0];
-                if (!file) { Swal.showValidationMessage('Please select a .sql file'); return false; }
-                if (!file.name.endsWith('.sql')) { Swal.showValidationMessage('Only .sql files are accepted'); return false; }
-                return file;
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const formData = new FormData();
-                formData.append('ajax_action', 'restore_database');
-                formData.append('sql_file', result.value);
-                Swal.fire({ title: 'Restoring...', text: 'Please wait', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                fetch('database.php', { method: 'POST', body: formData })
-                    .then(r => r.json())
-                    .then(data => {
-                        Swal.fire({ icon: data.success ? 'success' : 'error', title: data.success ? 'Restored!' : 'Error', text: data.message })
-                            .then(() => { if (data.success) location.reload(); });
-                    })
-                    .catch(() => Swal.fire('Error', 'Restore failed', 'error'));
-            }
-        });
-    }
-
-    // ── Reset Database ──
-    function resetDatabase() {
-        Swal.fire({
-            title: 'Reset Database?',
-            html: '<p style="color:#e74c3c;font-weight:600;">This will permanently delete ALL data from all tables (except settings).</p><p>This action cannot be undone!</p>',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Reset Everything',
-            confirmButtonColor: '#e74c3c',
-            cancelButtonText: 'Cancel',
-            input: 'text',
-            inputPlaceholder: 'Type RESET to confirm',
-            inputValidator: (value) => {
-                if (value !== 'RESET') return 'You need to type RESET to confirm';
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const formData = new FormData();
-                formData.append('ajax_action', 'reset_database');
-                Swal.fire({ title: 'Resetting...', text: 'Please wait', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                fetch('database.php', { method: 'POST', body: formData })
-                    .then(r => r.json())
-                    .then(data => {
-                        Swal.fire({ icon: data.success ? 'success' : 'error', title: data.success ? 'Reset Complete!' : 'Error', text: data.message })
-                            .then(() => { if (data.success) location.reload(); });
-                    })
-                    .catch(() => Swal.fire('Error', 'Reset failed', 'error'));
-            }
-        });
-    }
-
-    // ── Export Data (CSV) ──
-    function exportData() {
-        const options = {};
-        tableNames.forEach(t => { options[t] = t; });
-        Swal.fire({
-            title: 'Export Table as CSV',
-            input: 'select',
-            inputOptions: options,
-            inputPlaceholder: 'Select a table',
-            showCancelButton: true,
-            confirmButtonText: 'Export CSV',
-            confirmButtonColor: '#4361ee',
-            inputValidator: (value) => {
-                if (!value) return 'Please select a table';
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = 'database.php?ajax=export_csv&table=' + encodeURIComponent(result.value);
-            }
-        });
-    }
-
-    // ── View Table Data ──
-    function viewTable(tableName) {
-        Swal.fire({ title: 'Loading...', text: 'Fetching table data', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        fetch('database.php?ajax=view_table&table=' + encodeURIComponent(tableName))
-            .then(r => r.json())
-            .then(data => {
-                if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
-                if (data.rows.length === 0) {
-                    Swal.fire({ title: tableName, text: 'Table is empty', icon: 'info' });
-                    return;
+        // ── Backup Database ──
+        function backupDatabase() {
+            Swal.fire({
+                title: 'Backup Database?',
+                text: 'This will download a full SQL backup of all tables.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Download Backup',
+                confirmButtonColor: '#4361ee'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = 'database.php?ajax=backup';
                 }
-                let html = '<div style="max-height:400px;overflow:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr>';
-                data.columns.forEach(c => { html += '<th style="padding:8px 10px;border:1px solid #ddd;background:#f5f7fa;text-align:left;white-space:nowrap;">' + c + '</th>'; });
-                html += '</tr></thead><tbody>';
-                data.rows.forEach(row => {
-                    html += '<tr>';
-                    data.columns.forEach(c => {
-                        let val = row[c] ?? '';
-                        if (val.length > 60) val = val.substring(0, 60) + '...';
-                        html += '<td style="padding:6px 10px;border:1px solid #eee;white-space:nowrap;">' + val.replace(/</g, '&lt;') + '</td>';
+            });
+        }
+
+        // ── Restore Database ──
+        function restoreDatabase() {
+            Swal.fire({
+                title: 'Restore Database',
+                html: '<p style="margin-bottom:1rem;color:#666;">Upload a <strong>.sql</strong> backup file to restore.</p>' +
+                    '<input type="file" id="sqlFile" accept=".sql" class="swal2-file" style="display:block;margin:0 auto;">',
+                icon: 'upload',
+                showCancelButton: true,
+                confirmButtonText: 'Restore',
+                confirmButtonColor: '#4361ee',
+                preConfirm: () => {
+                    const file = document.getElementById('sqlFile').files[0];
+                    if (!file) { Swal.showValidationMessage('Please select a .sql file'); return false; }
+                    if (!file.name.endsWith('.sql')) { Swal.showValidationMessage('Only .sql files are accepted'); return false; }
+                    return file;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('ajax_action', 'restore_database');
+                    formData.append('sql_file', result.value);
+                    Swal.fire({ title: 'Restoring...', text: 'Please wait', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    fetch('database.php', { method: 'POST', body: formData })
+                        .then(r => r.json())
+                        .then(data => {
+                            Swal.fire({ icon: data.success ? 'success' : 'error', title: data.success ? 'Restored!' : 'Error', text: data.message })
+                                .then(() => { if (data.success) location.reload(); });
+                        })
+                        .catch(() => Swal.fire('Error', 'Restore failed', 'error'));
+                }
+            });
+        }
+
+        // ── Reset Database ──
+        function resetDatabase() {
+            Swal.fire({
+                title: 'Reset Database?',
+                html: '<p style="color:#e74c3c;font-weight:600;">This will permanently delete ALL data from all tables (except settings).</p><p>This action cannot be undone!</p>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Reset Everything',
+                confirmButtonColor: '#e74c3c',
+                cancelButtonText: 'Cancel',
+                input: 'text',
+                inputPlaceholder: 'Type RESET to confirm',
+                inputValidator: (value) => {
+                    if (value !== 'RESET') return 'You need to type RESET to confirm';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('ajax_action', 'reset_database');
+                    Swal.fire({ title: 'Resetting...', text: 'Please wait', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    fetch('database.php', { method: 'POST', body: formData })
+                        .then(r => r.json())
+                        .then(data => {
+                            Swal.fire({ icon: data.success ? 'success' : 'error', title: data.success ? 'Reset Complete!' : 'Error', text: data.message })
+                                .then(() => { if (data.success) location.reload(); });
+                        })
+                        .catch(() => Swal.fire('Error', 'Reset failed', 'error'));
+                }
+            });
+        }
+
+        // ── Export Data (CSV) ──
+        function exportData() {
+            const options = {};
+            tableNames.forEach(t => { options[t] = t; });
+            Swal.fire({
+                title: 'Export Table as CSV',
+                input: 'select',
+                inputOptions: options,
+                inputPlaceholder: 'Select a table',
+                showCancelButton: true,
+                confirmButtonText: 'Export CSV',
+                confirmButtonColor: '#4361ee',
+                inputValidator: (value) => {
+                    if (!value) return 'Please select a table';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = 'database.php?ajax=export_csv&table=' + encodeURIComponent(result.value);
+                }
+            });
+        }
+
+        // ── View Table Data ──
+        function viewTable(tableName) {
+            Swal.fire({ title: 'Loading...', text: 'Fetching table data', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            fetch('database.php?ajax=view_table&table=' + encodeURIComponent(tableName))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
+                    if (data.rows.length === 0) {
+                        Swal.fire({ title: tableName, text: 'Table is empty', icon: 'info' });
+                        return;
+                    }
+                    let html = '<div style="max-height:400px;overflow:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr>';
+                    data.columns.forEach(c => { html += '<th style="padding:8px 10px;border:1px solid #ddd;background:#f5f7fa;text-align:left;white-space:nowrap;">' + c + '</th>'; });
+                    html += '</tr></thead><tbody>';
+                    data.rows.forEach(row => {
+                        html += '<tr>';
+                        data.columns.forEach(c => {
+                            let val = row[c] ?? '';
+                            if (val.length > 60) val = val.substring(0, 60) + '...';
+                            html += '<td style="padding:6px 10px;border:1px solid #eee;white-space:nowrap;">' + val.replace(/</g, '&lt;') + '</td>';
+                        });
+                        html += '</tr>';
                     });
-                    html += '</tr>';
-                });
-                html += '</tbody></table></div>';
-                if (data.rows.length >= 100) html += '<p style="color:#888;margin-top:8px;font-size:12px;">Showing first 100 rows</p>';
-                Swal.fire({ title: tableName, html: html, width: '80%', confirmButtonColor: '#4361ee' });
-            })
-            .catch(() => Swal.fire('Error', 'Failed to load table data', 'error'));
-    }
+                    html += '</tbody></table></div>';
+                    if (data.rows.length >= 100) html += '<p style="color:#888;margin-top:8px;font-size:12px;">Showing first 100 rows</p>';
+                    Swal.fire({ title: tableName, html: html, width: '80%', confirmButtonColor: '#4361ee' });
+                })
+                .catch(() => Swal.fire('Error', 'Failed to load table data', 'error'));
+        }
     </script>
 </body>
 

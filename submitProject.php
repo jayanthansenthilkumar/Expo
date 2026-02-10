@@ -19,7 +19,7 @@ $myTeam = mysqli_fetch_assoc(mysqli_stmt_get_result($teamCheck));
 mysqli_stmt_close($teamCheck);
 
 if ($myTeam) {
-    $isLeader = ((int)$myTeam['leader_id'] === (int)$userId);
+    $isLeader = ((int) $myTeam['leader_id'] === (int) $userId);
 }
 
 // Get team members for display
@@ -30,7 +30,9 @@ if ($myTeam) {
     mysqli_stmt_execute($memberStmt);
     $memberRes = mysqli_stmt_get_result($memberStmt);
     $names = [];
-    while ($row = mysqli_fetch_assoc($memberRes)) { $names[] = $row['name']; }
+    while ($row = mysqli_fetch_assoc($memberRes)) {
+        $names[] = $row['name'];
+    }
     $teamMemberNames = implode(', ', $names);
     mysqli_stmt_close($memberStmt);
 }
@@ -56,101 +58,98 @@ unset($_SESSION['success'], $_SESSION['error']);
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Submit Project</h1>
-                </div>
-                <div class="header-right">
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Submit Project';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
                 <?php if (!$myTeam): ?>
-                <div style="text-align:center;padding:3rem 1rem;">
-                    <i class="ri-team-line" style="font-size:4rem;color:var(--text-muted);margin-bottom:1rem;display:block;"></i>
-                    <h2 style="margin-bottom:0.5rem;">Team Required</h2>
-                    <p style="color:var(--text-muted);max-width:400px;margin:0 auto 1.5rem;">You must be part of a team to submit projects for SPARK'26. Create a new team or join an existing one.</p>
-                    <a href="myTeam.php" class="btn-primary"><i class="ri-team-line"></i> Go to My Team</a>
-                </div>
+                    <div style="text-align:center;padding:3rem 1rem;">
+                        <i class="ri-team-line"
+                            style="font-size:4rem;color:var(--text-muted);margin-bottom:1rem;display:block;"></i>
+                        <h2 style="margin-bottom:0.5rem;">Team Required</h2>
+                        <p style="color:var(--text-muted);max-width:400px;margin:0 auto 1.5rem;">You must be part of a team
+                            to submit projects for SPARK'26. Create a new team or join an existing one.</p>
+                        <a href="myTeam.php" class="btn-primary"><i class="ri-team-line"></i> Go to My Team</a>
+                    </div>
                 <?php elseif (!$isLeader): ?>
-                <div style="text-align:center;padding:3rem 1rem;">
-                    <i class="ri-lock-line" style="font-size:4rem;color:var(--text-muted);margin-bottom:1rem;display:block;"></i>
-                    <h2 style="margin-bottom:0.5rem;">Leader Access Only</h2>
-                    <p style="color:var(--text-muted);max-width:450px;margin:0 auto 1.5rem;">Only the team leader can submit projects. You can view your team's projects from the My Projects page.</p>
-                    <a href="myProjects.php" class="btn-primary"><i class="ri-folder-line"></i> View Projects</a>
-                </div>
+                    <div style="text-align:center;padding:3rem 1rem;">
+                        <i class="ri-lock-line"
+                            style="font-size:4rem;color:var(--text-muted);margin-bottom:1rem;display:block;"></i>
+                        <h2 style="margin-bottom:0.5rem;">Leader Access Only</h2>
+                        <p style="color:var(--text-muted);max-width:450px;margin:0 auto 1.5rem;">Only the team leader can
+                            submit projects. You can view your team's projects from the My Projects page.</p>
+                        <a href="myProjects.php" class="btn-primary"><i class="ri-folder-line"></i> View Projects</a>
+                    </div>
                 <?php else: ?>
 
-                <div class="form-container">
-                    <div class="form-card">
-                        <h2>Project Submission Form</h2>
-                        <p class="form-description">Fill in the details below to submit your project for SPARK'26</p>
-                        
-                        <form action="sparkBackend.php" method="POST" enctype="multipart/form-data">
-                            <input type="hidden" name="action" value="submit_project">
-                            
-                            <div class="form-group">
-                                <label for="projectTitle">Project Title *</label>
-                                <input type="text" id="projectTitle" name="projectTitle" required placeholder="Enter your project title">
-                            </div>
+                    <div class="form-container">
+                        <div class="form-card">
+                            <h2>Project Submission Form</h2>
+                            <p class="form-description">Fill in the details below to submit your project for SPARK'26</p>
 
-                            <div class="form-group">
-                                <label for="projectCategory">Category *</label>
-                                <select id="projectCategory" name="projectCategory" required>
-                                    <option value="">Select a category</option>
-                                    <option value="web">Web Development</option>
-                                    <option value="mobile">Mobile Application</option>
-                                    <option value="ai">AI/Machine Learning</option>
-                                    <option value="iot">IoT</option>
-                                    <option value="blockchain">Blockchain</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
+                            <form action="sparkBackend.php" method="POST" enctype="multipart/form-data">
+                                <input type="hidden" name="action" value="submit_project">
 
-                            <div class="form-group">
-                                <label for="projectDescription">Description *</label>
-                                <textarea id="projectDescription" name="projectDescription" rows="5" required placeholder="Describe your project in detail"></textarea>
-                            </div>
+                                <div class="form-group">
+                                    <label for="projectTitle">Project Title *</label>
+                                    <input type="text" id="projectTitle" name="projectTitle" required
+                                        placeholder="Enter your project title">
+                                </div>
 
-                            <?php if ($myTeam): ?>
-                            <div class="form-group">
-                                <label>Team</label>
-                                <input type="text" value="<?php echo htmlspecialchars($myTeam['team_name']); ?>" disabled style="background:var(--bg-surface);">
-                            </div>
-                            <?php endif; ?>
+                                <div class="form-group">
+                                    <label for="projectCategory">Category *</label>
+                                    <select id="projectCategory" name="projectCategory" required>
+                                        <option value="">Select a category</option>
+                                        <option value="web">Web Development</option>
+                                        <option value="mobile">Mobile Application</option>
+                                        <option value="ai">AI/Machine Learning</option>
+                                        <option value="iot">IoT</option>
+                                        <option value="blockchain">Blockchain</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
 
-                            <div class="form-group">
-                                <label for="teamMembers">Team Members</label>
-                                <input type="text" id="teamMembers" name="teamMembers" placeholder="Enter team member names (comma separated)" value="<?php echo htmlspecialchars($teamMemberNames); ?>">
-                            </div>
+                                <div class="form-group">
+                                    <label for="projectDescription">Description *</label>
+                                    <textarea id="projectDescription" name="projectDescription" rows="5" required
+                                        placeholder="Describe your project in detail"></textarea>
+                                </div>
 
-                            <div class="form-group">
-                                <label for="projectFile">Project Documentation (PDF)</label>
-                                <input type="file" id="projectFile" name="projectFile" accept=".pdf">
-                            </div>
+                                <?php if ($myTeam): ?>
+                                    <div class="form-group">
+                                        <label>Team</label>
+                                        <input type="text" value="<?php echo htmlspecialchars($myTeam['team_name']); ?>"
+                                            disabled style="background:var(--bg-surface);">
+                                    </div>
+                                <?php endif; ?>
 
-                            <div class="form-group">
-                                <label for="githubLink">GitHub Repository</label>
-                                <input type="url" id="githubLink" name="githubLink" placeholder="https://github.com/username/repo">
-                            </div>
+                                <div class="form-group">
+                                    <label for="teamMembers">Team Members</label>
+                                    <input type="text" id="teamMembers" name="teamMembers"
+                                        placeholder="Enter team member names (comma separated)"
+                                        value="<?php echo htmlspecialchars($teamMemberNames); ?>">
+                                </div>
 
-                            <div class="form-actions">
-                                <button type="submit" class="btn-primary">Submit Project</button>
-                                <a href="myProjects.php" class="btn-secondary">Cancel</a>
-                            </div>
-                        </form>
+                                <div class="form-group">
+                                    <label for="projectFile">Project Documentation (PDF)</label>
+                                    <input type="file" id="projectFile" name="projectFile" accept=".pdf">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="githubLink">GitHub Repository</label>
+                                    <input type="url" id="githubLink" name="githubLink"
+                                        placeholder="https://github.com/username/repo">
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn-primary">Submit Project</button>
+                                    <a href="myProjects.php" class="btn-secondary">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
                 <?php endif; ?>
             </div>
         </main>
@@ -158,29 +157,29 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     <script src="assets/js/script.js"></script>
     <script>
-    <?php if ($successMsg): ?>
-    Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
-    <?php endif; ?>
-    <?php if ($errorMsg): ?>
-    Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
-    <?php endif; ?>
+        <?php if ($successMsg): ?>
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+        <?php endif; ?>
+        <?php if ($errorMsg): ?>
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+        <?php endif; ?>
 
-    // SweetAlert form submission confirmation
-    document.querySelector('form[action="sparkBackend.php"]')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        Swal.fire({
-            title: 'Submit Project?',
-            text: 'Are you sure you want to submit this project for review?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#2563eb',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, submit it!'
-        }).then((result) => {
-            if (result.isConfirmed) form.submit();
+        // SweetAlert form submission confirmation
+        document.querySelector('form[action="sparkBackend.php"]')?.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const form = this;
+            Swal.fire({
+                title: 'Submit Project?',
+                text: 'Are you sure you want to submit this project for review?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, submit it!'
+            }).then((result) => {
+                if (result.isConfirmed) form.submit();
+            });
         });
-    });
     </script>
 </body>
 

@@ -24,7 +24,8 @@ if ($stmt) {
 $totalApproved = count($projects);
 $scoredCount = 0;
 foreach ($projects as $p) {
-    if ($p['score'] > 0) $scoredCount++;
+    if ($p['score'] > 0)
+        $scoredCount++;
 }
 $unscoredCount = $totalApproved - $scoredCount;
 $progressPercent = $totalApproved > 0 ? round(($scoredCount / $totalApproved) * 100) : 0;
@@ -32,7 +33,10 @@ $progressPercent = $totalApproved > 0 ? round(($scoredCount / $totalApproved) * 
 // Flash messages
 $flashMessage = $_SESSION['flash_message'] ?? $_SESSION['success'] ?? null;
 $flashType = $_SESSION['flash_type'] ?? (isset($_SESSION['success']) ? 'success' : (isset($_SESSION['error']) ? 'error' : 'info'));
-if (isset($_SESSION['error'])) { $flashMessage = $_SESSION['error']; $flashType = 'error'; }
+if (isset($_SESSION['error'])) {
+    $flashMessage = $_SESSION['error'];
+    $flashType = 'error';
+}
 unset($_SESSION['flash_message'], $_SESSION['flash_type'], $_SESSION['success'], $_SESSION['error']);
 ?>
 <!DOCTYPE html>
@@ -52,23 +56,10 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type'], $_SESSION['success'],
         <?php include 'includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <button class="mobile-toggle" onclick="toggleSidebar()">
-                        <i class="ri-menu-line"></i>
-                    </button>
-                    <h1>Judging Panel</h1>
-                </div>
-                <div class="header-right">
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo $userInitials; ?></div>
-                        <div class="user-info">
-                            <span class="user-name"><?php echo htmlspecialchars($userName); ?></span>
-                            <span class="user-role"><?php echo htmlspecialchars($userRole); ?></span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php
+            $pageTitle = 'Judging Panel';
+            include 'includes/header.php';
+            ?>
 
             <div class="dashboard-content">
                 <div class="content-header">
@@ -111,42 +102,45 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type'], $_SESSION['success'],
                     <div class="judges-panel">
                         <h3>Projects to Judge</h3>
                         <?php if (empty($projects)): ?>
-                        <div class="empty-state">
-                            <i class="ri-file-list-3-line"></i>
-                            <h4>No Approved Projects</h4>
-                            <p>There are no approved projects to judge yet</p>
-                        </div>
+                            <div class="empty-state">
+                                <i class="ri-file-list-3-line"></i>
+                                <h4>No Approved Projects</h4>
+                                <p>There are no approved projects to judge yet</p>
+                            </div>
                         <?php else: ?>
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Project Title</th>
-                                        <th>Student</th>
-                                        <th>Department</th>
-                                        <th>Category</th>
-                                        <th>Current Score</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($projects as $project): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($project['title']); ?></td>
-                                        <td><?php echo htmlspecialchars($project['student_name'] ?? 'Unknown'); ?></td>
-                                        <td><?php echo htmlspecialchars($project['department'] ?? '-'); ?></td>
-                                        <td><?php echo htmlspecialchars($project['category'] ?? '-'); ?></td>
-                                        <td><?php echo $project['score'] > 0 ? $project['score'] . '/100' : '<span style="color:#999;">Not scored</span>'; ?></td>
-                                        <td>
-                                            <button class="btn-primary" onclick="openScoreModal(<?php echo $project['id']; ?>, '<?php echo htmlspecialchars(addslashes($project['title'])); ?>', <?php echo intval($project['score']); ?>)">
-                                                <i class="ri-star-line"></i> <?php echo $project['score'] > 0 ? 'Update Score' : 'Score'; ?>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Project Title</th>
+                                            <th>Student</th>
+                                            <th>Department</th>
+                                            <th>Category</th>
+                                            <th>Current Score</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($projects as $project): ?>
+                                            <tr>
+                                                <td><?php echo htmlspecialchars($project['title']); ?></td>
+                                                <td><?php echo htmlspecialchars($project['student_name'] ?? 'Unknown'); ?></td>
+                                                <td><?php echo htmlspecialchars($project['department'] ?? '-'); ?></td>
+                                                <td><?php echo htmlspecialchars($project['category'] ?? '-'); ?></td>
+                                                <td><?php echo $project['score'] > 0 ? $project['score'] . '/100' : '<span style="color:#999;">Not scored</span>'; ?>
+                                                </td>
+                                                <td>
+                                                    <button class="btn-primary"
+                                                        onclick="openScoreModal(<?php echo $project['id']; ?>, '<?php echo htmlspecialchars(addslashes($project['title'])); ?>', <?php echo intval($project['score']); ?>)">
+                                                        <i class="ri-star-line"></i>
+                                                        <?php echo $project['score'] > 0 ? 'Update Score' : 'Score'; ?>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -159,7 +153,8 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type'], $_SESSION['success'],
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: <?php echo $progressPercent; ?>%"></div>
                             </div>
-                            <span class="progress-value"><?php echo $scoredCount; ?>/<?php echo $totalApproved; ?></span>
+                            <span
+                                class="progress-value"><?php echo $scoredCount; ?>/<?php echo $totalApproved; ?></span>
                         </div>
                     </div>
                 </div>
@@ -210,9 +205,9 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type'], $_SESSION['success'],
         }
     </script>
     <script>
-    <?php if ($flashMessage): ?>
-    Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
-    <?php endif; ?>
+        <?php if ($flashMessage): ?>
+            Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
+        <?php endif; ?>
     </script>
 </body>
 
