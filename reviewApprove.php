@@ -363,7 +363,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 confirmButtonColor: '#2563eb',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
-                width: '600px',
+                width: Math.min(600, window.innerWidth - 40) + 'px',
                 focusConfirm: false,
                 preConfirm: () => {
                     const decision = document.querySelector('input[name="swal-decision"]:checked');
@@ -453,7 +453,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 denyButtonColor: '#6b7280',
                 cancelButtonText: '',
                 showCancelButton: false,
-                width: '600px',
+                width: Math.min(600, window.innerWidth - 40) + 'px',
                 focusConfirm: false,
                 preConfirm: () => {
                     const decision = document.querySelector('input[name="swal-view-decision"]:checked');

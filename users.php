@@ -247,7 +247,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 confirmButtonColor: '#2563eb',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
-                width: '500px',
+                width: Math.min(500, window.innerWidth - 40) + 'px',
                 focusConfirm: false,
                 preConfirm: () => {
                     const name = document.getElementById('swal-name').value.trim();
@@ -311,7 +311,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 confirmButtonColor: '#2563eb',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
-                width: '500px',
+                width: Math.min(500, window.innerWidth - 40) + 'px',
                 focusConfirm: false,
                 preConfirm: () => {
                     const editName = document.getElementById('swal-editName').value.trim();

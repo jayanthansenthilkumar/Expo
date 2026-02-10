@@ -235,7 +235,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
 
             Swal.fire({
                 title: '',
-                width: '600px',
+                width: Math.min(600, window.innerWidth - 40) + 'px',
                 padding: '0',
                 showConfirmButton: false,
                 showCloseButton: true,

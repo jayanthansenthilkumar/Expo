@@ -321,7 +321,7 @@ foreach ($deptNames as $deptName) {
                         html += '<p style="color:#888;">No projects in this department.</p>';
                     }
 
-                    Swal.fire({ title: deptName + ' Department', html: html, width: '700px', confirmButtonColor: '#4361ee' });
+                    Swal.fire({ title: deptName + ' Department', html: html, width: Math.min(700, window.innerWidth - 40) + 'px', confirmButtonColor: '#4361ee' });
                 })
                 .catch(() => Swal.fire('Error', 'Failed to load department data', 'error'));
         }

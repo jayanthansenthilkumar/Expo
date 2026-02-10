@@ -109,6 +109,9 @@ if (session_status() === PHP_SESSION_NONE) {
         <a href="index.php" class="logo">
             SPARK<span>'26</span>
         </a>
+        <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close sidebar">
+            <i class="ri-close-line"></i>
+        </button>
     </div>
     <nav class="sidebar-menu">
         <?php if (empty($role_menu)): ?>

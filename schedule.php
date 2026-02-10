@@ -137,7 +137,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 confirmButtonColor: '#2563eb',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
-                width: '500px',
+                width: Math.min(500, window.innerWidth - 40) + 'px',
                 focusConfirm: false,
                 preConfirm: () => {
                     const title = document.getElementById('swal-eTitle').value.trim();

@@ -123,7 +123,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                             new team or join an existing one using a team code.</p>
                     </div>
 
-                    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
+                    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));">
                         <!-- Create Team Card -->
                         <div class="dash-card" style="border:2px solid var(--border);">
                             <div class="dash-card-header">
@@ -169,7 +169,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     following teams:</p>
                                 <?php foreach ($pendingInvitations as $inv): ?>
                                     <div
-                                        style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;border:1px solid var(--border);border-radius:10px;margin-bottom:0.75rem;background:var(--bg-surface);">
+                                        style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding:0.75rem;border:1px solid var(--border);border-radius:10px;margin-bottom:0.75rem;background:var(--bg-surface);">
                                         <div>
                                             <strong
                                                 style="font-size:0.95rem;"><?php echo htmlspecialchars($inv['team_name']); ?></strong>

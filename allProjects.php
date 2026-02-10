@@ -327,7 +327,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                         ${actionButtons}
                     </div>
                 `,
-                width: 600,
+                width: Math.min(600, window.innerWidth - 40),
                 showConfirmButton: false,
                 showCloseButton: true,
                 focusConfirm: false

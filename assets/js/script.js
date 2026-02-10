@@ -7,6 +7,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // --- Mobile Nav Menu Toggle (Landing Page) ---
+  window.toggleMobileMenu = function() {
+    const navMenu = document.getElementById('navMenu');
+    const menuIcon = document.getElementById('menuIcon');
+    if (navMenu) {
+      navMenu.classList.toggle('mobile-open');
+      if (menuIcon) {
+        if (navMenu.classList.contains('mobile-open')) {
+          menuIcon.className = 'ri-close-line';
+        } else {
+          menuIcon.className = 'ri-menu-line';
+        }
+      }
+    }
+  };
+
   // Close sidebar and user dropdown when clicking outside
   document.addEventListener('click', function(e) {
     const sidebar = document.getElementById('sidebar');
@@ -16,15 +32,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Sidebar Close Logic
     if (sidebar && sidebar.classList.contains('open')) {
-      if (!sidebar.contains(e.target) && !mobileToggle.contains(e.target)) {
+      if (!sidebar.contains(e.target) && (!mobileToggle || !mobileToggle.contains(e.target))) {
         sidebar.classList.remove('open');
       }
     }
 
     // User Dropdown Close Logic
     if (userDropdown && userDropdown.classList.contains('show')) {
-      if (!userProfile.contains(e.target)) {
+      if (!userProfile || !userProfile.contains(e.target)) {
         userDropdown.classList.remove('show');
+      }
+    }
+
+    // Mobile nav menu close on link click
+    const navMenu = document.getElementById('navMenu');
+    const menuIcon = document.getElementById('menuIcon');
+    if (navMenu && navMenu.classList.contains('mobile-open')) {
+      if (e.target.classList.contains('nav-link') || e.target.classList.contains('btn-primary')) {
+        navMenu.classList.remove('mobile-open');
+        if (menuIcon) menuIcon.className = 'ri-menu-line';
       }
     }
   });

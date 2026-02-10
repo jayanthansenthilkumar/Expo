@@ -70,7 +70,7 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
             <a href="index.php" class="logo">
                 SPARK <span>'26</span>
             </a>
-            <div class="nav-menu">
+            <div class="nav-menu" id="navMenu">
                 <a href="#about" class="nav-link">About</a>
                 <a href="#tracks" class="nav-link">Tracks</a>
                 <a href="#schedule" class="nav-link">Schedule</a>
@@ -79,6 +79,7 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
                     <a href="logout.php" class="nav-link" style="color: var(--primary);">Logout</a>
                 <?php else: ?>
                     <a href="login.php" class="nav-link">Login</a>
+                    <a href="register.php" class="btn-primary">Register Now</a>
                 <?php endif; ?>
             </div>
             <?php if (!$isLoggedIn): ?>
@@ -86,6 +87,9 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
             <?php else: ?>
                 <a href="<?php echo $dashboardLink; ?>" class="btn-primary">Go to Console</a>
             <?php endif; ?>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+                <i class="ri-menu-line" id="menuIcon"></i>
+            </button>
         </div>
     </nav>
 

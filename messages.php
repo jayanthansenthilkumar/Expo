@@ -194,7 +194,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 confirmButtonColor: '#2563eb',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
-                width: '550px',
+                width: Math.min(550, window.innerWidth - 40) + 'px',
                 focusConfirm: false,
                 preConfirm: () => {
                     const recipient = document.getElementById('swal-recipient').value;
