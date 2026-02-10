@@ -1,58 +1,96 @@
+# =============================================================
+# SPARK'26 — Docker Compose
+# =============================================================
+# Works for both local dev and Portainer/TrueNAS hosting.
+#
+# Local dev:   docker-compose up --build
+# Portainer:   Deploy as Stack, set env vars in Portainer UI
+#
+# Environment variables (defaults work for local dev):
+#   APP_PORT        → App port          (default: 8085)
+#   PMA_PORT        → phpMyAdmin port   (default: 8086)
+#   DB_ROOT_PASSWORD→ MySQL root pass   (default: root_password)
+#   DB_USER         → MySQL app user    (default: spark_user)
+#   DB_PASSWORD     → MySQL app pass    (default: spark_password)
+#   DB_NAME         → Database name     (default: spark)
+#   TZ              → Timezone          (default: Asia/Kolkata)
+# =============================================================
+
 services:
-  # PHP Application on port 8085
+  # ── PHP + Apache Application ──────────────────────────────
   spark-app:
     build: .
     container_name: spark-app
     ports:
-      - "8085:80"
+      - "${APP_PORT:-8085}:80"
     volumes:
       - .:/var/www/html
+      - uploads:/var/www/html/assets/uploads
     environment:
       - DB_HOST=spark-db
-      - DB_USER=spark_user
-      - DB_PASSWORD=spark_password
-      - DB_NAME=spark
+      - DB_USER=${DB_USER:-spark_user}
+      - DB_PASSWORD=${DB_PASSWORD:-spark_password}
+      - DB_NAME=${DB_NAME:-spark}
+      - TZ=${TZ:-Asia/Kolkata}
     depends_on:
-      - spark-db
+      spark-db:
+        condition: service_healthy
     networks:
       - spark-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/login.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
-  # MySQL Database Service (internal only, accessed via PhpMyAdmin or app)
+  # ── MySQL 8.0 Database ────────────────────────────────────
+  # Schema auto-loads from assets/schema/spark.sql on first run
   spark-db:
     image: mysql:8.0
     container_name: spark-db
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: spark
-      MYSQL_USER: spark_user
-      MYSQL_PASSWORD: spark_password
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${DB_NAME:-spark}
+      MYSQL_USER: ${DB_USER:-spark_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-spark_password}
+      TZ: ${TZ:-Asia/Kolkata}
     volumes:
-      - spark-db-volume:/var/lib/mysql
-      - ./assets/schema/spark.sql:/docker-entrypoint-initdb.d/spark.sql
+      - spark-db-data:/var/lib/mysql
+      - ./assets/schema:/docker-entrypoint-initdb.d:ro
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     networks:
       - spark-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-root_password}"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # PhpMyAdmin for Database Management on port 8086
+  # ── phpMyAdmin ────────────────────────────────────────────
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: spark-phpmyadmin
     environment:
       PMA_HOST: spark-db
-      PMA_USER: spark_user
-      PMA_PASSWORD: spark_password
-      PMA_ROOT_PASSWORD: root_password
+      PMA_USER: ${DB_USER:-spark_user}
+      PMA_PASSWORD: ${DB_PASSWORD:-spark_password}
+      UPLOAD_LIMIT: 64M
     ports:
-      - "8086:80"
+      - "${PMA_PORT:-8086}:80"
     networks:
       - spark-network
     depends_on:
-      - spark-db
+      spark-db:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
-  spark-db-volume:
+  spark-db-data:
+  uploads:
 
 networks:
   spark-network:
