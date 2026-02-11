@@ -371,6 +371,8 @@ if (isset($_SESSION['success'])) {
             }
         });
     </script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

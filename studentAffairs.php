@@ -230,6 +230,8 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 
     <script src="assets/js/script.js"></script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

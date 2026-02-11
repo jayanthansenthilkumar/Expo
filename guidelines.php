@@ -165,6 +165,8 @@ $upcomingEvents = mysqli_query($conn, "SELECT * FROM schedule WHERE event_date >
     </div>
 
     <script src="assets/js/script.js"></script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

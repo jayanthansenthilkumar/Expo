@@ -70,7 +70,10 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
             <a href="index.php" class="logo">
                 SPARK <span>'26</span>
             </a>
-            <div class="nav-menu" id="navMenu">
+            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+                <i class="ri-menu-line" id="menuIcon"></i>
+            </button>
+            <div class="nav-links-desktop">
                 <a href="#about" class="nav-link">About</a>
                 <a href="#tracks" class="nav-link">Tracks</a>
                 <a href="#schedule" class="nav-link">Schedule</a>
@@ -82,16 +85,25 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
                     <a href="register.php" class="btn-primary">Register Now</a>
                 <?php endif; ?>
             </div>
-            <?php if (!$isLoggedIn): ?>
-                <a href="register.php" class="btn-primary">Register Now</a>
-            <?php else: ?>
-                <a href="<?php echo $dashboardLink; ?>" class="btn-primary">Go to Console</a>
-            <?php endif; ?>
-            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Toggle menu">
-                <i class="ri-menu-line" id="menuIcon"></i>
-            </button>
         </div>
     </nav>
+
+    <!-- Mobile Menu Overlay (outside navbar to avoid backdrop-filter containing block) -->
+    <div class="mobile-menu-overlay" id="navMenu">
+        <button class="mobile-menu-close" onclick="toggleMobileMenu()" aria-label="Close menu">
+            <i class="ri-close-line"></i>
+        </button>
+        <a href="#about" class="nav-link" onclick="toggleMobileMenu()">About</a>
+        <a href="#tracks" class="nav-link" onclick="toggleMobileMenu()">Tracks</a>
+        <a href="#schedule" class="nav-link" onclick="toggleMobileMenu()">Schedule</a>
+        <?php if ($isLoggedIn): ?>
+            <a href="<?php echo $dashboardLink; ?>" class="nav-link">Dashboard</a>
+            <a href="logout.php" class="nav-link" style="color: var(--primary);">Logout</a>
+        <?php else: ?>
+            <a href="login.php" class="nav-link">Login</a>
+            <a href="register.php" class="btn-primary">Register Now</a>
+        <?php endif; ?>
+    </div>
 
     <!-- Hero Section -->
     <header class="hero">
@@ -452,61 +464,17 @@ $featuredAnnouncement = mysqli_fetch_assoc($featuredAnn);
                 </div>
             </div>
             <div class="text-center" style="font-size: 0.9rem; color: #64748b;">
-                &copy; 2026 College Innovation Council. All rights reserved.
+                &copy; 2026 Syraa Groups. All rights reserved. | Hosted by HariX
             </div>
         </div>
     </footer>
 
     <!-- Syraa AI Chat Widget -->
-    <div class="chat-widget-container">
-        <button class="chat-toggle-btn" aria-label="Open chat">
-            <i class="ri-chat-smile-3-line chat-icon-open"></i>
-            <i class="ri-close-line chat-icon-close"></i>
-        </button>
-        <div class="chat-window">
-            <div class="chat-header">
-                <div class="chat-avatar">
-                    <i class="ri-robot-2-line"></i>
-                </div>
-                <div class="chat-info">
-                    <h3>Syraa AI</h3>
-                    <span class="chat-status"><span class="status-dot"></span> Online</span>
-                </div>
-                <div class="chat-controls">
-                    <button class="chat-notification-btn" title="Notifications">
-                        <i class="ri-notification-3-line"></i>
-                        <span class="notification-dot"></span>
-                    </button>
-                    <button class="close-chat" aria-label="Close chat">
-                        <i class="ri-close-line"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="chat-messages">
-                <!-- Messages injected by JS -->
-                <div class="typing-indicator" style="display:none;">
-                    <div class="chat-message bot typing-bubble">
-                        <div class="typing-dots">
-                            <span class="dot"></span>
-                            <span class="dot"></span>
-                            <span class="dot"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" class="chat-input" placeholder="Type a message..." autocomplete="off">
-                <button class="chat-send-btn" aria-label="Send message">
-                    <i class="ri-send-plane-fill"></i>
-                </button>
-            </div>
-        </div>
-    </div>
+    <?php include 'includes/bot.php'; ?>
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- jQuery and Chat Scripts loaded by bot.php -->
     <script src="assets/js/script.js"></script>
-    <script src="assets/js/chat.js"></script>
 </body>
 
 </html>

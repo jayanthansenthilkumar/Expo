@@ -497,6 +497,8 @@ unset($_SESSION['success'], $_SESSION['error']);
             Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo htmlspecialchars($flashError, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb' });
         <?php endif; ?>
     </script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

@@ -151,6 +151,8 @@ if (isset($catStmt)) {
     </div>
 
     <script src="assets/js/script.js"></script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

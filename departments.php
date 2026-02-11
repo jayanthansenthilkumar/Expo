@@ -429,6 +429,8 @@ foreach ($deptNames as $deptName) {
             });
         }
     </script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

@@ -239,6 +239,8 @@ while ($row = mysqli_fetch_assoc($monthlyResult)) {
             options: commonOptions
         });
     </script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

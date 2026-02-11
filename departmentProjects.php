@@ -325,6 +325,8 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
             return div.innerHTML;
         }
     </script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

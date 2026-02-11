@@ -402,6 +402,8 @@ if ($tablesResult) {
                 .catch(() => Swal.fire('Error', 'Failed to load table data', 'error'));
         }
     </script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

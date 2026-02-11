@@ -127,6 +127,8 @@ if (isset($_SESSION['user_id']) && !$success && empty($error)) {
             });
         <?php endif; ?>
     </script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

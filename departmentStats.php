@@ -297,6 +297,8 @@ foreach ($statusBreakdown as $row) {
             }
         });
     </script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

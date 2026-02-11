@@ -269,6 +269,8 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type'], $_SESSION['success'],
             Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
         <?php endif; ?>
     </script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

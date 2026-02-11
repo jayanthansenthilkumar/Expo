@@ -205,6 +205,8 @@ unset($_SESSION['success'], $_SESSION['error']);
             return div.innerHTML;
         }
     </script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>

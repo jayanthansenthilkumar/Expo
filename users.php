@@ -378,6 +378,8 @@ unset($_SESSION['success'], $_SESSION['error']);
             });
         });
     </script>
+
+    <?php include 'includes/bot.php'; ?>
 </body>
 
 </html>
