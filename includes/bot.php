@@ -1,7 +1,10 @@
 <?php
 // includes/bot.php
+$chatUserRole = $_SESSION['role'] ?? '';
+$chatUserName = $_SESSION['name'] ?? '';
+$chatIsLoggedIn = isset($_SESSION['user_id']) ? 'true' : 'false';
 ?>
-<div class="chat-widget-container">
+<div class="chat-widget-container" data-role="<?php echo htmlspecialchars($chatUserRole); ?>" data-logged-in="<?php echo $chatIsLoggedIn; ?>" data-user="<?php echo htmlspecialchars($chatUserName); ?>">
     <button class="chat-toggle-btn" aria-label="Open chat">
         <i class="ri-chat-smile-3-line chat-icon-open"></i>
         <i class="ri-close-line chat-icon-close"></i>

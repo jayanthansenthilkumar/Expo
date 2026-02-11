@@ -12,6 +12,57 @@
 
         let chatOpened = false;
         let isProcessing = false;
+        const chatRole = $('.chat-widget-container').data('role') || '';
+        const chatLoggedIn = $('.chat-widget-container').data('logged-in') === true || $('.chat-widget-container').data('logged-in') === 'true';
+        const chatUserName = $('.chat-widget-container').data('user') || '';
+
+        // Role-aware default suggestions
+        function getDefaultSuggestions() {
+            if (!chatLoggedIn) {
+                return [
+                    { icon: 'ri-user-add-line', text: 'Register' },
+                    { icon: 'ri-login-box-line', text: 'Login' },
+                    { icon: 'ri-calendar-line', text: 'Schedule' },
+                    { icon: 'ri-questionnaire-line', text: 'Help' }
+                ];
+            }
+            switch (chatRole) {
+                case 'student':
+                    return [
+                        { icon: 'ri-folder-line', text: 'My Projects' },
+                        { icon: 'ri-team-line', text: 'My Team' },
+                        { icon: 'ri-calendar-line', text: 'Schedule' },
+                        { icon: 'ri-questionnaire-line', text: 'Help' }
+                    ];
+                case 'departmentcoordinator':
+                    return [
+                        { icon: 'ri-checkbox-circle-line', text: 'Pending Reviews' },
+                        { icon: 'ri-bar-chart-line', text: 'Department Stats' },
+                        { icon: 'ri-group-line', text: 'Students' },
+                        { icon: 'ri-questionnaire-line', text: 'Help' }
+                    ];
+                case 'admin':
+                    return [
+                        { icon: 'ri-pie-chart-line', text: 'Analytics' },
+                        { icon: 'ri-folder-line', text: 'All Projects' },
+                        { icon: 'ri-shield-user-line', text: 'Coordinators' },
+                        { icon: 'ri-questionnaire-line', text: 'Help' }
+                    ];
+                case 'studentaffairs':
+                    return [
+                        { icon: 'ri-folder-line', text: 'All Projects' },
+                        { icon: 'ri-checkbox-circle-line', text: 'Approvals' },
+                        { icon: 'ri-pie-chart-line', text: 'Analytics' },
+                        { icon: 'ri-questionnaire-line', text: 'Help' }
+                    ];
+                default:
+                    return [
+                        { icon: 'ri-calendar-line', text: 'Schedule' },
+                        { icon: 'ri-compass-line', text: 'Tracks' },
+                        { icon: 'ri-questionnaire-line', text: 'Help' }
+                    ];
+            }
+        }
 
         // ── Helpers ──────────────────────────────────────
 
@@ -49,10 +100,13 @@
                 chatOpened = true;
                 // Staggered welcome
                 setTimeout(function () {
-                    appendBotMessage("Hey there! I'm **Syraa** ✨ — your SPARK'26 assistant.");
-                    setTimeout(function () {
+                    var welcomeName = chatUserName ? chatUserName.split(' ')[0] : 'there';
+                    var welcomeMsg = chatLoggedIn
+                        ? "Hey " + welcomeName + "! ✨ I'm **Syraa** — your SPARK'26 assistant. Type **help** to see what I can do!"
+                        : "Hey there! I'm **Syraa** ✨ — your SPARK'26 assistant.";
+                    appendBotMessage(welcomeMsg, function() {
                         showSuggestions();
-                    }, 400);
+                    });
                 }, 300);
 
                 // Silent notification check
@@ -87,13 +141,8 @@
             // Remove any existing suggestions first
             $('.chat-suggestions').remove();
 
-            // Use defaults for initial open, or provided data
-            var items = suggestions || [
-                { icon: 'ri-user-add-line', text: 'Register' },
-                { icon: 'ri-login-box-line', text: 'Login' },
-                { icon: 'ri-team-line', text: 'Create Team' },
-                { icon: 'ri-calendar-line', text: 'Schedule' }
-            ];
+            // Use role-aware defaults, or provided data
+            var items = suggestions || getDefaultSuggestions();
 
             var $wrap = $('<div>').addClass('chat-suggestions');
             items.forEach(function (s) {
@@ -282,11 +331,104 @@
             });
         }
 
+        // ── Chart Rendering ───────────────────────────
+
+        function renderChart(chartData) {
+            var $wrapper = $('<div>').addClass('chat-msg-wrapper bot-wrapper');
+            var $card = $('<div>').addClass('chat-chart-card');
+
+            // --- Donut Chart ---
+            if (chartData.donut) {
+                var donut = chartData.donut;
+                var total = donut.total || 0;
+                var $donutSection = $('<div>').addClass('chart-donut-section');
+
+                // Build conic gradient
+                var gradientParts = [];
+                var cumulative = 0;
+                var hasData = total > 0;
+
+                if (hasData) {
+                    donut.segments.forEach(function (seg) {
+                        var pct = (seg.value / total) * 100;
+                        gradientParts.push(seg.color + ' ' + cumulative + '% ' + (cumulative + pct) + '%');
+                        cumulative += pct;
+                    });
+                } else {
+                    gradientParts.push('#e2e8f0 0% 100%');
+                }
+
+                var $donutRing = $('<div>').addClass('chart-donut-ring').css(
+                    'background', 'conic-gradient(' + gradientParts.join(', ') + ')'
+                );
+                var $donutCenter = $('<div>').addClass('chart-donut-center').html(
+                    '<span class="chart-donut-value">' + total + '</span>' +
+                    '<span class="chart-donut-label">' + donut.label + '</span>'
+                );
+                $donutRing.append($donutCenter);
+                $donutSection.append($donutRing);
+
+                // Legend
+                var $legend = $('<div>').addClass('chart-legend');
+                donut.segments.forEach(function (seg) {
+                    var pct = total > 0 ? Math.round((seg.value / total) * 100) : 0;
+                    $legend.append(
+                        '<div class="chart-legend-item">' +
+                        '<span class="chart-legend-dot" style="background:' + seg.color + '"></span>' +
+                        '<span class="chart-legend-text">' + seg.label + '</span>' +
+                        '<span class="chart-legend-val">' + seg.value + ' (' + pct + '%)</span>' +
+                        '</div>'
+                    );
+                });
+                $donutSection.append($legend);
+                $card.append($donutSection);
+            }
+
+            // --- Bar Chart ---
+            if (chartData.bars && chartData.bars.length) {
+                var maxVal = Math.max.apply(null, chartData.bars.map(function (b) { return b.value; })) || 1;
+                var $barSection = $('<div>').addClass('chart-bar-section');
+                var $barTitle = $('<div>').addClass('chart-bar-title').text('Overview');
+                $barSection.append($barTitle);
+
+                chartData.bars.forEach(function (bar) {
+                    var pct = Math.round((bar.value / maxVal) * 100);
+                    $barSection.append(
+                        '<div class="chart-bar-row">' +
+                        '<div class="chart-bar-label">' + (bar.icon || '') + ' ' + bar.label + '</div>' +
+                        '<div class="chart-bar-track">' +
+                        '<div class="chart-bar-fill" style="width:0%" data-width="' + pct + '%"></div>' +
+                        '</div>' +
+                        '<div class="chart-bar-value">' + bar.value + '</div>' +
+                        '</div>'
+                    );
+                });
+                $card.append($barSection);
+            }
+
+            var $time = $('<span>').addClass('chat-timestamp').text(getTimestamp());
+            $wrapper.append($card).append($time);
+            $wrapper.insertBefore($typingIndicator);
+
+            // Animate bars after insert
+            setTimeout(function () {
+                $card.find('.chart-bar-fill').each(function () {
+                    $(this).css('width', $(this).data('width'));
+                });
+                $card.addClass('chart-visible');
+            }, 100);
+            scrollToBottom();
+        }
+
         // ── Handle Response ──────────────────────────────
 
         function handleResponse(response) {
             if (response.reply) {
                 appendBotMessage(response.reply, function () {
+                    // Render chart if present
+                    if (response.chart) {
+                        renderChart(response.chart);
+                    }
                     // After message streams in, render options if any
                     if (response.options && Array.isArray(response.options)) {
                         renderOptions(response.options);
@@ -311,6 +453,8 @@
             if (response.action) {
                 if (response.action === 'reload') {
                     setTimeout(function () { location.reload(); }, 2000);
+                } else if (response.action === 'redirect' && response.redirect_url) {
+                    setTimeout(function () { window.location.href = response.redirect_url; }, 2000);
                 } else if (response.action === 'scroll_schedule') {
                     scrollToSection('#schedule');
                 } else if (response.action === 'scroll_tracks') {

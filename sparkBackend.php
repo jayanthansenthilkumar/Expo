@@ -33,6 +33,57 @@ function getDashboardUrl($role)
 }
 
 // ==========================================
+// HELPER: Get role-based chat suggestions
+// ==========================================
+function getChatSuggestions($role = null)
+{
+    if (!$role) {
+        return [
+            ['icon' => 'ri-user-add-line', 'text' => 'Register'],
+            ['icon' => 'ri-login-box-line', 'text' => 'Login'],
+            ['icon' => 'ri-calendar-line', 'text' => 'Schedule'],
+            ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+        ];
+    }
+    switch ($role) {
+        case 'student':
+            return [
+                ['icon' => 'ri-folder-line', 'text' => 'My Projects'],
+                ['icon' => 'ri-team-line', 'text' => 'My Team'],
+                ['icon' => 'ri-calendar-line', 'text' => 'Schedule'],
+                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+            ];
+        case 'departmentcoordinator':
+            return [
+                ['icon' => 'ri-checkbox-circle-line', 'text' => 'Pending Reviews'],
+                ['icon' => 'ri-bar-chart-line', 'text' => 'Department Stats'],
+                ['icon' => 'ri-group-line', 'text' => 'Students'],
+                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+            ];
+        case 'admin':
+            return [
+                ['icon' => 'ri-pie-chart-line', 'text' => 'Analytics'],
+                ['icon' => 'ri-folder-line', 'text' => 'All Projects'],
+                ['icon' => 'ri-shield-user-line', 'text' => 'Coordinators'],
+                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+            ];
+        case 'studentaffairs':
+            return [
+                ['icon' => 'ri-folder-line', 'text' => 'All Projects'],
+                ['icon' => 'ri-checkbox-circle-line', 'text' => 'Approvals'],
+                ['icon' => 'ri-pie-chart-line', 'text' => 'Analytics'],
+                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+            ];
+        default:
+            return [
+                ['icon' => 'ri-calendar-line', 'text' => 'Schedule'],
+                ['icon' => 'ri-compass-line', 'text' => 'Tracks'],
+                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+            ];
+    }
+}
+
+// ==========================================
 // HANDLE REGISTRATION
 // ==========================================
 if (isset($_POST['register'])) {
@@ -170,11 +221,7 @@ switch ($action) {
             echo json_encode([
                 'reply' => "Action cancelled. How else can I help you?",
                 'action' => 'reset_ui',
-                'suggestions' => [
-                    ['icon' => 'ri-questionnaire-line', 'text' => 'Help'],
-                    ['icon' => 'ri-calendar-line', 'text' => 'Schedule'],
-                    ['icon' => 'ri-compass-line', 'text' => 'Tracks']
-                ]
+                'suggestions' => getChatSuggestions($_SESSION['role'] ?? null)
             ]);
             exit;
         }
@@ -323,6 +370,1128 @@ switch ($action) {
                         }
                     }
                 }
+
+                // ============================================================
+                // ROLE-BASED FEATURE COMMANDS
+                // ============================================================
+
+                // --- Logout ---
+                elseif (preg_match('/^(logout|log ?out|sign ?out|signout)$/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "You are not logged in.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $name = $_SESSION['name'];
+                        session_unset();
+                        session_destroy();
+                        session_start();
+                        $_SESSION['chat_state'] = 'IDLE';
+                        $response['reply'] = "Goodbye, $name! You have been logged out successfully. 👋";
+                        $response['action'] = 'reload';
+                        $response['suggestions'] = getChatSuggestions();
+                    }
+                }
+
+                // --- My Profile ---
+                elseif (preg_match('/(my profile|my info|who am i|my account|my detail|view profile)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first to view your profile.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $uid = $_SESSION['user_id'];
+                        $stmt = mysqli_prepare($conn, "SELECT name, email, role, department, year, reg_no, created_at FROM users WHERE id = ?");
+                        mysqli_stmt_bind_param($stmt, "i", $uid);
+                        mysqli_stmt_execute($stmt);
+                        $pUser = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+                        mysqli_stmt_close($stmt);
+
+                        if ($pUser) {
+                            $joined = date('M d, Y', strtotime($pUser['created_at']));
+                            $response['reply'] = "📋 **Your Profile**\n"
+                                . "• **Name:** " . $pUser['name'] . "\n"
+                                . "• **Email:** " . $pUser['email'] . "\n"
+                                . "• **Role:** " . ucfirst($pUser['role']) . "\n"
+                                . ($pUser['department'] ? "• **Department:** " . $pUser['department'] . "\n" : "")
+                                . ($pUser['year'] ? "• **Year:** " . $pUser['year'] . "\n" : "")
+                                . ($pUser['reg_no'] ? "• **Reg No:** " . $pUser['reg_no'] . "\n" : "")
+                                . "• **Joined:** " . $joined;
+                        } else {
+                            $response['reply'] = "Could not fetch profile details.";
+                        }
+                        $response['suggestions'] = [
+                            ['icon' => 'ri-settings-3-line', 'text' => 'Settings'],
+                            ['icon' => 'ri-bar-chart-line', 'text' => 'My Stats'],
+                            ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                        ];
+                    }
+                }
+
+                // --- My Stats / Dashboard ---
+                elseif (preg_match('/(my stats|my dashboard|^dashboard$|my overview|my summary)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        $uid = $_SESSION['user_id'];
+
+                        if ($role === 'student') {
+                            $teamId = null;
+                            $tc = mysqli_prepare($conn, "SELECT t.id FROM team_members tm JOIN teams t ON tm.team_id = t.id WHERE tm.user_id = ?");
+                            mysqli_stmt_bind_param($tc, "i", $uid);
+                            mysqli_stmt_execute($tc);
+                            $tr = mysqli_fetch_assoc(mysqli_stmt_get_result($tc));
+                            if ($tr) $teamId = $tr['id'];
+                            mysqli_stmt_close($tc);
+
+                            $total = 0; $approved = 0; $pending = 0; $rejected = 0;
+                            if ($teamId) {
+                                $ps = mysqli_prepare($conn, "SELECT status, COUNT(*) as cnt FROM projects WHERE team_id = ? GROUP BY status");
+                                mysqli_stmt_bind_param($ps, "i", $teamId);
+                            } else {
+                                $ps = mysqli_prepare($conn, "SELECT status, COUNT(*) as cnt FROM projects WHERE student_id = ? GROUP BY status");
+                                mysqli_stmt_bind_param($ps, "i", $uid);
+                            }
+                            mysqli_stmt_execute($ps);
+                            $pr = mysqli_stmt_get_result($ps);
+                            while ($row = mysqli_fetch_assoc($pr)) {
+                                $total += $row['cnt'];
+                                if ($row['status'] === 'approved') $approved = $row['cnt'];
+                                if ($row['status'] === 'pending') $pending = $row['cnt'];
+                                if ($row['status'] === 'rejected') $rejected = $row['cnt'];
+                            }
+                            mysqli_stmt_close($ps);
+
+                            $eventDate = '2026-02-15';
+                            $daysLeft = max(0, (int)((strtotime($eventDate) - time()) / 86400));
+
+                            $response['reply'] = "📊 **Your Dashboard**"
+                                . ($teamId ? "" : "\n\n⚠️ You haven't joined a team yet!");
+                            $response['chart'] = [
+                                'type' => 'student',
+                                'title' => 'Your Dashboard',
+                                'donut' => [
+                                    'label' => 'Projects',
+                                    'total' => (int)$total,
+                                    'segments' => [
+                                        ['label' => 'Approved', 'value' => (int)$approved, 'color' => '#22c55e'],
+                                        ['label' => 'Pending', 'value' => (int)$pending, 'color' => '#f59e0b'],
+                                        ['label' => 'Rejected', 'value' => (int)$rejected, 'color' => '#ef4444']
+                                    ]
+                                ],
+                                'bars' => [
+                                    ['label' => 'Total Projects', 'value' => (int)$total, 'icon' => '📁'],
+                                    ['label' => 'Approved', 'value' => (int)$approved, 'icon' => '✅'],
+                                    ['label' => 'Pending', 'value' => (int)$pending, 'icon' => '⏳'],
+                                    ['label' => 'Days to Expo', 'value' => (int)$daysLeft, 'icon' => '📅']
+                                ]
+                            ];
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-folder-line', 'text' => 'My Projects'],
+                                ['icon' => 'ri-team-line', 'text' => 'My Team'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        } elseif ($role === 'departmentcoordinator') {
+                            $dept = $_SESSION['department'] ?? '';
+                            $deptFilter = buildDeptFilter($dept);
+                            $dp = $deptFilter['placeholders'];
+                            $dt = $deptFilter['types'];
+                            $dv = $deptFilter['values'];
+
+                            $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department IN ($dp)");
+                            mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                            mysqli_stmt_execute($stmt);
+                            $totalP = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                            mysqli_stmt_close($stmt);
+
+                            $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department IN ($dp) AND status = 'pending'");
+                            mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                            mysqli_stmt_execute($stmt);
+                            $pendingP = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                            mysqli_stmt_close($stmt);
+
+                            $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department IN ($dp) AND status = 'approved'");
+                            mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                            mysqli_stmt_execute($stmt);
+                            $approvedP = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                            mysqli_stmt_close($stmt);
+
+                            $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM teams WHERE department IN ($dp)");
+                            mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                            mysqli_stmt_execute($stmt);
+                            $teamCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                            mysqli_stmt_close($stmt);
+
+                            $response['reply'] = "📊 **Department Dashboard** ($dept)";
+                            $response['chart'] = [
+                                'type' => 'department',
+                                'title' => "$dept Department",
+                                'donut' => [
+                                    'label' => 'Projects',
+                                    'total' => (int)$totalP,
+                                    'segments' => [
+                                        ['label' => 'Approved', 'value' => (int)$approvedP, 'color' => '#22c55e'],
+                                        ['label' => 'Pending', 'value' => (int)$pendingP, 'color' => '#f59e0b'],
+                                        ['label' => 'Rejected', 'value' => isset($rejectedP) ? (int)$rejectedP : 0, 'color' => '#ef4444']
+                                    ]
+                                ],
+                                'bars' => [
+                                    ['label' => 'Total Projects', 'value' => (int)$totalP, 'icon' => '📁'],
+                                    ['label' => 'Pending Review', 'value' => (int)$pendingP, 'icon' => '⏳'],
+                                    ['label' => 'Approved', 'value' => (int)$approvedP, 'icon' => '✅'],
+                                    ['label' => 'Teams', 'value' => (int)$teamCount, 'icon' => '👥']
+                                ]
+                            ];
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-checkbox-circle-line', 'text' => 'Pending Reviews'],
+                                ['icon' => 'ri-group-line', 'text' => 'Students'],
+                                ['icon' => 'ri-team-line', 'text' => 'Teams'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        } else {
+                            $totalP = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects"))['cnt'];
+                            $totalU = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users"))['cnt'];
+                            $totalD = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(DISTINCT department) as cnt FROM projects WHERE department IS NOT NULL AND department != ''"))['cnt'];
+                            $approvedP = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved'"))['cnt'];
+                            $pendingP = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'pending'"))['cnt'];
+
+                            $response['reply'] = "📊 **System Dashboard**\n"
+                                . "• **Total Projects:** $totalP\n"
+                                . "• **Pending:** $pendingP ⏳\n"
+                                . "• **Approved:** $approvedP ✅\n"
+                                . "• **Registered Users:** $totalU 👤\n"
+                                . "• **Departments:** $totalD 🏢";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        }
+                    }
+                }
+
+                // --- My Projects (Student) ---
+                elseif (preg_match('/(my project|my submission|view project|project status)/', $lowerMsg) && !preg_match('/(all|department|dept|pending|top)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $uid = $_SESSION['user_id'];
+                        $teamId = null;
+                        $tc = mysqli_prepare($conn, "SELECT t.id FROM team_members tm JOIN teams t ON tm.team_id = t.id WHERE tm.user_id = ?");
+                        mysqli_stmt_bind_param($tc, "i", $uid);
+                        mysqli_stmt_execute($tc);
+                        $tr = mysqli_fetch_assoc(mysqli_stmt_get_result($tc));
+                        if ($tr) $teamId = $tr['id'];
+                        mysqli_stmt_close($tc);
+
+                        if ($teamId) {
+                            $ps = mysqli_prepare($conn, "SELECT title, status, category, score, created_at FROM projects WHERE team_id = ? ORDER BY created_at DESC LIMIT 5");
+                            mysqli_stmt_bind_param($ps, "i", $teamId);
+                        } else {
+                            $ps = mysqli_prepare($conn, "SELECT title, status, category, score, created_at FROM projects WHERE student_id = ? ORDER BY created_at DESC LIMIT 5");
+                            mysqli_stmt_bind_param($ps, "i", $uid);
+                        }
+                        mysqli_stmt_execute($ps);
+                        $result = mysqli_stmt_get_result($ps);
+                        $chatProjects = [];
+                        while ($row = mysqli_fetch_assoc($result)) {
+                            $chatProjects[] = $row;
+                        }
+                        mysqli_stmt_close($ps);
+
+                        if (empty($chatProjects)) {
+                            $response['reply'] = "You haven't submitted any projects yet. Submit your first project to get started! 🚀";
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-add-line', 'text' => 'Submit Project'],
+                                ['icon' => 'ri-team-line', 'text' => 'My Team'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        } else {
+                            $reply = "📂 **Your Projects** (" . count($chatProjects) . " latest)\n\n";
+                            foreach ($chatProjects as $i => $p) {
+                                $statusIcon = $p['status'] === 'approved' ? '✅' : ($p['status'] === 'rejected' ? '❌' : '⏳');
+                                $scoreText = $p['score'] ? " | Score: {$p['score']}" : "";
+                                $reply .= ($i + 1) . ". **" . $p['title'] . "** $statusIcon\n"
+                                    . "   " . ucfirst($p['category']) . " | " . ucfirst($p['status']) . $scoreText . "\n\n";
+                            }
+                            $response['reply'] = $reply;
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-bar-chart-line', 'text' => 'My Stats'],
+                                ['icon' => 'ri-team-line', 'text' => 'My Team'],
+                                ['icon' => 'ri-trophy-line', 'text' => 'Top Projects']
+                            ];
+                        }
+                    }
+                }
+
+                // --- My Team ---
+                elseif (preg_match('/(my team|team info|team member|team detail)/', $lowerMsg) && !preg_match('/(create|join|all|manage|list)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $uid = $_SESSION['user_id'];
+                        $tc = mysqli_prepare($conn, "SELECT t.*, u.name as leader_name FROM team_members tm JOIN teams t ON tm.team_id = t.id LEFT JOIN users u ON t.leader_id = u.id WHERE tm.user_id = ?");
+                        mysqli_stmt_bind_param($tc, "i", $uid);
+                        mysqli_stmt_execute($tc);
+                        $myTeamData = mysqli_fetch_assoc(mysqli_stmt_get_result($tc));
+                        mysqli_stmt_close($tc);
+
+                        if (!$myTeamData) {
+                            $response['reply'] = "You haven't joined a team yet. Create one or join using an invite code!";
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-team-line', 'text' => 'Create Team'],
+                                ['icon' => 'ri-group-line', 'text' => 'Join Team'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        } else {
+                            $ms = mysqli_prepare($conn, "SELECT u.name, tm.role FROM team_members tm JOIN users u ON tm.user_id = u.id WHERE tm.team_id = ? ORDER BY tm.role = 'leader' DESC");
+                            mysqli_stmt_bind_param($ms, "i", $myTeamData['id']);
+                            mysqli_stmt_execute($ms);
+                            $mr = mysqli_stmt_get_result($ms);
+                            $members = [];
+                            while ($m = mysqli_fetch_assoc($mr)) {
+                                $members[] = $m;
+                            }
+                            mysqli_stmt_close($ms);
+
+                            $reply = "👥 **Team: " . $myTeamData['team_name'] . "**\n"
+                                . "• **Code:** " . $myTeamData['team_code'] . "\n"
+                                . "• **Leader:** " . $myTeamData['leader_name'] . "\n"
+                                . "• **Department:** " . $myTeamData['department'] . "\n"
+                                . "• **Status:** " . ucfirst($myTeamData['status']) . "\n"
+                                . "• **Members:** " . count($members) . "/" . $myTeamData['max_members'] . "\n\n";
+
+                            foreach ($members as $m) {
+                                $badge = $m['role'] === 'leader' ? '👑' : '👤';
+                                $reply .= "  $badge " . $m['name'] . " (" . ucfirst($m['role']) . ")\n";
+                            }
+
+                            $response['reply'] = $reply;
+                            $isLeader = ((int)$myTeamData['leader_id'] === (int)$uid);
+                            $response['suggestions'] = $isLeader ? [
+                                ['icon' => 'ri-mail-send-line', 'text' => 'Invite'],
+                                ['icon' => 'ri-folder-line', 'text' => 'My Projects'],
+                                ['icon' => 'ri-add-line', 'text' => 'Submit Project']
+                            ] : [
+                                ['icon' => 'ri-folder-line', 'text' => 'My Projects'],
+                                ['icon' => 'ri-calendar-line', 'text' => 'Schedule'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        }
+                    }
+                }
+
+                // --- Announcements (View) ---
+                elseif (preg_match('/(announcement|notice|bulletin)/', $lowerMsg) && !preg_match('/(create|post|new|add) (announcement|notice)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login to view announcements.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if (in_array($role, ['admin', 'studentaffairs'])) {
+                            $annRes = mysqli_query($conn, "SELECT a.title, a.message, u.name as author, a.is_featured, a.created_at FROM announcements a JOIN users u ON a.author_id = u.id ORDER BY a.created_at DESC LIMIT 5");
+                        } else {
+                            $safeRole = mysqli_real_escape_string($conn, $role);
+                            $annRes = mysqli_query($conn, "SELECT a.title, a.message, u.name as author, a.is_featured, a.created_at FROM announcements a JOIN users u ON a.author_id = u.id WHERE a.target_role IN ('all', '$safeRole') ORDER BY a.created_at DESC LIMIT 5");
+                        }
+                        $anns = [];
+                        while ($row = mysqli_fetch_assoc($annRes)) { $anns[] = $row; }
+
+                        if (empty($anns)) {
+                            $response['reply'] = "No announcements to show at this time. 📭";
+                        } else {
+                            $reply = "📢 **Recent Announcements**\n\n";
+                            foreach ($anns as $i => $a) {
+                                $featured = $a['is_featured'] ? "⭐ " : "";
+                                $date = date('M d', strtotime($a['created_at']));
+                                $reply .= ($i + 1) . ". $featured**" . $a['title'] . "**\n"
+                                    . "   " . substr($a['message'], 0, 100) . (strlen($a['message']) > 100 ? "..." : "") . "\n"
+                                    . "   By " . $a['author'] . " - $date\n\n";
+                            }
+                            $response['reply'] = $reply;
+                        }
+
+                        $sug = [];
+                        if (in_array($role, ['admin', 'studentaffairs'])) {
+                            $sug[] = ['icon' => 'ri-add-line', 'text' => 'Create Announcement'];
+                        }
+                        $sug[] = ['icon' => 'ri-bar-chart-line', 'text' => 'My Stats'];
+                        $sug[] = ['icon' => 'ri-questionnaire-line', 'text' => 'Help'];
+                        $response['suggestions'] = $sug;
+                    }
+                }
+
+                // --- Create Announcement (Admin/SA) ---
+                elseif (preg_match('/(create|post|new|add) announcement/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if (!in_array($role, ['admin', 'studentaffairs'])) {
+                            $response['reply'] = "Only admins and student affairs can create announcements.";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        } else {
+                            $_SESSION['chat_state'] = 'ANN_ASK_TITLE';
+                            $_SESSION['chat_data'] = [];
+                            $response['reply'] = "📢 Let's create an announcement! What is the **Title**?";
+                        }
+                    }
+                }
+
+                // --- Send Message ---
+                elseif (preg_match('/(send message|compose message|write message|new message)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $_SESSION['chat_state'] = 'MSG_ASK_RECIPIENT';
+                        $_SESSION['chat_data'] = [];
+                        $response['reply'] = "📧 Who would you like to message? Enter their **email address**.";
+                    }
+                }
+
+                // --- Messages / Inbox ---
+                elseif (preg_match('/(^message|^inbox|^mail|unread message|my message|check message|view message)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login to check messages.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $uid = $_SESSION['user_id'];
+                        $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM messages WHERE recipient_id = ? AND is_read = 0");
+                        mysqli_stmt_bind_param($stmt, "i", $uid);
+                        mysqli_stmt_execute($stmt);
+                        $unread = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                        mysqli_stmt_close($stmt);
+
+                        $stmt = mysqli_prepare($conn, "SELECT m.subject, m.is_read, m.created_at, u.name as sender FROM messages m JOIN users u ON m.sender_id = u.id WHERE m.recipient_id = ? ORDER BY m.created_at DESC LIMIT 5");
+                        mysqli_stmt_bind_param($stmt, "i", $uid);
+                        mysqli_stmt_execute($stmt);
+                        $msgRes = mysqli_stmt_get_result($stmt);
+                        $msgs = [];
+                        while ($row = mysqli_fetch_assoc($msgRes)) { $msgs[] = $row; }
+                        mysqli_stmt_close($stmt);
+
+                        if (empty($msgs)) {
+                            $response['reply'] = "📬 Your inbox is empty. No messages yet.";
+                        } else {
+                            $reply = "📬 **Inbox** ($unread unread)\n\n";
+                            foreach ($msgs as $i => $m) {
+                                $readIcon = $m['is_read'] ? '📖' : '📩';
+                                $date = date('M d, H:i', strtotime($m['created_at']));
+                                $reply .= "$readIcon **" . $m['subject'] . "**\n"
+                                    . "   From: " . $m['sender'] . " - $date\n\n";
+                            }
+                            $response['reply'] = $reply;
+                        }
+                        $response['suggestions'] = [
+                            ['icon' => 'ri-mail-send-line', 'text' => 'Send Message'],
+                            ['icon' => 'ri-bar-chart-line', 'text' => 'My Stats'],
+                            ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                        ];
+                    }
+                }
+
+                // --- Guidelines ---
+                elseif (preg_match('/(guideline|submission rule|judging criteria|submission requirement)/', $lowerMsg)) {
+                    $response['reply'] = "📋 **SPARK'26 Guidelines**\n\n"
+                        . "**General:**\n"
+                        . "• Team size: Max 4 members\n"
+                        . "• Deadline: Feb 15, 2026, 11:59 PM\n"
+                        . "• Original work only\n"
+                        . "• Must be currently enrolled\n\n"
+                        . "**Project Requirements:**\n"
+                        . "• Clear problem statement\n"
+                        . "• Complete documentation\n"
+                        . "• GitHub repository required\n"
+                        . "• Working demo/prototype\n"
+                        . "• PDF upload (max 10MB)\n\n"
+                        . "**Judging Criteria:**\n"
+                        . "• Innovation: 25%\n"
+                        . "• Technical Complexity: 25%\n"
+                        . "• Practicality: 20%\n"
+                        . "• Presentation: 15%\n"
+                        . "• Documentation: 15%";
+                    $role = $_SESSION['role'] ?? null;
+                    $response['suggestions'] = getChatSuggestions($role);
+                }
+
+                // --- Top Projects / Leaderboard ---
+                elseif (preg_match('/(top project|leaderboard|ranking|best project|winner|scores)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login to view the leaderboard.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        $dept = $_SESSION['department'] ?? '';
+
+                        if ($role === 'departmentcoordinator') {
+                            $deptFilter = buildDeptFilter($dept);
+                            $dp = $deptFilter['placeholders'];
+                            $dt = $deptFilter['types'];
+                            $dv = $deptFilter['values'];
+                            $stmt = mysqli_prepare($conn, "SELECT p.title, p.score, p.category, u.name as student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'approved' AND p.score > 0 AND p.department IN ($dp) ORDER BY p.score DESC LIMIT 10");
+                            mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                        } else {
+                            $stmt = mysqli_prepare($conn, "SELECT p.title, p.score, p.category, u.name as student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'approved' AND p.score > 0 ORDER BY p.score DESC LIMIT 10");
+                        }
+                        mysqli_stmt_execute($stmt);
+                        $topRes = mysqli_stmt_get_result($stmt);
+                        $tops = [];
+                        while ($row = mysqli_fetch_assoc($topRes)) { $tops[] = $row; }
+                        mysqli_stmt_close($stmt);
+
+                        if (empty($tops)) {
+                            $response['reply'] = "🏆 No scored projects yet. Projects will appear here after judging.";
+                        } else {
+                            $medals = ['🥇', '🥈', '🥉'];
+                            $reply = "🏆 **Top Projects Leaderboard**\n\n";
+                            foreach ($tops as $i => $p) {
+                                $rank = $i < 3 ? $medals[$i] : "#" . ($i + 1);
+                                $reply .= "$rank **" . $p['title'] . "** — " . $p['score'] . "/100\n"
+                                    . "   By " . $p['student_name'] . " | " . ucfirst($p['category']) . "\n\n";
+                            }
+                            $response['reply'] = $reply;
+                        }
+                        $response['suggestions'] = getChatSuggestions($role);
+                    }
+                }
+
+                // --- Pending Reviews (Coordinator/Admin/SA) ---
+                elseif (preg_match('/(pending review|pending project|review project|pending approval|awaiting review|^approval|approval status)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if (!in_array($role, ['departmentcoordinator', 'admin', 'studentaffairs'])) {
+                            $response['reply'] = "This feature is only available for coordinators and administrators.";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        } else {
+                            // Get counts
+                            if ($role === 'departmentcoordinator') {
+                                $dept = $_SESSION['department'] ?? '';
+                                $deptFilter = buildDeptFilter($dept);
+                                $dp = $deptFilter['placeholders'];
+                                $dt = $deptFilter['types'];
+                                $dv = $deptFilter['values'];
+
+                                $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'pending' AND department IN ($dp)");
+                                mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                                mysqli_stmt_execute($stmt);
+                                $pendCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                                mysqli_stmt_close($stmt);
+
+                                $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved' AND department IN ($dp)");
+                                mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                                mysqli_stmt_execute($stmt);
+                                $apprCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                                mysqli_stmt_close($stmt);
+
+                                $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'rejected' AND department IN ($dp)");
+                                mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                                mysqli_stmt_execute($stmt);
+                                $rejCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                                mysqli_stmt_close($stmt);
+
+                                $stmt = mysqli_prepare($conn, "SELECT p.id, p.title, p.category, u.name as student_name, p.created_at FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'pending' AND p.department IN ($dp) ORDER BY p.created_at DESC LIMIT 10");
+                                mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                            } else {
+                                $pendCount = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'pending'"))['cnt'];
+                                $apprCount = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved'"))['cnt'];
+                                $rejCount = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'rejected'"))['cnt'];
+
+                                $stmt = mysqli_prepare($conn, "SELECT p.id, p.title, p.category, u.name as student_name, p.created_at FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'pending' ORDER BY p.created_at DESC LIMIT 10");
+                            }
+                            mysqli_stmt_execute($stmt);
+                            $pendRes = mysqli_stmt_get_result($stmt);
+                            $pendings = [];
+                            while ($row = mysqli_fetch_assoc($pendRes)) { $pendings[] = $row; }
+                            mysqli_stmt_close($stmt);
+
+                            $reply = "📋 **Review Summary**\n"
+                                . "• Pending: $pendCount ⏳\n"
+                                . "• Approved: $apprCount ✅\n"
+                                . "• Rejected: $rejCount ❌\n\n";
+
+                            if (empty($pendings)) {
+                                $reply .= "✅ No pending projects to review. All caught up!";
+                            } else {
+                                $reply .= "**Pending Projects:**\n\n";
+                                foreach ($pendings as $i => $p) {
+                                    $date = date('M d', strtotime($p['created_at']));
+                                    $reply .= ($i + 1) . ". **" . $p['title'] . "** (ID: " . $p['id'] . ")\n"
+                                        . "   By " . $p['student_name'] . " | " . ucfirst($p['category']) . " | $date\n\n";
+                                }
+                                $reply .= "💡 Type **approve [ID]** or **reject [ID]** to review.";
+                            }
+                            $response['reply'] = $reply;
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-bar-chart-line', 'text' => 'Department Stats'],
+                                ['icon' => 'ri-group-line', 'text' => 'Students'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        }
+                    }
+                }
+
+                // --- Approve/Reject Project by ID ---
+                elseif (preg_match('/^(approve|reject)\s+(\d+)/', $lowerMsg, $reviewMatch)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if (!in_array($role, ['departmentcoordinator', 'admin', 'studentaffairs'])) {
+                            $response['reply'] = "Only coordinators and admins can review projects.";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        } else {
+                            $decision = $reviewMatch[1];
+                            $projectId = (int)$reviewMatch[2];
+
+                            $stmt = mysqli_prepare($conn, "SELECT title, department FROM projects WHERE id = ? AND status = 'pending'");
+                            mysqli_stmt_bind_param($stmt, "i", $projectId);
+                            mysqli_stmt_execute($stmt);
+                            $project = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+                            mysqli_stmt_close($stmt);
+
+                            if (!$project) {
+                                $response['reply'] = "Project #$projectId not found or is not pending review.";
+                                $response['suggestions'] = [
+                                    ['icon' => 'ri-checkbox-circle-line', 'text' => 'Pending Reviews'],
+                                    ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                                ];
+                            } else {
+                                $_SESSION['chat_state'] = 'REVIEW_CONFIRM';
+                                $_SESSION['chat_data'] = [
+                                    'project_id' => $projectId,
+                                    'project_title' => $project['title'],
+                                    'decision' => $decision === 'approve' ? 'approved' : 'rejected'
+                                ];
+                                $response['reply'] = "You are about to **$decision** project:\n\n**" . $project['title'] . "** (ID: $projectId)\n\nAdd a review comment (or type **skip** to proceed without one):";
+                            }
+                        }
+                    }
+                }
+
+                // --- Department Stats (Coordinator) ---
+                elseif (preg_match('/(department stat|dept stat|department overview|dept overview|department summary)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if ($role !== 'departmentcoordinator') {
+                            $response['reply'] = "This feature is for department coordinators. Try **analytics** for system-wide stats.";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        } else {
+                            $dept = $_SESSION['department'] ?? '';
+                            $deptFilter = buildDeptFilter($dept);
+                            $dp = $deptFilter['placeholders'];
+                            $dt = $deptFilter['types'];
+                            $dv = $deptFilter['values'];
+
+                            $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department IN ($dp)");
+                            mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                            mysqli_stmt_execute($stmt);
+                            $totalP = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                            mysqli_stmt_close($stmt);
+
+                            $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department IN ($dp) AND status = 'pending'");
+                            mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                            mysqli_stmt_execute($stmt);
+                            $pendingP = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                            mysqli_stmt_close($stmt);
+
+                            $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department IN ($dp) AND status = 'approved'");
+                            mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                            mysqli_stmt_execute($stmt);
+                            $approvedP = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                            mysqli_stmt_close($stmt);
+
+                            $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM projects WHERE department IN ($dp) AND status = 'rejected'");
+                            mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                            mysqli_stmt_execute($stmt);
+                            $rejectedP = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                            mysqli_stmt_close($stmt);
+
+                            $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM teams WHERE department IN ($dp)");
+                            mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                            mysqli_stmt_execute($stmt);
+                            $teamCount = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                            mysqli_stmt_close($stmt);
+
+                            $stmt = mysqli_prepare($conn, "SELECT category, COUNT(*) as cnt FROM projects WHERE department IN ($dp) GROUP BY category ORDER BY cnt DESC");
+                            mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                            mysqli_stmt_execute($stmt);
+                            $catRes = mysqli_stmt_get_result($stmt);
+                            $cats = [];
+                            while ($row = mysqli_fetch_assoc($catRes)) { $cats[] = $row; }
+                            mysqli_stmt_close($stmt);
+
+                            $response['reply'] = "📊 **Department Statistics** ($dept)";
+
+                            $catBars = [];
+                            if (!empty($cats)) {
+                                foreach ($cats as $c) {
+                                    $catBars[] = ['label' => ucfirst($c['category']), 'value' => (int)$c['cnt'], 'icon' => '📂'];
+                                }
+                            }
+
+                            $response['chart'] = [
+                                'type' => 'department',
+                                'title' => "$dept Department",
+                                'donut' => [
+                                    'label' => 'Projects',
+                                    'total' => (int)$totalP,
+                                    'segments' => [
+                                        ['label' => 'Approved', 'value' => (int)$approvedP, 'color' => '#22c55e'],
+                                        ['label' => 'Pending', 'value' => (int)$pendingP, 'color' => '#f59e0b'],
+                                        ['label' => 'Rejected', 'value' => (int)$rejectedP, 'color' => '#ef4444']
+                                    ]
+                                ],
+                                'bars' => array_merge(
+                                    [
+                                        ['label' => 'Total Projects', 'value' => (int)$totalP, 'icon' => '📁'],
+                                        ['label' => 'Teams', 'value' => (int)$teamCount, 'icon' => '👥']
+                                    ],
+                                    $catBars
+                                )
+                            ];
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-checkbox-circle-line', 'text' => 'Pending Reviews'],
+                                ['icon' => 'ri-group-line', 'text' => 'Students'],
+                                ['icon' => 'ri-team-line', 'text' => 'Teams'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        }
+                    }
+                }
+
+                // --- Student List (Coordinator/Admin) ---
+                elseif (preg_match('/(student list|list student|view student|my student|student count)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if (!in_array($role, ['departmentcoordinator', 'admin', 'studentaffairs'])) {
+                            $response['reply'] = "This feature is for coordinators and admins only.";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        } else {
+                            $reply = "";
+                            if ($role === 'departmentcoordinator') {
+                                $dept = $_SESSION['department'] ?? '';
+                                $deptFilter = buildDeptFilter($dept);
+                                $dp = $deptFilter['placeholders'];
+                                $dt = $deptFilter['types'];
+                                $dv = $deptFilter['values'];
+
+                                $stmt = mysqli_prepare($conn, "SELECT COUNT(*) as cnt FROM users WHERE department IN ($dp) AND role = 'student'");
+                                mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                                mysqli_stmt_execute($stmt);
+                                $totalStudents = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt))['cnt'];
+                                mysqli_stmt_close($stmt);
+
+                                $stmt = mysqli_prepare($conn, "SELECT name, email, department, year FROM users WHERE department IN ($dp) AND role = 'student' ORDER BY name LIMIT 10");
+                                mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                                $reply = "👨‍🎓 **Students** ($dept) — $totalStudents total\n\n";
+                            } else {
+                                $totalStudents = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users WHERE role = 'student'"))['cnt'];
+                                $stmt = mysqli_prepare($conn, "SELECT name, email, department, year FROM users WHERE role = 'student' ORDER BY name LIMIT 10");
+                                $reply = "👨‍🎓 **All Students** — $totalStudents total\n\n";
+                            }
+                            mysqli_stmt_execute($stmt);
+                            $stuRes = mysqli_stmt_get_result($stmt);
+                            $students = [];
+                            while ($row = mysqli_fetch_assoc($stuRes)) { $students[] = $row; }
+                            mysqli_stmt_close($stmt);
+
+                            if (empty($students)) {
+                                $reply .= "No students found.";
+                            } else {
+                                foreach ($students as $i => $s) {
+                                    $reply .= ($i + 1) . ". **" . $s['name'] . "**\n"
+                                        . "   " . ($s['department'] ?? '-') . " | " . ($s['year'] ?? '-') . "\n\n";
+                                }
+                                if ($totalStudents > 10) {
+                                    $reply .= "... and " . ($totalStudents - 10) . " more.";
+                                }
+                            }
+                            $response['reply'] = $reply;
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-checkbox-circle-line', 'text' => 'Pending Reviews'],
+                                ['icon' => 'ri-bar-chart-line', 'text' => 'Department Stats'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        }
+                    }
+                }
+
+                // --- All Projects Summary (Admin/SA) ---
+                elseif (preg_match('/(all project|total project|project count|project summary|project overview)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if (!in_array($role, ['admin', 'studentaffairs'])) {
+                            $response['reply'] = "This feature is for admins and student affairs only. Try **my projects** instead.";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        } else {
+                            $total = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects"))['cnt'];
+                            $pending = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'pending'"))['cnt'];
+                            $approved = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved'"))['cnt'];
+                            $rejected = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'rejected'"))['cnt'];
+
+                            $catRes = mysqli_query($conn, "SELECT category, COUNT(*) as cnt FROM projects GROUP BY category ORDER BY cnt DESC");
+                            $cats = [];
+                            while ($row = mysqli_fetch_assoc($catRes)) { $cats[] = $row; }
+
+                            $deptRes = mysqli_query($conn, "SELECT department, COUNT(*) as cnt FROM projects WHERE department IS NOT NULL AND department != '' GROUP BY department ORDER BY cnt DESC LIMIT 5");
+                            $depts = [];
+                            while ($row = mysqli_fetch_assoc($deptRes)) { $depts[] = $row; }
+
+                            $reply = "📂 **All Projects Overview**\n\n"
+                                . "**Status:**\n"
+                                . "• Total: $total\n"
+                                . "• Pending: $pending ⏳\n"
+                                . "• Approved: $approved ✅\n"
+                                . "• Rejected: $rejected ❌\n\n";
+
+                            if (!empty($cats)) {
+                                $reply .= "**By Category:**\n";
+                                foreach ($cats as $c) {
+                                    $reply .= "• " . ucfirst($c['category']) . ": " . $c['cnt'] . "\n";
+                                }
+                                $reply .= "\n";
+                            }
+                            if (!empty($depts)) {
+                                $reply .= "**Top Departments:**\n";
+                                foreach ($depts as $d) {
+                                    $reply .= "• " . $d['department'] . ": " . $d['cnt'] . "\n";
+                                }
+                            }
+                            $response['reply'] = $reply;
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-checkbox-circle-line', 'text' => 'Approvals'],
+                                ['icon' => 'ri-pie-chart-line', 'text' => 'Analytics'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        }
+                    }
+                }
+
+                // --- Analytics (Admin/SA) ---
+                elseif (preg_match('/(^analytics|overall stat|system stat|^report|system overview)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if (!in_array($role, ['admin', 'studentaffairs'])) {
+                            $response['reply'] = "Analytics is available for admins and student affairs only.";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        } else {
+                            $totalP = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects"))['cnt'];
+                            $totalU = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users"))['cnt'];
+                            $totalS = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users WHERE role = 'student'"))['cnt'];
+                            $totalT = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM teams"))['cnt'];
+                            $totalD = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(DISTINCT department) as cnt FROM projects WHERE department IS NOT NULL AND department != ''"))['cnt'];
+                            $approvedP = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved'"))['cnt'];
+                            $pendingP = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'pending'"))['cnt'];
+                            $rejectedP = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'rejected'"))['cnt'];
+                            $approvalRate = $totalP > 0 ? round(($approvedP / $totalP) * 100) : 0;
+
+                            $response['reply'] = "📊 **SPARK'26 Analytics**";
+                            $response['chart'] = [
+                                'type' => 'analytics',
+                                'title' => "SPARK'26 Analytics",
+                                'donut' => [
+                                    'label' => 'Projects',
+                                    'total' => (int)$totalP,
+                                    'segments' => [
+                                        ['label' => 'Approved', 'value' => (int)$approvedP, 'color' => '#22c55e'],
+                                        ['label' => 'Pending', 'value' => (int)$pendingP, 'color' => '#f59e0b'],
+                                        ['label' => 'Rejected', 'value' => (int)$rejectedP, 'color' => '#ef4444']
+                                    ]
+                                ],
+                                'bars' => [
+                                    ['label' => 'Projects', 'value' => (int)$totalP, 'icon' => '📁'],
+                                    ['label' => 'Users', 'value' => (int)$totalU, 'icon' => '👤'],
+                                    ['label' => 'Students', 'value' => (int)$totalS, 'icon' => '🎓'],
+                                    ['label' => 'Teams', 'value' => (int)$totalT, 'icon' => '👥'],
+                                    ['label' => 'Departments', 'value' => (int)$totalD, 'icon' => '🏛️']
+                                ]
+                            ];
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-folder-line', 'text' => 'All Projects'],
+                                ['icon' => 'ri-checkbox-circle-line', 'text' => 'Approvals'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        }
+                    }
+                }
+
+                // --- Teams Overview (Coordinator/Admin) ---
+                elseif (preg_match('/(all team|team list|view team|manage team|teams overview)/', $lowerMsg) && !preg_match('/(create|join|my) team/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if (!in_array($role, ['departmentcoordinator', 'admin', 'studentaffairs'])) {
+                            $response['reply'] = "This feature is for coordinators and admins only.";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        } else {
+                            if ($role === 'departmentcoordinator') {
+                                $dept = $_SESSION['department'] ?? '';
+                                $deptFilter = buildDeptFilter($dept);
+                                $dp = $deptFilter['placeholders'];
+                                $dt = $deptFilter['types'];
+                                $dv = $deptFilter['values'];
+                                $stmt = mysqli_prepare($conn, "SELECT t.team_name, t.status, u.name as leader_name, (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count FROM teams t LEFT JOIN users u ON t.leader_id = u.id WHERE t.department IN ($dp) ORDER BY t.created_at DESC LIMIT 10");
+                                mysqli_stmt_bind_param($stmt, $dt, ...$dv);
+                                $title = "Teams ($dept)";
+                            } else {
+                                $stmt = mysqli_prepare($conn, "SELECT t.team_name, t.status, t.department, u.name as leader_name, (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count FROM teams t LEFT JOIN users u ON t.leader_id = u.id ORDER BY t.created_at DESC LIMIT 10");
+                                $title = "All Teams";
+                            }
+                            mysqli_stmt_execute($stmt);
+                            $teamRes = mysqli_stmt_get_result($stmt);
+                            $chatTeams = [];
+                            while ($row = mysqli_fetch_assoc($teamRes)) { $chatTeams[] = $row; }
+                            mysqli_stmt_close($stmt);
+
+                            if (empty($chatTeams)) {
+                                $response['reply'] = "👥 No teams found yet.";
+                            } else {
+                                $reply = "👥 **$title**\n\n";
+                                foreach ($chatTeams as $i => $t) {
+                                    $statusIcon = $t['status'] === 'open' ? '🟢' : '🔴';
+                                    $deptInfo = isset($t['department']) ? " | " . $t['department'] : "";
+                                    $reply .= ($i + 1) . ". **" . $t['team_name'] . "** $statusIcon\n"
+                                        . "   Leader: " . $t['leader_name'] . " | " . $t['member_count'] . " members" . $deptInfo . "\n\n";
+                                }
+                                $response['reply'] = $reply;
+                            }
+                            $response['suggestions'] = getChatSuggestions($role);
+                        }
+                    }
+                }
+
+                // --- Coordinators (Admin/SA) ---
+                elseif (preg_match('/(coordinator list|view coordinator|^coordinators$|dept coordinator|department coordinator)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if (!in_array($role, ['admin', 'studentaffairs'])) {
+                            $response['reply'] = "This feature is for admins and student affairs only.";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        } else {
+                            $coordRes = mysqli_query($conn, "SELECT u.name, u.email, u.department, u.status, (SELECT COUNT(*) FROM projects WHERE department = u.department) as project_count FROM users u WHERE u.role = 'departmentcoordinator' ORDER BY u.department");
+                            $coords = [];
+                            while ($row = mysqli_fetch_assoc($coordRes)) { $coords[] = $row; }
+
+                            if (empty($coords)) {
+                                $response['reply'] = "No coordinators assigned yet.";
+                            } else {
+                                $reply = "🎓 **Department Coordinators** (" . count($coords) . ")\n\n";
+                                foreach ($coords as $i => $c) {
+                                    $statusIcon = $c['status'] === 'active' ? '🟢' : '🔴';
+                                    $reply .= ($i + 1) . ". **" . $c['name'] . "** $statusIcon\n"
+                                        . "   " . $c['department'] . " | " . $c['project_count'] . " projects\n"
+                                        . "   " . $c['email'] . "\n\n";
+                                }
+                                $response['reply'] = $reply;
+                            }
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-pie-chart-line', 'text' => 'Analytics'],
+                                ['icon' => 'ri-folder-line', 'text' => 'All Projects'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        }
+                    }
+                }
+
+                // --- Judging (Admin/SA/Coordinator) ---
+                elseif (preg_match('/(^judging|^judge|scoring progress|score progress|judging progress)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if (!in_array($role, ['admin', 'studentaffairs', 'departmentcoordinator'])) {
+                            $response['reply'] = "Judging info is available for coordinators and admins.";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        } else {
+                            $totalApproved = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved'"))['cnt'];
+                            $scored = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'approved' AND score > 0"))['cnt'];
+                            $unscored = $totalApproved - $scored;
+                            $progress = $totalApproved > 0 ? round(($scored / $totalApproved) * 100) : 0;
+
+                            $response['reply'] = "⚖️ **Judging Progress**\n\n"
+                                . "• Approved Projects: $totalApproved\n"
+                                . "• Scored: $scored ✅\n"
+                                . "• Unscored: $unscored ⏳\n"
+                                . "• Progress: **$progress%**\n\n"
+                                . ($progress < 100 ? "📝 $unscored projects awaiting scores." : "🎉 All projects scored! Ready for results.");
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-trophy-line', 'text' => 'Top Projects'],
+                                ['icon' => 'ri-folder-line', 'text' => 'All Projects'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        }
+                    }
+                }
+
+                // --- Departments Overview (Admin) ---
+                elseif (preg_match('/(^departments$|department list|all department|dept list)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $role = $_SESSION['role'];
+                        if (!in_array($role, ['admin', 'studentaffairs'])) {
+                            $response['reply'] = "This feature is for admins only.";
+                            $response['suggestions'] = getChatSuggestions($role);
+                        } else {
+                            $deptResult = mysqli_query($conn, "SELECT department, COUNT(*) as project_count FROM projects WHERE department IS NOT NULL AND department != '' GROUP BY department ORDER BY project_count DESC");
+                            $depts = [];
+                            while ($row = mysqli_fetch_assoc($deptResult)) { $depts[] = $row; }
+
+                            if (empty($depts)) {
+                                $response['reply'] = "🏢 No department data yet.";
+                            } else {
+                                $reply = "🏢 **Departments Overview**\n\n";
+                                foreach ($depts as $i => $d) {
+                                    $coordRes = mysqli_query($conn, "SELECT name FROM users WHERE role = 'departmentcoordinator' AND department = '" . mysqli_real_escape_string($conn, $d['department']) . "' LIMIT 1");
+                                    $coord = mysqli_fetch_assoc($coordRes);
+                                    $coordName = $coord ? $coord['name'] : 'Not assigned';
+                                    $reply .= ($i + 1) . ". **" . $d['department'] . "** — " . $d['project_count'] . " projects\n"
+                                        . "   Coordinator: " . $coordName . "\n\n";
+                                }
+                                $response['reply'] = $reply;
+                            }
+                            $response['suggestions'] = [
+                                ['icon' => 'ri-shield-user-line', 'text' => 'Coordinators'],
+                                ['icon' => 'ri-pie-chart-line', 'text' => 'Analytics'],
+                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                            ];
+                        }
+                    }
+                }
+
+                // --- View Schedule (with real data) ---
+                elseif (preg_match('/(^schedule|view schedule|upcoming event|event schedule|timeline)/', $lowerMsg)) {
+                    $scheRes = mysqli_query($conn, "SELECT title, description, event_date, event_type FROM schedule ORDER BY event_date ASC LIMIT 8");
+                    $events = [];
+                    while ($row = mysqli_fetch_assoc($scheRes)) { $events[] = $row; }
+
+                    if (empty($events)) {
+                        $response['reply'] = "📅 No schedule events found. SPARK'26 is on **Feb 15, 2026**.";
+                    } else {
+                        $reply = "📅 **SPARK'26 Schedule**\n\n";
+                        foreach ($events as $e) {
+                            $date = date('M d, Y', strtotime($e['event_date']));
+                            $time = date('h:i A', strtotime($e['event_date']));
+                            $typeIcon = match($e['event_type']) {
+                                'milestone' => '🔵',
+                                'deadline' => '🔴',
+                                'event' => '🟢',
+                                default => '⚪'
+                            };
+                            $reply .= "$typeIcon **" . $e['title'] . "**\n"
+                                . "   $date at $time\n"
+                                . ($e['description'] ? "   " . $e['description'] . "\n" : "") . "\n";
+                        }
+                        $response['reply'] = $reply;
+                    }
+                    $response['action'] = 'scroll_schedule';
+                    $role = $_SESSION['role'] ?? null;
+                    $response['suggestions'] = getChatSuggestions($role);
+                }
+
+                // --- Submit Project shortcut ---
+                elseif (preg_match('/(submit project|new project|post project)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $response['reply'] = "📤 Opening the project submission form...";
+                        $response['action'] = 'redirect';
+                        $response['redirect_url'] = 'submitProject.php';
+                        $response['suggestions'] = getChatSuggestions($_SESSION['role']);
+                    }
+                }
+
+                // --- Settings ---
+                elseif (preg_match('/(^setting|^preference|account setting|change password|update profile)/', $lowerMsg)) {
+                    if (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $response['reply'] = "⚙️ Opening Settings where you can update your profile and change your password...";
+                        $response['action'] = 'redirect';
+                        $response['redirect_url'] = 'settings.php';
+                        $response['suggestions'] = getChatSuggestions($_SESSION['role']);
+                    }
+                }
+
+                // --- Navigate to Pages ---
+                elseif (preg_match('/(go to|open|navigate|take me to|visit)\s+(.+)/i', $lowerMsg, $navMatch)) {
+                    $page = strtolower(trim($navMatch[2]));
+                    $role = $_SESSION['role'] ?? 'student';
+                    $pageMap = [
+                        'dashboard' => ['student' => 'studentDashboard.php', 'admin' => 'sparkAdmin.php', 'studentaffairs' => 'studentAffairs.php', 'departmentcoordinator' => 'departmentCoordinator.php'],
+                        'my projects' => 'myProjects.php',
+                        'projects' => ['student' => 'myProjects.php', 'default' => 'allProjects.php'],
+                        'all projects' => 'allProjects.php',
+                        'my team' => 'myTeam.php',
+                        'teams' => 'teams.php',
+                        'submit' => 'submitProject.php',
+                        'profile' => 'profile.php',
+                        'settings' => 'settings.php',
+                        'messages' => 'messages.php',
+                        'announcements' => 'announcements.php',
+                        'schedule' => 'schedule.php',
+                        'guidelines' => 'guidelines.php',
+                        'analytics' => 'analytics.php',
+                        'approvals' => 'approvals.php',
+                        'users' => 'users.php',
+                        'coordinators' => 'coordinators.php',
+                        'departments' => 'departments.php',
+                        'judging' => 'judging.php',
+                        'review' => 'reviewApprove.php',
+                        'leaderboard' => 'topProjects.php',
+                        'students' => 'studentList.php',
+                    ];
+
+                    $url = null;
+                    foreach ($pageMap as $key => $val) {
+                        if (strpos($page, $key) !== false) {
+                            if (is_array($val)) {
+                                $url = $val[$role] ?? $val['default'] ?? array_values($val)[0];
+                            } else {
+                                $url = $val;
+                            }
+                            break;
+                        }
+                    }
+
+                    if ($url && isset($_SESSION['user_id'])) {
+                        $response['reply'] = "🔗 Opening **" . ucwords($page) . "**...";
+                        $response['action'] = 'redirect';
+                        $response['redirect_url'] = $url;
+                    } elseif (!isset($_SESSION['user_id'])) {
+                        $response['reply'] = "Please login first to access pages.";
+                        $response['suggestions'] = getChatSuggestions();
+                    } else {
+                        $response['reply'] = "I couldn't find that page. Try **help** to see available commands.";
+                        $response['suggestions'] = getChatSuggestions($role);
+                    }
+                }
+
                 // --- General Queries (Fallback) ---
                 else {
                     if (preg_match('/(hi|hello|hey|greetings|howdy|sup|yo)/', $lowerMsg)) {
@@ -333,21 +1502,7 @@ switch ($action) {
                             "Hi $user! Need help with SPARK'26?"
                         ];
                         $response['reply'] = $greetings[array_rand($greetings)];
-                        if (isset($_SESSION['user_id'])) {
-                            $response['suggestions'] = [
-                                ['icon' => 'ri-team-line', 'text' => 'Create Team'],
-                                ['icon' => 'ri-calendar-line', 'text' => 'Schedule'],
-                                ['icon' => 'ri-compass-line', 'text' => 'Tracks'],
-                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
-                            ];
-                        } else {
-                            $response['suggestions'] = [
-                                ['icon' => 'ri-user-add-line', 'text' => 'Register'],
-                                ['icon' => 'ri-login-box-line', 'text' => 'Login'],
-                                ['icon' => 'ri-calendar-line', 'text' => 'Schedule'],
-                                ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
-                            ];
-                        }
+                        $response['suggestions'] = getChatSuggestions($_SESSION['role'] ?? null);
                     } elseif (preg_match('/(thank|thanks|thx)/', $lowerMsg)) {
                         $response['reply'] = "You're welcome! Let me know if you need anything else. 😊";
                         $response['suggestions'] = [
@@ -355,31 +1510,57 @@ switch ($action) {
                             ['icon' => 'ri-compass-line', 'text' => 'Tracks'],
                             ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
                         ];
-                    } elseif (preg_match('/(help|what can you do|options|menu)/', $lowerMsg)) {
-                        $response['reply'] = "Here's what I can do:\n• **Register** — Create a new account\n• **Login** — Sign in to your account\n• **Create Team** — Start a new team\n• **Join Team** — Join with invite code\n• **Invite** — Invite a member\n• **Schedule** — View event timeline\n• **Tracks** — Browse project tracks";
-                        if (isset($_SESSION['user_id'])) {
-                            $response['suggestions'] = [
-                                ['icon' => 'ri-team-line', 'text' => 'Create Team'],
-                                ['icon' => 'ri-group-line', 'text' => 'Join Team'],
-                                ['icon' => 'ri-mail-send-line', 'text' => 'Invite'],
-                                ['icon' => 'ri-calendar-line', 'text' => 'Schedule']
-                            ];
+                    } elseif (preg_match('/(help|what can you do|options|menu|command)/', $lowerMsg)) {
+                        $helpRole = $_SESSION['role'] ?? null;
+                        $helpBase = "Here's what I can do:\n";
+                        if (!isset($_SESSION['user_id'])) {
+                            $helpBase .= "• **Register** — Create a new account\n"
+                                . "• **Login** — Sign in to your account\n"
+                                . "• **Schedule** — View event timeline\n"
+                                . "• **Tracks** — Browse project tracks\n"
+                                . "• **Guidelines** — View submission rules";
                         } else {
-                            $response['suggestions'] = [
-                                ['icon' => 'ri-user-add-line', 'text' => 'Register'],
-                                ['icon' => 'ri-login-box-line', 'text' => 'Login'],
-                                ['icon' => 'ri-calendar-line', 'text' => 'Schedule'],
-                                ['icon' => 'ri-compass-line', 'text' => 'Tracks']
-                            ];
+                            $helpBase .= "• **My Profile** — View your profile\n"
+                                . "• **My Stats** — View your dashboard\n"
+                                . "• **Schedule** — View event timeline\n"
+                                . "• **Announcements** — Recent announcements\n"
+                                . "• **Messages** — Check your inbox\n"
+                                . "• **Guidelines** — Submission rules\n"
+                                . "• **Top Projects** — View leaderboard\n";
+                            if ($helpRole === 'student') {
+                                $helpBase .= "\n**Student Commands:**\n"
+                                    . "• **My Projects** — View your projects\n"
+                                    . "• **My Team** — View team info\n"
+                                    . "• **Submit Project** — Open submission form\n"
+                                    . "• **Create Team** / **Join Team** / **Invite**";
+                            } elseif ($helpRole === 'departmentcoordinator') {
+                                $helpBase .= "\n**Coordinator Commands:**\n"
+                                    . "• **Pending Reviews** — Review projects\n"
+                                    . "• **Approve [ID]** / **Reject [ID]** — Review by ID\n"
+                                    . "• **Department Stats** — Department overview\n"
+                                    . "• **Students** — Student list\n"
+                                    . "• **Teams** — Department teams\n"
+                                    . "• **Judging** — Scoring progress";
+                            } elseif (in_array($helpRole, ['admin', 'studentaffairs'])) {
+                                $helpBase .= "\n**Admin Commands:**\n"
+                                    . "• **All Projects** — Project overview\n"
+                                    . "• **Analytics** — System statistics\n"
+                                    . "• **Approvals** — Review summary\n"
+                                    . "• **Coordinators** — View coordinators\n"
+                                    . "• **Departments** — Department overview\n"
+                                    . "• **Judging** — Scoring progress\n"
+                                    . "• **Create Announcement** — Post announcement\n"
+                                    . "• **Send Message** — Message a user";
+                            }
+                            $helpBase .= "\n\n• **Go to [page]** — Navigate to any page\n"
+                                . "• **Logout** — Sign out";
                         }
-                    } elseif (strpos($lowerMsg, 'schedule') !== false || strpos($lowerMsg, 'date') !== false || strpos($lowerMsg, 'when') !== false) {
-                        $response['reply'] = "📅 SPARK'26 is scheduled for **Feb 15, 2026**. Let me scroll you to the timeline!";
+                        $response['reply'] = $helpBase;
+                        $response['suggestions'] = getChatSuggestions($helpRole);
+                    } elseif (strpos($lowerMsg, 'date') !== false || strpos($lowerMsg, 'when') !== false) {
+                        $response['reply'] = "📅 SPARK'26 is scheduled for **Feb 15, 2026**. Type **schedule** for the full timeline!";
                         $response['action'] = 'scroll_schedule';
-                        $response['suggestions'] = [
-                            ['icon' => 'ri-compass-line', 'text' => 'Tracks'],
-                            ['icon' => 'ri-team-line', 'text' => 'Create Team'],
-                            ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
-                        ];
+                        $response['suggestions'] = getChatSuggestions($_SESSION['role'] ?? null);
                     } elseif (strpos($lowerMsg, 'track') !== false || strpos($lowerMsg, 'topic') !== false || strpos($lowerMsg, 'domain') !== false) {
                         $response['reply'] = "We have 5 tracks: **AI/ML**, **Software Dev**, **HealthTech**, **Green Energy**, and **Open Innovation**. Let me show you!";
                         $response['action'] = 'scroll_tracks';
@@ -400,15 +1581,13 @@ switch ($action) {
                     } else {
                         $fallbacks = [
                             "I'm not sure I understand that. Try saying **help** to see what I can do!",
-                            "Hmm, I didn't catch that. You can ask me about **registration**, **login**, **teams**, or the **schedule**.",
-                            "I'm still learning! Try commands like **Register**, **Login**, **Create Team**, or **Schedule**."
+                            "Hmm, I didn't catch that. Type **help** to see all available commands.",
+                            "I'm still learning! Say **help** to see everything I can do for you."
                         ];
                         $response['reply'] = $fallbacks[array_rand($fallbacks)];
-                        $response['suggestions'] = [
-                            ['icon' => 'ri-questionnaire-line', 'text' => 'Help'],
-                            ['icon' => 'ri-calendar-line', 'text' => 'Schedule'],
-                            ['icon' => 'ri-compass-line', 'text' => 'Tracks']
-                        ];
+                        $response['suggestions'] = getChatSuggestions($_SESSION['role'] ?? null);
+                        // Keep this line to prevent overwrite below
+                        $response['suggestions'] = getChatSuggestions($_SESSION['role'] ?? null);
                     }
                 }
                 break;
@@ -829,6 +2008,139 @@ switch ($action) {
                         }
                     }
                 }
+                break;
+
+            // ==========================================
+            // REVIEW PROJECT CONFIRM FLOW
+            // ==========================================
+            case 'REVIEW_CONFIRM':
+                $projectId = $_SESSION['chat_data']['project_id'];
+                $title = $_SESSION['chat_data']['project_title'];
+                $decision = $_SESSION['chat_data']['decision'];
+                $reviewerId = $_SESSION['user_id'];
+
+                $comment = (in_array($lowerMsg, ['skip', 'no', 'none'])) ? '' : $message;
+
+                $stmt = mysqli_prepare($conn, "UPDATE projects SET status = ?, reviewed_by = ?, review_comments = ?, reviewed_at = NOW() WHERE id = ?");
+                mysqli_stmt_bind_param($stmt, "sisi", $decision, $reviewerId, $comment, $projectId);
+
+                if (mysqli_stmt_execute($stmt)) {
+                    $icon = $decision === 'approved' ? '✅' : '❌';
+                    $response['reply'] = "$icon Project **$title** has been **$decision** successfully!";
+                    if ($comment) {
+                        $response['reply'] .= "\nComment: $comment";
+                    }
+                } else {
+                    $response['reply'] = "Failed to update project. Please try again.";
+                }
+                mysqli_stmt_close($stmt);
+
+                $_SESSION['chat_state'] = 'IDLE';
+                $_SESSION['chat_data'] = [];
+                $response['suggestions'] = [
+                    ['icon' => 'ri-checkbox-circle-line', 'text' => 'Pending Reviews'],
+                    ['icon' => 'ri-bar-chart-line', 'text' => 'Department Stats'],
+                    ['icon' => 'ri-questionnaire-line', 'text' => 'Help']
+                ];
+                break;
+
+            // ==========================================
+            // SEND MESSAGE FLOW
+            // ==========================================
+            case 'MSG_ASK_RECIPIENT':
+                $email = trim($message);
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $response['reply'] = "That doesn't look like a valid email. Please enter a valid **email address**.";
+                } else {
+                    $stmt = mysqli_prepare($conn, "SELECT id, name FROM users WHERE email = ?");
+                    mysqli_stmt_bind_param($stmt, "s", $email);
+                    mysqli_stmt_execute($stmt);
+                    $recipient = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+                    mysqli_stmt_close($stmt);
+
+                    if (!$recipient) {
+                        $response['reply'] = "No user found with that email. Please try again.";
+                    } else {
+                        $_SESSION['chat_data']['recipient_id'] = $recipient['id'];
+                        $_SESSION['chat_data']['recipient_name'] = $recipient['name'];
+                        $_SESSION['chat_state'] = 'MSG_ASK_SUBJECT';
+                        $response['reply'] = "Messaging **" . $recipient['name'] . "**. What is the **Subject**?";
+                    }
+                }
+                break;
+
+            case 'MSG_ASK_SUBJECT':
+                $_SESSION['chat_data']['subject'] = $message;
+                $_SESSION['chat_state'] = 'MSG_ASK_BODY';
+                $response['reply'] = "Subject: **$message**\nNow type your **message**.";
+                break;
+
+            case 'MSG_ASK_BODY':
+                $senderId = $_SESSION['user_id'];
+                $recipientId = $_SESSION['chat_data']['recipient_id'];
+                $subject = $_SESSION['chat_data']['subject'];
+                $body = $message;
+
+                $stmt = mysqli_prepare($conn, "INSERT INTO messages (sender_id, recipient_id, subject, message) VALUES (?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt, "iiss", $senderId, $recipientId, $subject, $body);
+
+                if (mysqli_stmt_execute($stmt)) {
+                    $response['reply'] = "✅ Message sent to **" . $_SESSION['chat_data']['recipient_name'] . "** successfully!";
+                } else {
+                    $response['reply'] = "Failed to send message. Please try again.";
+                }
+                mysqli_stmt_close($stmt);
+
+                $_SESSION['chat_state'] = 'IDLE';
+                $_SESSION['chat_data'] = [];
+                $response['suggestions'] = getChatSuggestions($_SESSION['role'] ?? null);
+                break;
+
+            // ==========================================
+            // CREATE ANNOUNCEMENT FLOW
+            // ==========================================
+            case 'ANN_ASK_TITLE':
+                $_SESSION['chat_data']['ann_title'] = $message;
+                $_SESSION['chat_state'] = 'ANN_ASK_MSG';
+                $response['reply'] = "Title: **$message**\nNow type the **announcement message**.";
+                break;
+
+            case 'ANN_ASK_MSG':
+                $_SESSION['chat_data']['ann_message'] = $message;
+                $_SESSION['chat_state'] = 'ANN_ASK_TARGET';
+                $response['reply'] = "Who should see this announcement?";
+                $response['options'] = ['All', 'Students', 'Coordinators', 'Student Affairs'];
+                break;
+
+            case 'ANN_ASK_TARGET':
+                $targetMap = [
+                    'all' => 'all',
+                    'students' => 'student',
+                    'student' => 'student',
+                    'coordinators' => 'departmentcoordinator',
+                    'coordinator' => 'departmentcoordinator',
+                    'student affairs' => 'studentaffairs',
+                    'studentaffairs' => 'studentaffairs'
+                ];
+                $target = $targetMap[$lowerMsg] ?? 'all';
+
+                $annTitle = $_SESSION['chat_data']['ann_title'];
+                $annMsg = $_SESSION['chat_data']['ann_message'];
+                $authorId = $_SESSION['user_id'];
+
+                $stmt = mysqli_prepare($conn, "INSERT INTO announcements (title, message, author_id, target_role, is_featured) VALUES (?, ?, ?, ?, 0)");
+                mysqli_stmt_bind_param($stmt, "ssis", $annTitle, $annMsg, $authorId, $target);
+
+                if (mysqli_stmt_execute($stmt)) {
+                    $response['reply'] = "📢 Announcement **$annTitle** posted successfully!";
+                } else {
+                    $response['reply'] = "Failed to post announcement. Please try again.";
+                }
+                mysqli_stmt_close($stmt);
+
+                $_SESSION['chat_state'] = 'IDLE';
+                $_SESSION['chat_data'] = [];
+                $response['suggestions'] = getChatSuggestions($_SESSION['role'] ?? null);
                 break;
         }
 
