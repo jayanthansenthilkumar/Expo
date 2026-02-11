@@ -168,6 +168,9 @@ if ($tablesResult) {
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -236,7 +239,14 @@ if ($tablesResult) {
                     <div class="db-tables-section">
                         <h3>Database Tables</h3>
                         <div class="table-container">
-                            <table class="data-table">
+                            <div class="table-export-bar">
+                                <span class="export-label">Export</span>
+                                <div class="export-btn-group" data-table="dbTablesTable" data-filename="Database_Tables">
+                                    <button class="export-btn export-pdf-btn" title="Download as PDF"><i class="ri-file-pdf-2-line"></i> <span>PDF</span></button>
+                                    <button class="export-btn export-excel-btn" title="Download as Excel"><i class="ri-file-excel-2-line"></i> <span>Excel</span></button>
+                                </div>
+                            </div>
+                            <table class="data-table" id="dbTablesTable">
                                 <thead>
                                     <tr>
                                         <th>Table Name</th>
@@ -266,6 +276,7 @@ if ($tablesResult) {
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script src="assets/js/tableExport.js"></script>
     <script>
         // Available tables for export picker
         const tableNames = <?php echo json_encode(array_column($tables, 'name')); ?>;

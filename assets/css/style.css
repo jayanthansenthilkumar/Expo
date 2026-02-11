@@ -1610,120 +1610,6 @@ ul {
   font-size: 1.25rem;
 }
 
-/* Sidebar Dropdown Styles */
-.sidebar-dropdown {
-  margin-bottom: 0.1rem; /* minimal spacing */
-}
-
-.dropdown-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem; /* Same as menu-item */
-  color: var(--text-muted);
-  border-radius: 8px;
-  font-weight: 500; /* Match menu-item weight */
-  cursor: pointer;
-  transition: all 0.2s;
-  user-select: none;
-  width: 100%;
-  background: transparent;
-  text-decoration: none;
-}
-
-.dropdown-header:hover {
-  background: var(--bg-surface);
-  color: var(--primary);
-}
-
-.sidebar-dropdown.open .dropdown-header {
-  color: var(--primary);
-  font-weight: 600; /* Highlight active parent */
-  background: rgba(37, 99, 235, 0.05);
-}
-
-.dropdown-header span {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem; /* Match menu-item gap */
-  color: inherit;
-  font-size: 1rem; /* Explicit size */
-}
-
-.dropdown-header span i {
-  font-size: 1.25rem; /* Match menu-item icon size */
-  width: 24px; /* Fixed width for alignment */
-  text-align: center;
-}
-
-.dropdown-toggle-icon {
-  transition: transform 0.3s ease;
-  font-size: 1.1rem;
-  color: inherit;
-  opacity: 0.7;
-}
-
-.sidebar-dropdown.open .dropdown-toggle-icon {
-  transform: rotate(180deg);
-  opacity: 1;
-}
-
-.dropdown-content {
-  display: none;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
-}
-
-.sidebar-dropdown.open .dropdown-content {
-  display: block;
-}
-
-.dropdown-content .menu-item {
-  font-size: 0.9rem;
-  padding: 0.5rem 1rem 0.5rem 3.5rem; /* Indent text to align with parent text (icon width + gap + padding) */
-  background: transparent;
-  margin-bottom: 0;
-}
-
-.dropdown-content .menu-item:hover {
-  color: var(--primary);
-  background: transparent; /* specific hover for clean look? Or keep surface */
-  background: var(--bg-surface); /* Keep consistent */
-}
-
-.dropdown-content .menu-item i {
-  font-size: 1rem;
-  position: absolute;
-  left: 2rem; /* Position icon in the indentation space */
-  width: 20px;
-  text-align: center;
-  opacity: 0.8;
-}
-
-/* Update general menu-item style to support relative positioning for the icon in dropdowns if needed, 
-   but cleaner to just let flex handle if not using absolute. 
-   Let's stick to flex indentation. */
-.dropdown-content .menu-item {
-  padding-left: 2.75rem; /* Indent past the parent icon */
-  position: relative;
-}
-
-.dropdown-content .menu-item i {
-  font-size: 1.1rem;
-  position: absolute;
-  left: 1rem; /* Align under parent icon? No, indented. */
-  left: 1.25rem;
-  /* Actually, simpler: just flex with gap */
-  position: static;
-  font-size: 1rem;
-}
-
-/* Resetting to simple flex for submenu */
-.dropdown-content .menu-item {
-  padding-left: 2.5rem; /* Visual indentation */
-  justify-content: flex-start;
-}
 .sidebar-footer {
   padding: 1rem;
   border-top: 1px solid var(--border);
@@ -2329,7 +2215,8 @@ ul {
 }
 
 /* Table Styles */
-.table-container {
+.table-container,
+.table-responsive {
   background: white;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
@@ -3200,6 +3087,18 @@ ul {
   padding: 1.5rem;
 }
 
+.judges-panel .table-container {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  margin-top: 0.75rem;
+  overflow: hidden;
+}
+
+.judges-panel .table-container .table-export-bar {
+  border-radius: 0;
+}
+
 .judging-progress {
   background: white;
   border-radius: var(--radius-md);
@@ -3363,6 +3262,16 @@ ul {
   border: 1px solid var(--border);
 }
 
+.approval-list .table-container {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.approval-list .table-container .table-export-bar {
+  border-radius: 0;
+}
+
 .stat-icon.red {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
@@ -3380,6 +3289,22 @@ ul {
   background: white;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
+}
+
+.review-queue .table-responsive {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.review-queue .table-responsive .table-export-bar {
+  border-radius: 0;
+}
+
+.review-queue .empty-state,
+.approval-list .empty-state {
+  border: none;
+  border-radius: 0;
 }
 
 /* Messages Styles */
@@ -5366,7 +5291,8 @@ ul {
    DATA TABLE MOBILE SCROLLABLE
    ==================================== */
 @media (max-width: 768px) {
-  .table-container {
+  .table-container,
+  .table-responsive {
     position: relative;
   }
 
@@ -5374,8 +5300,9 @@ ul {
     min-width: 600px;
   }
 
-  .table-container::after {
-    content: "← Scroll →";
+  .table-container::after,
+  .table-responsive::after {
+    content: "\2190 Scroll \2192";
     display: block;
     text-align: center;
     font-size: 0.7rem;
@@ -5383,6 +5310,8 @@ ul {
     padding: 0.5rem 0;
     background: var(--bg-surface);
     border-top: 1px solid var(--border);
+    position: sticky;
+    left: 0;
   }
 }
 
@@ -5435,4 +5364,121 @@ ul {
     height: 36px;
     font-size: 0.8rem;
   }
+}
+
+/* ========== Table Export Buttons ========== */
+.table-export-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0.5rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-surface);
+    gap: 0.5rem;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+}
+
+.table-export-bar .export-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-right: 0.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.export-btn-group {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    font-family: inherit;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.export-btn i {
+    font-size: 0.92rem;
+    line-height: 1;
+}
+
+.export-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.export-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.export-pdf-btn {
+    color: #b91c1c;
+    border-color: #fecaca;
+    background: #fff5f5;
+}
+
+.export-pdf-btn:hover {
+    color: #dc2626;
+    border-color: #f87171;
+    background: #fee2e2;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.1);
+}
+
+.export-excel-btn {
+    color: #15803d;
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.export-excel-btn:hover {
+    color: #16a34a;
+    border-color: #4ade80;
+    background: #dcfce7;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.1);
+}
+
+@media (max-width: 768px) {
+    .table-export-bar {
+        padding: 0.4rem 0.75rem;
+    }
+    .export-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.74rem;
+        gap: 0.25rem;
+    }
+    .export-btn i {
+        font-size: 0.85rem;
+    }
+    .table-export-bar .export-label {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .export-btn span,
+    .export-btn-text {
+        display: none;
+    }
+    .export-btn {
+        padding: 0.32rem 0.5rem;
+    }
 }

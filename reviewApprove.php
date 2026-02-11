@@ -120,6 +120,9 @@ unset($_SESSION['success'], $_SESSION['error']);
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -186,7 +189,14 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </div>
                     <?php else: ?>
                         <div class="table-responsive">
-                            <table class="data-table">
+                            <div class="table-export-bar">
+                                <span class="export-label">Export</span>
+                                <div class="export-btn-group" data-table="pendingReviewTable" data-filename="Pending_Review_Projects">
+                                    <button class="export-btn export-pdf-btn" title="Download as PDF"><i class="ri-file-pdf-2-line"></i> <span>PDF</span></button>
+                                    <button class="export-btn export-excel-btn" title="Download as Excel"><i class="ri-file-excel-2-line"></i> <span>Excel</span></button>
+                                </div>
+                            </div>
+                            <table class="data-table" id="pendingReviewTable">
                                 <thead>
                                     <tr>
                                         <th>Title</th>
@@ -234,7 +244,14 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </div>
                     <?php else: ?>
                         <div class="table-responsive">
-                            <table class="data-table">
+                            <div class="table-export-bar">
+                                <span class="export-label">Export</span>
+                                <div class="export-btn-group" data-table="approvedProjectsTable" data-filename="Approved_Projects">
+                                    <button class="export-btn export-pdf-btn" title="Download as PDF"><i class="ri-file-pdf-2-line"></i> <span>PDF</span></button>
+                                    <button class="export-btn export-excel-btn" title="Download as Excel"><i class="ri-file-excel-2-line"></i> <span>Excel</span></button>
+                                </div>
+                            </div>
+                            <table class="data-table" id="approvedProjectsTable">
                                 <thead>
                                     <tr>
                                         <th>Title</th>
@@ -281,7 +298,14 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </div>
                     <?php else: ?>
                         <div class="table-responsive">
-                            <table class="data-table">
+                            <div class="table-export-bar">
+                                <span class="export-label">Export</span>
+                                <div class="export-btn-group" data-table="rejectedProjectsTable" data-filename="Rejected_Projects">
+                                    <button class="export-btn export-pdf-btn" title="Download as PDF"><i class="ri-file-pdf-2-line"></i> <span>PDF</span></button>
+                                    <button class="export-btn export-excel-btn" title="Download as Excel"><i class="ri-file-excel-2-line"></i> <span>Excel</span></button>
+                                </div>
+                            </div>
+                            <table class="data-table" id="rejectedProjectsTable">
                                 <thead>
                                     <tr>
                                         <th>Title</th>
@@ -319,6 +343,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 
     <script src="assets/js/script.js"></script>
+    <script src="assets/js/tableExport.js"></script>
     <script>
         function openReviewModal(projectId, title, description, student, category, department, github, team) {
             const githubHtml = github

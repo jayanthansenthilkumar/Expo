@@ -121,68 +121,24 @@ if (session_status() === PHP_SESSION_NONE) {
                 Home
             </a>
         <?php else: ?>
-            <?php if ($user_role === 'admin'): ?>
-                <!-- Dropdown Menu for Admin Only -->
-                <?php foreach ($role_menu as $label => $items): ?>
-                    <?php
-                    // Check if one of the items is active to expand the dropdown by default
-                    $categoryActive = false;
-                    foreach ($items as $item) {
-                        if ($current_page === $item['link']) {
-                            $categoryActive = true;
-                            break;
-                        }
-                    }
-                    ?>
-                    <div class="sidebar-dropdown <?php echo $categoryActive ? 'open' : ''; ?>">
-                        <a href="#" class="dropdown-header" onclick="toggleDropdown(this); return false;">
-                            <span>
-                                <i class="ri-folder-3-line" style="font-size:1.1rem;"></i>
-                                <?php echo htmlspecialchars($label); ?>
-                            </span>
-                            <i class="ri-arrow-down-s-line dropdown-toggle-icon"></i>
-                        </a>
-                        <div class="dropdown-content">
-                            <?php foreach ($items as $item):
-                                $active = ($current_page === $item['link']) ? 'active' : '';
-                                ?>
-                                <a href="<?php echo htmlspecialchars($item['link']); ?>" class="menu-item <?php echo $active; ?>">
-                                    <i class="<?php echo htmlspecialchars($item['icon']); ?>" style="font-size:1.1rem;"></i>
-                                    <?php echo htmlspecialchars($item['text']); ?>
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <!-- Standard Flat Menu for Other Roles -->
-                <?php foreach ($role_menu as $label => $items): ?>
-                    <?php if (count($items) > 0): ?>
-                        <!-- Only show label if there are items, for cleanliness -->
-                        <?php if (!is_numeric($label)): ?>
-                            <div class="menu-label"><?php echo htmlspecialchars($label); ?></div>
-                        <?php endif; ?>
-
-                        <?php foreach ($items as $item):
-                            $active = ($current_page === $item['link']) ? 'active' : '';
-                            ?>
-                            <a href="<?php echo htmlspecialchars($item['link']); ?>" class="menu-item <?php echo $active; ?>">
-                                <i class="<?php echo htmlspecialchars($item['icon']); ?>" style="font-size:1.1rem;"></i>
-                                <?php echo htmlspecialchars($item['text']); ?>
-                            </a>
-                        <?php endforeach; ?>
+            <?php foreach ($role_menu as $label => $items): ?>
+                <?php if (count($items) > 0): ?>
+                    <?php if (!is_numeric($label)): ?>
+                        <div class="menu-label"><?php echo htmlspecialchars($label); ?></div>
                     <?php endif; ?>
-                <?php endforeach; ?>
-            <?php endif; ?>
+
+                    <?php foreach ($items as $item):
+                        $active = ($current_page === $item['link']) ? 'active' : '';
+                        ?>
+                        <a href="<?php echo htmlspecialchars($item['link']); ?>" class="menu-item <?php echo $active; ?>">
+                            <i class="<?php echo htmlspecialchars($item['icon']); ?>" style="font-size:1.1rem;"></i>
+                            <?php echo htmlspecialchars($item['text']); ?>
+                        </a>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            <?php endforeach; ?>
         <?php endif; ?>
     </nav>
-    <script>
-        function toggleDropdown(element) {
-            // Toggle the open class on the parent .sidebar-dropdown
-            const dropdown = element.closest('.sidebar-dropdown');
-            dropdown.classList.toggle('open');
-        }
-    </script>
 
     <!-- <div class="sidebar-footer">
     </div> -->
