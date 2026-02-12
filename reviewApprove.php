@@ -52,8 +52,6 @@ if ($filterByDept) {
     $rejectedCount = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as cnt FROM projects WHERE status = 'rejected'"))['cnt'];
 }
 
-$underReviewCount = 0;
-
 // Fetch pending projects with student name
 if ($filterByDept) {
     $stmt = mysqli_prepare($conn, "SELECT p.*, u.name AS student_name FROM projects p LEFT JOIN users u ON p.student_id = u.id WHERE p.status = 'pending' AND p.department IN ($dp) ORDER BY p.created_at DESC");
@@ -117,12 +115,62 @@ unset($_SESSION['success'], $_SESSION['error']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review & Approve | SPARK'26</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=2">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .review-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0;
+        }
+        .review-tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .review-tab:hover {
+            color: #1e293b;
+            background: #f8fafc;
+            border-radius: 8px 8px 0 0;
+        }
+        .review-tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+            font-weight: 600;
+        }
+        .tab-badge {
+            font-size: 0.75rem;
+            padding: 0.15rem 0.55rem;
+            border-radius: 10px;
+            font-weight: 600;
+            line-height: 1;
+        }
+        .badge-amber { background: #fef3c7; color: #92400e; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-red { background: #fef2f2; color: #991b1b; }
+        .review-tab-content {
+            display: none;
+        }
+        .review-tab-content.active {
+            display: block;
+        }
+    </style>
 </head>
 
 <body>
@@ -148,15 +196,6 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon blue">
-                            <i class="ri-eye-line"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3><?php echo $underReviewCount; ?></h3>
-                            <p>Under Review</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
                         <div class="stat-icon green">
                             <i class="ri-checkbox-circle-line"></i>
                         </div>
@@ -176,10 +215,21 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </div>
                 </div>
 
-                <div class="content-header">
-                    <h2>Projects Pending Review</h2>
+                <!-- Tabs -->
+                <div class="review-tabs">
+                    <button class="review-tab active" data-tab="pending" onclick="switchTab('pending')">
+                        <i class="ri-time-line"></i> Pending <span class="tab-badge badge-amber"><?php echo $pendingCount; ?></span>
+                    </button>
+                    <button class="review-tab" data-tab="approved" onclick="switchTab('approved')">
+                        <i class="ri-checkbox-circle-line"></i> Approved <span class="tab-badge badge-green"><?php echo $approvedCount; ?></span>
+                    </button>
+                    <button class="review-tab" data-tab="rejected" onclick="switchTab('rejected')">
+                        <i class="ri-close-circle-line"></i> Rejected <span class="tab-badge badge-red"><?php echo $rejectedCount; ?></span>
+                    </button>
                 </div>
 
+                <!-- Pending Tab -->
+                <div class="review-tab-content active" id="tab-pending">
                 <div class="review-queue">
                     <?php if (empty($pendingProjects)): ?>
                         <div class="empty-state">
@@ -228,13 +278,10 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </div>
                     <?php endif; ?>
                 </div>
-
-                <!-- Review modal handled via SweetAlert -->
-
-                <!-- Approved Projects -->
-                <div class="content-header" style="margin-top:2rem;">
-                    <h2>Approved Projects</h2>
                 </div>
+
+                <!-- Approved Tab -->
+                <div class="review-tab-content" id="tab-approved">
                 <div class="review-queue">
                     <?php if (empty($approvedProjects)): ?>
                         <div class="empty-state">
@@ -284,11 +331,10 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </div>
                     <?php endif; ?>
                 </div>
-
-                <!-- Rejected Projects -->
-                <div class="content-header" style="margin-top:2rem;">
-                    <h2>Rejected Projects</h2>
                 </div>
+
+                <!-- Rejected Tab -->
+                <div class="review-tab-content" id="tab-rejected">
                 <div class="review-queue">
                     <?php if (empty($rejectedProjects)): ?>
                         <div class="empty-state">
@@ -338,13 +384,21 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </div>
                     <?php endif; ?>
                 </div>
+                </div>
             </div>
         </main>
     </div>
 
     <script src="assets/js/script.js"></script>
-    <script src="assets/js/tableExport.js"></script>
+    <script src="assets/js/tableExport.js?v=2"></script>
     <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.review-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.review-tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`.review-tab[data-tab="${tab}"]`).classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
         function openReviewModal(projectId, title, description, student, category, department, github, team) {
             const githubHtml = github
                 ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#2563eb;">${escapeHtml(github)}</a></p>`

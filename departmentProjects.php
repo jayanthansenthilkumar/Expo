@@ -47,10 +47,11 @@ $totalProjects = $countStmt->get_result()->fetch_assoc()['total'];
 $totalPages = max(1, ceil($totalProjects / $perPage));
 $countStmt->close();
 
-// Fetch projects with student name
-$sql = "SELECT p.*, u.name AS student_name
+// Fetch projects with student name and team name
+$sql = "SELECT p.*, u.name AS student_name, t.team_name AS team_name
         FROM projects p
         LEFT JOIN users u ON p.student_id = u.id
+        LEFT JOIN teams t ON p.team_id = t.id
         $where
         ORDER BY p.created_at DESC
         LIMIT ? OFFSET ?";
@@ -76,7 +77,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Department Projects | SPARK'26</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=2">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
@@ -138,7 +139,11 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                             <tr>
                                 <th>Project Name</th>
                                 <th>Team Lead</th>
+                                <th>Team Name</th>
                                 <th>Category</th>
+                                <th>Description</th>
+                                <th>GitHub</th>
+                                <th>File</th>
                                 <th>Status</th>
                                 <th>Submitted</th>
                                 <th>Actions</th>
@@ -147,7 +152,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                         <tbody>
                             <?php if (empty($projects)): ?>
                                 <tr>
-                                    <td colspan="6" class="empty-table">
+                                    <td colspan="10" class="empty-table">
                                         <i class="ri-folder-open-line"></i>
                                         <p>No projects in your department yet</p>
                                     </td>
@@ -157,7 +162,28 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                                     <tr>
                                         <td><?php echo htmlspecialchars($project['title']); ?></td>
                                         <td><?php echo htmlspecialchars($project['student_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($project['team_name'] ?? 'N/A'); ?></td>
                                         <td><?php echo htmlspecialchars($project['category']); ?></td>
+                                        <td title="<?php echo htmlspecialchars($project['description'] ?? ''); ?>">
+                                            <?php
+                                            $desc = $project['description'] ?? '';
+                                            echo htmlspecialchars(mb_strlen($desc) > 60 ? mb_substr($desc, 0, 60) . '...' : $desc);
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <?php if (!empty($project['github_link'])): ?>
+                                                <a href="<?php echo htmlspecialchars($project['github_link']); ?>" target="_blank" title="<?php echo htmlspecialchars($project['github_link']); ?>" style="color:#2563eb;"><i class="ri-github-line"></i> Repo</a>
+                                            <?php else: ?>
+                                                <span style="color:#94a3b8;">—</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if (!empty($project['file_path'])): ?>
+                                                <a href="javascript:void(0)" onclick="viewPdf('<?php echo htmlspecialchars($project['file_path'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($project['title'], ENT_QUOTES); ?>')" title="View PDF" style="color:#2563eb;cursor:pointer;"><i class="ri-file-pdf-2-line"></i> PDF</a>
+                                            <?php else: ?>
+                                                <span style="color:#94a3b8;">—</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><span
                                                 class="status-badge status-<?php echo htmlspecialchars($project['status']); ?>"><?php echo ucfirst(htmlspecialchars($project['status'])); ?></span>
                                         </td>
@@ -195,7 +221,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
     </div>
 
     <script src="assets/js/script.js"></script>
-    <script src="assets/js/tableExport.js"></script>
+    <script src="assets/js/tableExport.js?v=2"></script>
     <script>
         <?php if ($flashMessage): ?>
             Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
@@ -274,8 +300,19 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                                     <p style="color:#334155;font-weight:500;">${escapeHtml(project.student_name || 'Unknown')}</p>
                                 </div>
                                 <div>
-                                     <label style="display:block;font-weight:600;font-size:0.8rem;color:#64748b;margin-bottom:0.25rem;text-transform:uppercase;">Links</label>
-                                     ${project.github_link ? `<a href="${escapeHtml(project.github_link)}" target="_blank" style="color:#2563eb;text-decoration:none;font-weight:500;"><i class="ri-github-line"></i> GitHub Repository</a>` : '<span style="color:#94a3b8;">No links provided</span>'}
+                                    <label style="display:block;font-weight:600;font-size:0.8rem;color:#64748b;margin-bottom:0.25rem;text-transform:uppercase;">Team Name</label>
+                                    <p style="color:#334155;font-weight:500;">${escapeHtml(project.team_name || 'N/A')}</p>
+                                </div>
+                            </div>
+
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.25rem;">
+                                <div>
+                                     <label style="display:block;font-weight:600;font-size:0.8rem;color:#64748b;margin-bottom:0.25rem;text-transform:uppercase;">GitHub Repository</label>
+                                     ${project.github_link ? `<a href="${escapeHtml(project.github_link)}" target="_blank" style="color:#2563eb;text-decoration:none;font-weight:500;"><i class="ri-github-line"></i> ${escapeHtml(project.github_link)}</a>` : '<span style="color:#94a3b8;">No link provided</span>'}
+                                </div>
+                                <div>
+                                     <label style="display:block;font-weight:600;font-size:0.8rem;color:#64748b;margin-bottom:0.25rem;text-transform:uppercase;">Documentation (PDF)</label>
+                                     ${project.file_path ? `<a href="javascript:void(0)" onclick="Swal.close(); setTimeout(() => viewPdf('${escapeHtml(project.file_path)}', '${escapeHtml(project.title)}'), 300);" style="color:#2563eb;text-decoration:none;font-weight:500;cursor:pointer;"><i class="ri-file-pdf-2-line"></i> View PDF</a>` : '<span style="color:#94a3b8;">No file uploaded</span>'}
                                 </div>
                             </div>
 
@@ -329,6 +366,37 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
             });
         }
 
+        function viewPdf(filePath, title) {
+            const modal = document.getElementById('pdfModal');
+            const pdfTitle = document.getElementById('pdfModalTitle');
+            const pdfEmbed = document.getElementById('pdfModalEmbed');
+            const pdfFallback = document.getElementById('pdfModalFallback');
+            const pdfFallbackLink = document.getElementById('pdfModalFallbackLink');
+
+            pdfTitle.textContent = title || 'Project Documentation';
+            pdfEmbed.src = filePath;
+            pdfFallbackLink.href = filePath;
+
+            // Show fallback after a timeout in case embed fails
+            pdfFallback.style.display = 'none';
+            pdfEmbed.style.display = 'block';
+            pdfEmbed.onerror = function() {
+                pdfEmbed.style.display = 'none';
+                pdfFallback.style.display = 'flex';
+            };
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePdfModal() {
+            const modal = document.getElementById('pdfModal');
+            const pdfEmbed = document.getElementById('pdfModalEmbed');
+            pdfEmbed.src = '';
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -336,6 +404,118 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
             return div.innerHTML;
         }
     </script>
+
+    <!-- PDF Viewer Modal -->
+    <div id="pdfModal" class="pdf-modal-overlay" onclick="if(event.target===this) closePdfModal();">
+        <div class="pdf-modal-container">
+            <div class="pdf-modal-header">
+                <h3 id="pdfModalTitle">Project Documentation</h3>
+                <button class="pdf-modal-close" onclick="closePdfModal()" title="Close">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="pdf-modal-body">
+                <embed id="pdfModalEmbed" src="" type="application/pdf" class="pdf-modal-embed">
+                <div id="pdfModalFallback" class="pdf-modal-fallback" style="display:none;">
+                    <i class="ri-file-pdf-2-line"></i>
+                    <p>Unable to display PDF in the browser.</p>
+                    <a id="pdfModalFallbackLink" href="#" target="_blank" class="btn-primary">
+                        <i class="ri-external-link-line"></i> Open PDF in New Tab
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .pdf-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+        .pdf-modal-overlay.active {
+            display: flex;
+        }
+        .pdf-modal-container {
+            background: #fff;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 950px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        .pdf-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+        .pdf-modal-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pdf-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+            padding: 0.25rem;
+            border-radius: 6px;
+            line-height: 1;
+            transition: all 0.2s;
+        }
+        .pdf-modal-close:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .pdf-modal-body {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        .pdf-modal-embed {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        .pdf-modal-fallback {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 1rem;
+            color: #64748b;
+        }
+        .pdf-modal-fallback i {
+            font-size: 4rem;
+            color: #ef4444;
+        }
+        .pdf-modal-fallback p {
+            margin: 0;
+            font-size: 1rem;
+        }
+    </style>
 
     <?php include 'includes/bot.php'; ?>
 </body>

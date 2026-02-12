@@ -50,7 +50,7 @@ if ($isFE) {
     $fetchParams = array_merge($feFilter['values'], [$perPage, $offset]);
     $stmt = mysqli_prepare($conn, "
         SELECT u.*, 
-            (SELECT COUNT(*) FROM projects WHERE student_id = u.id) AS project_count
+            (SELECT COUNT(*) FROM projects p WHERE p.student_id = u.id OR p.team_id IN (SELECT tm.team_id FROM team_members tm WHERE tm.user_id = u.id)) AS project_count
         FROM users u
         WHERE " . $feFilter['where'] . " AND u.role = 'student'
         ORDER BY u.created_at DESC
@@ -61,7 +61,7 @@ if ($isFE) {
     $fetchParams = array_merge($dv, [$perPage, $offset]);
     $stmt = mysqli_prepare($conn, "
         SELECT u.*, 
-            (SELECT COUNT(*) FROM projects WHERE student_id = u.id) AS project_count
+            (SELECT COUNT(*) FROM projects p WHERE p.student_id = u.id OR p.team_id IN (SELECT tm.team_id FROM team_members tm WHERE tm.user_id = u.id)) AS project_count
         FROM users u
         WHERE u.department IN ($dp) AND u.role = 'student'
         ORDER BY u.created_at DESC
@@ -73,7 +73,7 @@ if ($isFE) {
     $fetchParams = array_merge($dv, $excl['values'], [$perPage, $offset]);
     $stmt = mysqli_prepare($conn, "
         SELECT u.*, 
-            (SELECT COUNT(*) FROM projects WHERE student_id = u.id) AS project_count
+            (SELECT COUNT(*) FROM projects p WHERE p.student_id = u.id OR p.team_id IN (SELECT tm.team_id FROM team_members tm WHERE tm.user_id = u.id)) AS project_count
         FROM users u
         WHERE u.department IN ($dp) AND u.role = 'student' AND " . $excl['where'] . "
         ORDER BY u.created_at DESC
@@ -101,7 +101,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student List | SPARK'26</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=2">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
@@ -204,7 +204,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 
     <script src="assets/js/script.js"></script>
-    <script src="assets/js/tableExport.js"></script>
+    <script src="assets/js/tableExport.js?v=2"></script>
     <script>
         <?php if ($successMsg): ?>
             Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });

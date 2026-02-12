@@ -57,7 +57,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Students | SPARK'26</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=2">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
@@ -196,7 +196,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 
     <script src="assets/js/script.js"></script>
-    <script src="assets/js/tableExport.js"></script>
+    <script src="assets/js/tableExport.js?v=2"></script>
 
     <?php include 'includes/bot.php'; ?>
 </body>

@@ -43,7 +43,7 @@ function checkUserAccess($isPublic = false)
             'users.php', 'students.php', 'departments.php', 'coordinators.php', 
             'schedule.php', 'announcements.php', 'judging.php', 'guidelines.php',
             'settings.php', 'database.php', 'departmentStats.php',
-            'messages.php', 'profile.php', 'logout.php', 'index.php'
+            'messages.php', 'profile.php', 'logout.php', 'index.php', 'teams.php'
         ],
         'departmentcoordinator' => [
             'departmentCoordinator.php', 'departmentStats.php', 'departmentProjects.php', 
@@ -55,7 +55,7 @@ function checkUserAccess($isPublic = false)
             'students.php', 'announcements.php', 'messages.php', 'profile.php', 
             'settings.php', 'logout.php', 'index.php',
             'users.php', 'departments.php', 'coordinators.php', 'schedule.php',
-            'judging.php', 'database.php', 'guidelines.php'
+            'judging.php', 'database.php', 'guidelines.php', 'teams.php'
         ],
         'student' => [
             'studentDashboard.php', 'myProjects.php', 'submitProject.php', 'myTeam.php',

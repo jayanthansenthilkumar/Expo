@@ -48,7 +48,8 @@ $menus = [
             ['link' => 'users.php', 'icon' => 'ri-user-line', 'text' => 'Users'],
             ['link' => 'students.php', 'icon' => 'ri-group-line', 'text' => 'Students'],
             ['link' => 'departments.php', 'icon' => 'ri-building-line', 'text' => 'Departments'],
-            ['link' => 'coordinators.php', 'icon' => 'ri-team-line', 'text' => 'Coordinators']
+            ['link' => 'coordinators.php', 'icon' => 'ri-team-line', 'text' => 'Coordinators'],
+            ['link' => 'teams.php', 'icon' => 'ri-group-2-line', 'text' => 'Teams']
         ],
         'Event' => [
             ['link' => 'schedule.php', 'icon' => 'ri-calendar-line', 'text' => 'Schedule'],
@@ -72,7 +73,8 @@ $menus = [
             ['link' => 'allProjects.php', 'icon' => 'ri-folder-line', 'text' => 'All Projects'],
             ['link' => 'approvals.php', 'icon' => 'ri-checkbox-circle-line', 'text' => 'Approvals'],
             ['link' => 'users.php', 'icon' => 'ri-user-line', 'text' => 'Users'],
-            ['link' => 'coordinators.php', 'icon' => 'ri-team-line', 'text' => 'Coordinators']
+            ['link' => 'coordinators.php', 'icon' => 'ri-team-line', 'text' => 'Coordinators'],
+            ['link' => 'teams.php', 'icon' => 'ri-group-2-line', 'text' => 'Teams']
         ],
         'Event' => [
             ['link' => 'announcements.php', 'icon' => 'ri-megaphone-line', 'text' => 'Announcements'],
