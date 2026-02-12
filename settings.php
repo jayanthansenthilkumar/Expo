@@ -127,10 +127,10 @@ unset($_SESSION['success'], $_SESSION['error']);
     <script src="assets/js/script.js"></script>
     <script>
         <?php if ($success): ?>
-            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($success); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($success); ?>', confirmButtonColor: '#D97706', timer: 3000, timerProgressBar: true });
         <?php endif; ?>
         <?php if ($error): ?>
-            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($error); ?>', confirmButtonColor: '#2563eb' });
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($error); ?>', confirmButtonColor: '#D97706' });
         <?php endif; ?>
     </script>
 

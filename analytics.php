@@ -170,7 +170,7 @@ while ($row = mysqli_fetch_assoc($monthlyResult)) {
                 labels: categoryLabels.map(l => l ? l.toUpperCase() : 'OTHER'),
                 datasets: [{
                     data: categoryData,
-                    backgroundColor: ['#4f46e5', '#ec4899', '#f59e0b', '#10b981', '#6366f1', '#8b5cf6'],
+                    backgroundColor: ['#B45309', '#ec4899', '#f59e0b', '#10b981', '#D97706', '#F59E0B'],
                     borderWidth: 0
                 }]
             },
@@ -185,8 +185,8 @@ while ($row = mysqli_fetch_assoc($monthlyResult)) {
                 datasets: [{
                     label: 'Submissions',
                     data: trendData,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderColor: '#D97706',
+                    backgroundColor: 'rgba(217, 119, 6, 0.1)',
                     fill: true,
                     tension: 0.4
                 }]
@@ -206,7 +206,7 @@ while ($row = mysqli_fetch_assoc($monthlyResult)) {
                 datasets: [{
                     label: 'Projects',
                     data: deptData,
-                    backgroundColor: '#8b5cf6',
+                    backgroundColor: '#F59E0B',
                     borderRadius: 4
                 }]
             },

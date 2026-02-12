@@ -212,7 +212,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type'], $_SESSION['success'],
                     </div>
                 `,
                 confirmButtonText: '<i class="ri-star-line"></i> Submit Score',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
                 focusConfirm: false,
@@ -277,7 +277,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type'], $_SESSION['success'],
     </script>
     <script>
         <?php if ($flashMessage): ?>
-            Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
+            Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#D97706'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
         <?php endif; ?>
     </script>
 

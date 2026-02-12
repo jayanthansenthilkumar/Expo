@@ -117,7 +117,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 <?php if (!$myTeam): ?>
                     <!-- Team Registration Banner -->
                     <div
-                        style="background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);color:#92400e;padding:1.25rem 1.5rem;border-radius:12px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+                        style="background:#F59E0B;color:#92400e;padding:1.25rem 1.5rem;border-radius:12px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
                         <div style="display:flex;align-items:center;gap:0.75rem;">
                             <i class="ri-error-warning-line" style="font-size:1.5rem;"></i>
                             <div>
@@ -219,7 +219,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </a>
                     <?php elseif (!$myTeam && $pendingInviteCount > 0): ?>
                         <a href="myTeam.php" class="action-card" style="text-decoration:none;color:inherit;">
-                            <div class="action-icon" style="background:#dbeafe;">
+                            <div class="action-icon" style="background:#FEF3C7;">
                                 <i class="ri-mail-line" style="color:#1d4ed8;"></i>
                             </div>
                             <div>
@@ -314,10 +314,10 @@ unset($_SESSION['success'], $_SESSION['error']);
     <script src="assets/js/script.js"></script>
     <script>
         <?php if ($successMsg): ?>
-            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#D97706', timer: 3000, timerProgressBar: true });
         <?php endif; ?>
         <?php if ($errorMsg): ?>
-            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#D97706' });
         <?php endif; ?>
     </script>
 

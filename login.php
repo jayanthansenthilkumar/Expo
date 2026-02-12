@@ -104,7 +104,7 @@ if (isset($_SESSION['user_id']) && !$success && empty($error)) {
                 icon: 'error',
                 title: 'Login Failed',
                 text: '<?php echo addslashes($error); ?>',
-                confirmButtonColor: '#2563eb'
+                confirmButtonColor: '#D97706'
             });
         <?php endif; ?>
 
@@ -114,7 +114,7 @@ if (isset($_SESSION['user_id']) && !$success && empty($error)) {
                 icon: 'success',
                 title: 'Login Successful',
                 text: '<?php echo addslashes($successMsg); ?>',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 timer: 1500,
                 timerProgressBar: true,
                 showConfirmButton: false

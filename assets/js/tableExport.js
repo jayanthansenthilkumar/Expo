@@ -53,7 +53,7 @@ function exportTableToPDF(tableEl, filename) {
     if (!tableEl) { alert('No table found to export.'); return; }
     const data = getTableData(tableEl);
     if (data.rows.length === 0) {
-        Swal.fire({ icon: 'info', title: 'No Data', text: 'The table has no data to export.', confirmButtonColor: '#2563eb' });
+        Swal.fire({ icon: 'info', title: 'No Data', text: 'The table has no data to export.', confirmButtonColor: '#D97706' });
         return;
     }
 
@@ -114,7 +114,7 @@ function exportTableToPDF(tableEl, filename) {
 
     doc.save(filename + '.pdf');
 
-    Swal.fire({ icon: 'success', title: 'PDF Downloaded!', text: filename + '.pdf has been saved.', confirmButtonColor: '#2563eb', timer: 2000, timerProgressBar: true, showConfirmButton: false });
+    Swal.fire({ icon: 'success', title: 'PDF Downloaded!', text: filename + '.pdf has been saved.', confirmButtonColor: '#D97706', timer: 2000, timerProgressBar: true, showConfirmButton: false });
 }
 
 /* ── Excel Export ── */
@@ -122,7 +122,7 @@ function exportTableToExcel(tableEl, filename) {
     if (!tableEl) { alert('No table found to export.'); return; }
     const data = getTableData(tableEl);
     if (data.rows.length === 0) {
-        Swal.fire({ icon: 'info', title: 'No Data', text: 'The table has no data to export.', confirmButtonColor: '#2563eb' });
+        Swal.fire({ icon: 'info', title: 'No Data', text: 'The table has no data to export.', confirmButtonColor: '#D97706' });
         return;
     }
 
@@ -136,7 +136,7 @@ function exportTableToExcel(tableEl, filename) {
     XLSX.utils.book_append_sheet(wb, ws, 'Data');
     XLSX.writeFile(wb, filename + '.xlsx');
 
-    Swal.fire({ icon: 'success', title: 'Excel Downloaded!', text: filename + '.xlsx has been saved.', confirmButtonColor: '#2563eb', timer: 2000, timerProgressBar: true, showConfirmButton: false });
+    Swal.fire({ icon: 'success', title: 'Excel Downloaded!', text: filename + '.xlsx has been saved.', confirmButtonColor: '#D97706', timer: 2000, timerProgressBar: true, showConfirmButton: false });
 }
 
 /* ══════════════════════════════════════════════════════

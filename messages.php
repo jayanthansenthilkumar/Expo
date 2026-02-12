@@ -102,7 +102,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <?php foreach ($inboxMessages as $msg): ?>
                                     <a href="?msg=<?php echo $msg['id']; ?>"
                                         class="message-item <?php echo (!$msg['is_read']) ? 'unread' : ''; ?> <?php echo ($selectedMsgId == $msg['id']) ? 'active' : ''; ?>"
-                                        style="display:block;padding:0.75rem 1rem;border-bottom:1px solid #e5e7eb;text-decoration:none;color:inherit;<?php echo (!$msg['is_read']) ? 'background:#eff6ff;font-weight:600;' : ''; ?><?php echo ($selectedMsgId == $msg['id']) ? 'background:#dbeafe;' : ''; ?>">
+                                        style="display:block;padding:0.75rem 1rem;border-bottom:1px solid #e5e7eb;text-decoration:none;color:inherit;<?php echo (!$msg['is_read']) ? 'background:#eff6ff;font-weight:600;' : ''; ?><?php echo ($selectedMsgId == $msg['id']) ? 'background:#FEF3C7;' : ''; ?>">
                                         <div
                                             style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
                                             <span
@@ -191,7 +191,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
             `,
                 confirmButtonText: '<i class="ri-send-plane-line"></i> Send Message',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
                 width: Math.min(550, window.innerWidth - 40) + 'px',
@@ -234,10 +234,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         }
 
         <?php if ($successMsg): ?>
-            Swal.fire({ icon: 'success', title: 'Sent!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+            Swal.fire({ icon: 'success', title: 'Sent!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#D97706', timer: 3000, timerProgressBar: true });
         <?php endif; ?>
         <?php if ($errorMsg): ?>
-            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#D97706' });
         <?php endif; ?>
     </script>
 

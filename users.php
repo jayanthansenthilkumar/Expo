@@ -173,7 +173,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             <div style="display:flex;gap:0.5rem;">
                                                 <button type="button" class="btn-icon" title="Edit"
                                                     onclick="openEditUser(<?php echo $u['id']; ?>, '<?php echo addslashes($u['name']); ?>', '<?php echo addslashes($u['email']); ?>', '<?php echo $u['role']; ?>', '<?php echo addslashes($u['department'] ?? ''); ?>')"
-                                                    style="color:#6366f1;">
+                                                    style="color:#D97706;">
                                                     <i class="ri-edit-line"></i>
                                                 </button>
                                                 <?php if ($u['id'] != $_SESSION['user_id']): ?>
@@ -255,7 +255,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
             `,
                 confirmButtonText: '<i class="ri-user-add-line"></i> Add User',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
                 width: Math.min(500, window.innerWidth - 40) + 'px',
@@ -319,7 +319,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
             `,
                 confirmButtonText: '<i class="ri-save-line"></i> Save Changes',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
                 width: Math.min(500, window.innerWidth - 40) + 'px',
@@ -365,10 +365,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         }
 
         <?php if ($successMsg): ?>
-            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#D97706', timer: 3000, timerProgressBar: true });
         <?php endif; ?>
         <?php if ($errorMsg): ?>
-            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#D97706' });
         <?php endif; ?>
 
         document.querySelectorAll('.confirm-delete-form').forEach(form => {

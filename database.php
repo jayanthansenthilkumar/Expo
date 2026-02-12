@@ -289,7 +289,7 @@ if ($tablesResult) {
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Download Backup',
-                confirmButtonColor: '#4361ee'
+                confirmButtonColor: '#D97706'
             }).then((result) => {
                 if (result.isConfirmed) {
                     window.location.href = 'database.php?ajax=backup';
@@ -306,7 +306,7 @@ if ($tablesResult) {
                 icon: 'upload',
                 showCancelButton: true,
                 confirmButtonText: 'Restore',
-                confirmButtonColor: '#4361ee',
+                confirmButtonColor: '#D97706',
                 preConfirm: () => {
                     const file = document.getElementById('sqlFile').files[0];
                     if (!file) { Swal.showValidationMessage('Please select a .sql file'); return false; }
@@ -372,7 +372,7 @@ if ($tablesResult) {
                 inputPlaceholder: 'Select a table',
                 showCancelButton: true,
                 confirmButtonText: 'Export CSV',
-                confirmButtonColor: '#4361ee',
+                confirmButtonColor: '#D97706',
                 inputValidator: (value) => {
                     if (!value) return 'Please select a table';
                 }
@@ -408,7 +408,7 @@ if ($tablesResult) {
                     });
                     html += '</tbody></table></div>';
                     if (data.rows.length >= 100) html += '<p style="color:#888;margin-top:8px;font-size:12px;">Showing first 100 rows</p>';
-                    Swal.fire({ title: tableName, html: html, width: '80%', confirmButtonColor: '#4361ee' });
+                    Swal.fire({ title: tableName, html: html, width: '80%', confirmButtonColor: '#D97706' });
                 })
                 .catch(() => Swal.fire('Error', 'Failed to load table data', 'error'));
         }

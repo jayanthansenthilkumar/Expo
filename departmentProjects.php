@@ -172,14 +172,14 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                                         </td>
                                         <td>
                                             <?php if (!empty($project['github_link'])): ?>
-                                                <a href="<?php echo htmlspecialchars($project['github_link']); ?>" target="_blank" title="<?php echo htmlspecialchars($project['github_link']); ?>" style="color:#2563eb;"><i class="ri-github-line"></i> Repo</a>
+                                                <a href="<?php echo htmlspecialchars($project['github_link']); ?>" target="_blank" title="<?php echo htmlspecialchars($project['github_link']); ?>" style="color:#D97706;"><i class="ri-github-line"></i> Repo</a>
                                             <?php else: ?>
                                                 <span style="color:#94a3b8;">—</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
                                             <?php if (!empty($project['file_path'])): ?>
-                                                <a href="javascript:void(0)" onclick="viewPdf('<?php echo htmlspecialchars($project['file_path'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($project['title'], ENT_QUOTES); ?>')" title="View PDF" style="color:#2563eb;cursor:pointer;"><i class="ri-file-pdf-2-line"></i> PDF</a>
+                                                <a href="javascript:void(0)" onclick="viewPdf('<?php echo htmlspecialchars($project['file_path'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($project['title'], ENT_QUOTES); ?>')" title="View PDF" style="color:#D97706;cursor:pointer;"><i class="ri-file-pdf-2-line"></i> PDF</a>
                                             <?php else: ?>
                                                 <span style="color:#94a3b8;">—</span>
                                             <?php endif; ?>
@@ -224,7 +224,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
     <script src="assets/js/tableExport.js?v=2"></script>
     <script>
         <?php if ($flashMessage): ?>
-            Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
+            Swal.fire({ icon: '<?php echo $flashType === "success" ? "success" : "error"; ?>', title: '<?php echo $flashType === "success" ? "Success!" : "Oops!"; ?>', text: '<?php echo htmlspecialchars($flashMessage, ENT_QUOTES); ?>', confirmButtonColor: '#D97706'<?php if ($flashType === "success"): ?>, timer: 3000, timerProgressBar: true<?php endif; ?> });
         <?php endif; ?>
 
         const projectsData = <?php echo json_encode($projects); ?>;
@@ -308,11 +308,11 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.25rem;">
                                 <div>
                                      <label style="display:block;font-weight:600;font-size:0.8rem;color:#64748b;margin-bottom:0.25rem;text-transform:uppercase;">GitHub Repository</label>
-                                     ${project.github_link ? `<a href="${escapeHtml(project.github_link)}" target="_blank" style="color:#2563eb;text-decoration:none;font-weight:500;"><i class="ri-github-line"></i> ${escapeHtml(project.github_link)}</a>` : '<span style="color:#94a3b8;">No link provided</span>'}
+                                     ${project.github_link ? `<a href="${escapeHtml(project.github_link)}" target="_blank" style="color:#D97706;text-decoration:none;font-weight:500;"><i class="ri-github-line"></i> ${escapeHtml(project.github_link)}</a>` : '<span style="color:#94a3b8;">No link provided</span>'}
                                 </div>
                                 <div>
                                      <label style="display:block;font-weight:600;font-size:0.8rem;color:#64748b;margin-bottom:0.25rem;text-transform:uppercase;">Documentation (PDF)</label>
-                                     ${project.file_path ? `<a href="javascript:void(0)" onclick="Swal.close(); setTimeout(() => viewPdf('${escapeHtml(project.file_path)}', '${escapeHtml(project.title)}'), 300);" style="color:#2563eb;text-decoration:none;font-weight:500;cursor:pointer;"><i class="ri-file-pdf-2-line"></i> View PDF</a>` : '<span style="color:#94a3b8;">No file uploaded</span>'}
+                                     ${project.file_path ? `<a href="javascript:void(0)" onclick="Swal.close(); setTimeout(() => viewPdf('${escapeHtml(project.file_path)}', '${escapeHtml(project.title)}'), 300);" style="color:#D97706;text-decoration:none;font-weight:500;cursor:pointer;"><i class="ri-file-pdf-2-line"></i> View PDF</a>` : '<span style="color:#94a3b8;">No file uploaded</span>'}
                                 </div>
                             </div>
 

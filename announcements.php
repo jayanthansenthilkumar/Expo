@@ -114,10 +114,10 @@ unset($_SESSION['success'], $_SESSION['error']);
     <script src="assets/js/script.js"></script>
     <script>
         <?php if ($successMsg): ?>
-            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#D97706', timer: 3000, timerProgressBar: true });
         <?php endif; ?>
         <?php if ($errorMsg): ?>
-            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#D97706' });
         <?php endif; ?>
 
         function showCreateAnnouncement() {
@@ -142,7 +142,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
             `,
                 confirmButtonText: '<i class="ri-megaphone-line"></i> Post Announcement',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
                 focusConfirm: false,

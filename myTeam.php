@@ -217,7 +217,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             style="background:#fbbf24;color:#92400e;padding:0.2rem 0.6rem;border-radius:12px;font-size:0.75rem;font-weight:600;margin-left:0.5rem;">Leader</span>
                                     <?php else: ?>
                                         <span
-                                            style="background:#dbeafe;color:#1e40af;padding:0.2rem 0.6rem;border-radius:12px;font-size:0.75rem;font-weight:600;margin-left:0.5rem;">Member</span>
+                                            style="background:#FEF3C7;color:#B45309;padding:0.2rem 0.6rem;border-radius:12px;font-size:0.75rem;font-weight:600;margin-left:0.5rem;">Member</span>
                                     <?php endif; ?>
                                 </h2>
                                 <?php if ($myTeam['description']): ?>
@@ -422,7 +422,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 icon: 'success',
                 title: 'Success!',
                 text: '<?php echo addslashes($successMsg); ?>',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 timer: 3000,
                 timerProgressBar: true
             });
@@ -432,7 +432,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 icon: 'error',
                 title: 'Oops!',
                 text: '<?php echo addslashes($errorMsg); ?>',
-                confirmButtonColor: '#2563eb'
+                confirmButtonColor: '#D97706'
             });
         <?php endif; ?>
 
@@ -448,7 +448,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
             `,
                 confirmButtonText: '<i class="ri-team-line"></i> Create Team',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
                 focusConfirm: false,
@@ -521,7 +521,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
             `,
                 confirmButtonText: '<i class="ri-file-copy-line"></i> Copy Code',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 showCancelButton: true,
                 cancelButtonText: 'Close',
                 cancelButtonColor: '#6b7280'
@@ -622,7 +622,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                         icon: 'info',
                         title: 'No Students Available',
                         text: 'All students are already in teams or no students are registered yet.',
-                        confirmButtonColor: '#2563eb'
+                        confirmButtonColor: '#D97706'
                     });
                     return;
                 }
@@ -645,7 +645,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
             `,
                     confirmButtonText: '<i class="ri-send-plane-line"></i> Send Invitation',
-                    confirmButtonColor: '#2563eb',
+                    confirmButtonColor: '#D97706',
                     showCancelButton: true,
                     cancelButtonColor: '#6b7280',
                     focusConfirm: false,
@@ -729,7 +729,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                     text: 'You will join this team and any other pending invitations will be automatically declined.',
                     icon: 'question',
                     showCancelButton: true,
-                    confirmButtonColor: '#2563eb',
+                    confirmButtonColor: '#D97706',
                     cancelButtonColor: '#6b7280',
                     confirmButtonText: 'Yes, join team!'
                 }).then((result) => {

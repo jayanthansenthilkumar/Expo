@@ -185,7 +185,7 @@ foreach ($statusBreakdown as $row) {
                         <h3>Student Engagement</h3>
                         <div
                             style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;">
-                            <i class="ri-group-line" style="font-size:3rem;color:#8b5cf6;margin-bottom:1rem;"></i>
+                            <i class="ri-group-line" style="font-size:3rem;color:#F59E0B;margin-bottom:1rem;"></i>
                             <span
                                 style="font-size:3.5rem;font-weight:800;color:var(--text-main);line-height:1;"><?php echo $totalStudents; ?></span>
                             <span style="color:var(--text-muted);font-size:1rem;margin-top:0.5rem;">Active

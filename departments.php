@@ -321,7 +321,7 @@ foreach ($deptNames as $deptName) {
                         html += '<p style="color:#888;">No projects in this department.</p>';
                     }
 
-                    Swal.fire({ title: deptName + ' Department', html: html, width: Math.min(700, window.innerWidth - 40) + 'px', confirmButtonColor: '#4361ee' });
+                    Swal.fire({ title: deptName + ' Department', html: html, width: Math.min(700, window.innerWidth - 40) + 'px', confirmButtonColor: '#D97706' });
                 })
                 .catch(() => Swal.fire('Error', 'Failed to load department data', 'error'));
         }
@@ -350,7 +350,7 @@ foreach ($deptNames as $deptName) {
                             '</div>',
                         showCancelButton: true,
                         confirmButtonText: 'Save Changes',
-                        confirmButtonColor: '#4361ee',
+                        confirmButtonColor: '#D97706',
                         preConfirm: () => {
                             const newName = document.getElementById('editDeptName').value.trim();
                             const coordId = document.getElementById('editCoordinator').value;
@@ -386,7 +386,7 @@ foreach ($deptNames as $deptName) {
                             if (failed) {
                                 Swal.fire('Error', failed.message, 'error');
                             } else {
-                                Swal.fire({ icon: 'success', title: 'Updated!', text: 'Department updated successfully', confirmButtonColor: '#4361ee' })
+                                Swal.fire({ icon: 'success', title: 'Updated!', text: 'Department updated successfully', confirmButtonColor: '#D97706' })
                                     .then(() => location.reload());
                             }
                         }).catch(() => Swal.fire('Error', 'Failed to save changes', 'error'));
@@ -407,7 +407,7 @@ foreach ($deptNames as $deptName) {
                     '</div>',
                 showCancelButton: true,
                 confirmButtonText: 'Create Department',
-                confirmButtonColor: '#4361ee',
+                confirmButtonColor: '#D97706',
                 preConfirm: () => {
                     const name = document.getElementById('newDeptName').value.trim();
                     if (!name) { Swal.showValidationMessage('Department name is required'); return false; }
@@ -422,7 +422,7 @@ foreach ($deptNames as $deptName) {
                 fetch('departments.php', { method: 'POST', body: formData })
                     .then(r => r.json())
                     .then(data => {
-                        Swal.fire({ icon: data.success ? 'success' : 'error', title: data.success ? 'Created!' : 'Error', text: data.message, confirmButtonColor: '#4361ee' })
+                        Swal.fire({ icon: data.success ? 'success' : 'error', title: data.success ? 'Created!' : 'Error', text: data.message, confirmButtonColor: '#D97706' })
                             .then(() => { if (data.success) location.reload(); });
                     })
                     .catch(() => Swal.fire('Error', 'Failed to create department', 'error'));

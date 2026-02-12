@@ -150,8 +150,8 @@ unset($_SESSION['success'], $_SESSION['error']);
             border-radius: 8px 8px 0 0;
         }
         .review-tab.active {
-            color: #2563eb;
-            border-bottom-color: #2563eb;
+            color: #D97706;
+            border-bottom-color: #D97706;
             font-weight: 600;
         }
         .tab-badge {
@@ -401,7 +401,7 @@ unset($_SESSION['success'], $_SESSION['error']);
 
         function openReviewModal(projectId, title, description, student, category, department, github, team) {
             const githubHtml = github
-                ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#2563eb;">${escapeHtml(github)}</a></p>`
+                ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#D97706;">${escapeHtml(github)}</a></p>`
                 : '';
 
             Swal.fire({
@@ -439,7 +439,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
             `,
                 confirmButtonText: '<i class="ri-check-double-line"></i> Submit Review',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
                 width: Math.min(600, window.innerWidth - 40) + 'px',
@@ -475,7 +475,7 @@ unset($_SESSION['success'], $_SESSION['error']);
 
         function openViewModal(projectId, title, description, student, category, department, github, team, comments, currentStatus) {
             const githubHtml = github
-                ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#2563eb;">${escapeHtml(github)}</a></p>`
+                ? `<p><strong>GitHub:</strong> <a href="${escapeHtml(github)}" target="_blank" style="color:#D97706;">${escapeHtml(github)}</a></p>`
                 : '';
 
             const statusColor = currentStatus === 'approved' ? '#22c55e' : '#ef4444';
@@ -525,7 +525,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
             `,
                 confirmButtonText: '<i class="ri-refresh-line"></i> Update Decision',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 showCancelButton: true,
                 showDenyButton: true,
                 denyButtonText: 'Close',
@@ -570,10 +570,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         }
 
         <?php if ($flashSuccess): ?>
-            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo htmlspecialchars($flashSuccess, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo htmlspecialchars($flashSuccess, ENT_QUOTES); ?>', confirmButtonColor: '#D97706', timer: 3000, timerProgressBar: true });
         <?php endif; ?>
         <?php if ($flashError): ?>
-            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo htmlspecialchars($flashError, ENT_QUOTES); ?>', confirmButtonColor: '#2563eb' });
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo htmlspecialchars($flashError, ENT_QUOTES); ?>', confirmButtonColor: '#D97706' });
         <?php endif; ?>
     </script>
 

@@ -55,3 +55,4 @@ $chatIsLoggedIn = isset($_SESSION['user_id']) ? 'true' : 'false';
      However, to be safe, we will rely on this include for jQuery if it's missing in other pages. -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="assets/js/chat.js"></script>
+<script src="assets/js/sfx.js"></script>

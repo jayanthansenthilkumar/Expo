@@ -156,7 +156,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
             `,
                 confirmButtonText: '<i class="ri-save-line"></i> Create Coordinator',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
                 width: Math.min(550, window.innerWidth - 40) + 'px',
@@ -210,7 +210,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
             `,
                 confirmButtonText: '<i class="ri-user-settings-line"></i> Assign',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 showCancelButton: true,
                 cancelButtonColor: '#6b7280',
                 focusConfirm: false,
@@ -248,7 +248,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 title: '',
                 html: `
                 <div style="text-align:center;margin-bottom:1rem;">
-                    <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#2563eb);color:white;display:inline-flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;margin-bottom:0.5rem;">
+                    <div style="width:64px;height:64px;border-radius:50%;background:#D97706;color:white;display:inline-flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;margin-bottom:0.5rem;">
                         ${escapeHtml((coord.name || '').substring(0, 2).toUpperCase())}
                     </div>
                     <h3 style="margin:0;font-size:1.2rem;color:#1e293b;">${escapeHtml(coord.name)}</h3>
@@ -264,7 +264,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 </div>
                 <div style="display:flex;gap:1rem;justify-content:center;margin-bottom:0.5rem;">
                     <div style="text-align:center;background:#eff6ff;padding:0.75rem 1.5rem;border-radius:10px;flex:1;">
-                        <div style="font-size:1.5rem;font-weight:700;color:#2563eb;">${coord.project_count}</div>
+                        <div style="font-size:1.5rem;font-weight:700;color:#D97706;">${coord.project_count}</div>
                         <div style="font-size:0.8rem;color:#64748b;">Projects</div>
                     </div>
                     <div style="text-align:center;background:#f0fdf4;padding:0.75rem 1.5rem;border-radius:10px;flex:1;">
@@ -314,10 +314,10 @@ unset($_SESSION['success'], $_SESSION['error']);
         }
 
         <?php if ($successMsg): ?>
-            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#2563eb', timer: 3000, timerProgressBar: true });
+            Swal.fire({ icon: 'success', title: 'Success!', text: '<?php echo addslashes($successMsg); ?>', confirmButtonColor: '#D97706', timer: 3000, timerProgressBar: true });
         <?php endif; ?>
         <?php if ($errorMsg): ?>
-            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#2563eb' });
+            Swal.fire({ icon: 'error', title: 'Oops!', text: '<?php echo addslashes($errorMsg); ?>', confirmButtonColor: '#D97706' });
         <?php endif; ?>
     </script>
 

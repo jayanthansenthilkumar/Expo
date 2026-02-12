@@ -152,7 +152,7 @@ if (isset($_SESSION['success'])) {
                 icon: 'error',
                 title: 'Registration Failed',
                 text: '<?php echo addslashes($error); ?>',
-                confirmButtonColor: '#2563eb'
+                confirmButtonColor: '#D97706'
             });
         <?php endif; ?>
 
@@ -161,7 +161,7 @@ if (isset($_SESSION['success'])) {
                 icon: 'success',
                 title: 'Registration Successful!',
                 text: '<?php echo addslashes($success); ?>',
-                confirmButtonColor: '#2563eb',
+                confirmButtonColor: '#D97706',
                 timer: 2000,
                 timerProgressBar: true,
                 showConfirmButton: false
@@ -335,7 +335,7 @@ if (isset($_SESSION['success'])) {
                     icon: 'warning',
                     title: 'Missing Fields',
                     text: 'Please fill in all required fields',
-                    confirmButtonColor: '#2563eb'
+                    confirmButtonColor: '#D97706'
                 });
                 return;
             }
@@ -345,7 +345,7 @@ if (isset($_SESSION['success'])) {
                     icon: 'warning',
                     title: 'Invalid Register Number',
                     text: 'Register number must be exactly 12 characters',
-                    confirmButtonColor: '#2563eb'
+                    confirmButtonColor: '#D97706'
                 });
                 return;
             }
@@ -355,7 +355,7 @@ if (isset($_SESSION['success'])) {
                     icon: 'warning',
                     title: 'Weak Password',
                     text: 'Password must be at least 6 characters long',
-                    confirmButtonColor: '#2563eb'
+                    confirmButtonColor: '#D97706'
                 });
                 return;
             }
@@ -365,7 +365,7 @@ if (isset($_SESSION['success'])) {
                     icon: 'warning',
                     title: 'Invalid Email',
                     text: 'Please enter a valid email address',
-                    confirmButtonColor: '#2563eb'
+                    confirmButtonColor: '#D97706'
                 });
                 return;
             }
