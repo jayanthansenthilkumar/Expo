@@ -871,10 +871,14 @@
 
 @media (max-width: 768px) {
   .tech-navbar {
-    position: absolute !important;
-    background: transparent !important;
-    backdrop-filter: none !important;
-    border-bottom: none !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0;
+    width: 100%;
+    background: rgba(250, 249, 246, 0.95) !important;
+    backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid var(--spark-border) !important;
+    z-index: 1000;
   }
 
   .tech-hero {
